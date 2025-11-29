@@ -1,0 +1,103 @@
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7); /* Fundo escuro transparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Garante que está acima de tudo */
+}
+
+
+.auth-modal {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    position: relative;
+    width: 380px;
+    max-width: 90%;
+    text-align: center;
+}
+
+.auth-modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+}
+
+.auth-modal-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-dark); 
+    margin-bottom: 25px;
+}
+
+/* --- CAMPOS DE INPUT --- */
+.input-group {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 15px;
+    background-color: #f9f9f9;
+}
+
+.input-icon {
+    color: #999;
+    margin-right: 10px;
+}
+
+.input-field {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    font-size: 1rem;
+    color: var(--text-dark);
+}
+
+/* --- LINKS E BOTÕES --- */
+.forgot-password-link {
+    display: block;
+    margin-bottom: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #666;
+    text-decoration: none;
+}
+
+.login-button {
+    width: 100%;
+    background-color: var(--secondary-color);
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 12px 0;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.login-button:hover {
+    background-color: #0056b3;
+}
+
+.register-link {
+    display: block;
+    margin-top: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #666;
+    text-decoration: none;
+}

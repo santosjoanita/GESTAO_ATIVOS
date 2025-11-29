@@ -1,0 +1,28 @@
+/* src/index/index.css */
+
+/* Definição de Variáveis CSS (As cores centrais do projeto) */
+:root {
+    --primary-color: #043653; /* Azul Escuro */
+    --secondary-color: #007bff; /* Azul Secundário */
+    --background-light: #f4f6f9; /* Fundo Claro */
+    --text-dark: #333333; /* Texto Principal */
+}
+
+/* CSS RESET PURO (CRÍTICO para fixar o footer e preencher a tela) */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  /* Estas três linhas forçam a altura máxima do ecrã */
+  height: 100%; 
+  min-height: 100%;
+  box-sizing: border-box; 
+  
+  /* Definição de fonte base (se não estiver a usar Tailwind) */
+  font-family: Arial, sans-serif;
+}
+
+/* Regra de estilo para o logo (se ainda estiver grande) */
+header img {
+  max-height: 28px; /* Reduzido para 28px */
+  width: auto;
+}
