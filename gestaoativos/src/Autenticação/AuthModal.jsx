@@ -46,7 +46,7 @@ const AuthModal = ({ onClose }) => {
                 <button
                     className="login-button"
                 >
-                    <span>LOGIN</span>
+                    <span>ENTRAR</span>
                 </button>
 
                 {/* Registe-se aqui */}

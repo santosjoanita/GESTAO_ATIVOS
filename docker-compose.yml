@@ -1,0 +1,15 @@
+
+
+services:
+  # Nome do serviço frontend
+  frontend:
+  
+    build:
+      context: ./gestaoativos
+      dockerfile: Dockerfile
+    # Mapeia a porta interna 80 (Nginx) para a porta externa 3000 (ou 5173, se preferir)
+
+    ports:
+      - "3000:80"
+    # Reinicia se falhar
+    restart: unless-stopped
