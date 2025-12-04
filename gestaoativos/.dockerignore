@@ -1,0 +1,17 @@
+# DEPENDÊNCIAS
+node_modules
+
+
+/dist
+.vite/
+
+
+.env
+.env.*
+npm-debug.log*
+
+# Git 
+.git
+.gitignore
+
+postcss.config.cjs
