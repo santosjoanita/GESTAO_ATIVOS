@@ -101,3 +101,13 @@
     color: #666;
     text-decoration: none;
 }
+.alert-error-message {
+    color: #cc0000;
+    background-color: #ffeaea;
+    border: 1px solid #cc0000;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}

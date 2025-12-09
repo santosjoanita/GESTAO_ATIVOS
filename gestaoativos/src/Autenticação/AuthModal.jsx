@@ -1,13 +1,21 @@
-import React from 'react';
+// gestaoativos/src/AuthModal.jsx
+import React, { useState } from 'react';
 import { User, Lock, X } from 'lucide-react'; 
-import './AuthModal.css'; // Importa os estilos do modal
+import './AuthModal.css';
 
-const AuthModal = ({ onClose }) => {
+const AuthModal = ({ onClose, onLoginSubmit, isLoading, error }) => {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+
+    const handleLocalSubmit = (e) => {
+        e.preventDefault();
+        onLoginSubmit(username, password); 
+    };
+
     return (
         <div className="modal-overlay">
             <div className="auth-modal">
                 
-                {/* Botão de Fechar */}
                 <button 
                     onClick={onClose} 
                     className="auth-modal-close-btn"
@@ -17,39 +25,48 @@ const AuthModal = ({ onClose }) => {
 
                 <h2 className="auth-modal-title">AUTENTICAÇÃO</h2>
                 
-                {/* Campo Nome de Utilizador */}
-                <div className="input-group">
-                    <User className="input-icon" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Nome de utilizador"
-                        className="input-field"
-                    />
-                </div>
+                <form onSubmit={handleLocalSubmit}>
+                    
+                    <div className="input-group">
+                        <User className="input-icon" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Nome de utilizador"
+                            className="input-field"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            required
+                        />
+                    </div>
 
-                {/* Campo Palavra-passe */}
-                <div className="input-group">
-                    <Lock className="input-icon" size={20} />
-                    <input
-                        type="password"
-                        placeholder="Palavra-passe"
-                        className="input-field"
-                    />
-                </div>
+                    <div className="input-group">
+                        <Lock className="input-icon" size={20} />
+                        <input
+                            type="password"
+                            placeholder="Palavra-passe"
+                            className="input-field"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                    </div>
 
-                {/* Esqueceu-se da password */}
-                <a href="#" className="forgot-password-link">
-                    ESQUECEU-SE DA PASSWORD?
-                </a>
+                    {error && <div className="alert-error-message">{error}</div>}
 
-                {/* Botão Login */}
-                <button
-                    className="login-button"
-                >
-                    <span>ENTRAR</span>
-                </button>
+                    <a href="#" className="forgot-password-link">
+                        ESQUECEU-SE DA PASSWORD?
+                    </a>
 
-                {/* Registe-se aqui */}
+                    <button
+                        type="submit"
+                        className="login-button"
+                        disabled={isLoading}
+                    >
+                        <span>{isLoading ? 'A ENTRAR...' : 'ENTRAR'}</span>
+                    </button>
+
+                </form>
+
                 <a href="#" className="register-link">
                     REGISTE-SE AQUI
                 </a>

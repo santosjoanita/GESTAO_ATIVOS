@@ -1,15 +1,61 @@
-
+version: '3.8'
 
 services:
-  # Nome do serviço frontend
+  mysql-db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gestao_ativos_db
+      MYSQL_USER: user_gestao
+      MYSQL_PASSWORD: user_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  auth-service:
+    build:
+      context: ./backend_auth
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DB_HOST: mysql-db
+      DB_USER: user_gestao
+      DB_PASS: user_password
+      DB_NAME: gestao_ativos_db
+      DB_PORT: 3306
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mysql-db
+
+  inventory-service:
+    build:
+      context: ./backend_materiais
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DB_HOST: mysql-db
+      DB_USER: user_gestao
+      DB_PASS: user_password
+      DB_NAME: gestao_ativos_db
+      DB_PORT: 3306
+    ports:
+      - "3002:3002"
+    depends_on:
+      - mysql-db
+
   frontend:
-  
     build:
       context: ./gestaoativos
       dockerfile: Dockerfile
-    # Mapeia a porta interna 80 (Nginx) para a porta externa 3000 (ou 5173, se preferir)
-
+    environment:
+      VITE_API_BASE_URL: http://localhost:3001
     ports:
       - "3000:80"
-    # Reinicia se falhar
-    restart: unless-stopped
+    depends_on:
+      - auth-service
+
+volumes:
+  mysql_data:
