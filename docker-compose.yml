@@ -1,61 +1,50 @@
 version: '3.8'
 
 services:
+  # 1. BANCO DE DADOS: MySQL
   mysql-db:
     image: mysql:8.0
+    container_name: gestaoativos_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: gestao_ativos_db
-      MYSQL_USER: user_gestao
-      MYSQL_PASSWORD: user_password
+      MYSQL_ROOT_PASSWORD: root_password_segura 
+      MYSQL_DATABASE: gestao_ativos_db        
+      MYSQL_USER: user_gestao                  
+      MYSQL_PASSWORD: user_password_segura     
     ports:
-      - "3306:3306"
+      - "3306:3306" 
     volumes:
       - mysql_data:/var/lib/mysql
 
+  # 2. SERVIÇO DE AUTENTICAÇÃO (NODE.JS)
   auth-service:
     build:
-      context: ./backend_auth
+      context: ./backend_auth  
       dockerfile: Dockerfile
+    container_name: gestaoativos_auth
     restart: always
     environment:
-      DB_HOST: mysql-db
+      DB_HOST: mysql-db 
       DB_USER: user_gestao
-      DB_PASS: user_password
+      DB_PASS: user_password_segura
       DB_NAME: gestao_ativos_db
-      DB_PORT: 3306
     ports:
       - "3001:3001"
     depends_on:
       - mysql-db
 
-  inventory-service:
-    build:
-      context: ./backend_materiais
-      dockerfile: Dockerfile
-    restart: always
-    environment:
-      DB_HOST: mysql-db
-      DB_USER: user_gestao
-      DB_PASS: user_password
-      DB_NAME: gestao_ativos_db
-      DB_PORT: 3306
-    ports:
-      - "3002:3002"
-    depends_on:
-      - mysql-db
-
+  # 3. FRONTEND (Mantido)
   frontend:
     build:
-      context: ./gestaoativos
+      context: ./gestaoativos  
       dockerfile: Dockerfile
+    container_name: gestaoativos_frontend
     environment:
-      VITE_API_BASE_URL: http://localhost:3001
+      VITE_API_BASE_URL: http://localhost:3001 
     ports:
       - "3000:80"
     depends_on:
       - auth-service
-
+    
 volumes:
   mysql_data:

@@ -1,0 +1,305 @@
+/* gestaoativos/src/pages/Perfil.css */
+
+/* --- Variáveis Globais (Cores Esposende) --- */
+:root {
+    --color-primary-dark: #1f4e79; /* Azul Escuro do Header/Footer */
+    --color-secondary-light: #5b9bd5; /* Azul do Link e Destaque */
+    --color-text-dark: #333;
+    --color-bg-light: #f5f5f5; /* Fundo da Página */
+
+    /* Cores dos Status Cards (ajustadas ao design) */
+    --status-approved: #92d050; /* Verde */
+    --status-pending: #ffc000; /* Amarelo */
+    --status-scheduled: #a9a2f6; /* Roxo Claro */
+    --status-rejected: #f4b084; /* Salmão/Vermelho Claro */
+    --status-all: #8ecae6; /* Azul Claro */
+    --color-border: #e0e0e0;
+}
+
+body {
+    background-color: var(--color-bg-light);
+    margin: 0;
+    font-family: Arial, sans-serif;
+    color: var(--color-text-dark);
+}
+
+a {
+    text-decoration: none;
+    color: var(--color-secondary-light);
+}
+
+/* --- Layout e Alinhamento --- */
+.perfil-page-app {
+    min-height: 100vh;
+    padding-top: 80px; 
+    padding-bottom: 60px; 
+}
+
+/* 2. Centraliza o conteúdo (Header/Footer) na largura da tela */
+.centered-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.icon-esp {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.icon-esp:hover {
+    color: var(--color-secondary-light);
+}
+
+/* --- Header e Footer Fixos --- */
+.fixed-header-esp, .fixed-footer-esp {
+    position: fixed;
+    left: 0;
+    right: 0;
+    background-color: var(--color-primary-dark);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.fixed-header-esp {
+    top: 0;
+    height: 80px;
+}
+
+.fixed-footer-esp {
+    bottom: 0;
+    height: 60px;
+}
+
+.header-content-esp, .footer-content-esp {
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+}
+
+/* Header: Logo e Navegação */
+.logo-esp {
+    display: flex;
+    align-items: center;
+    font-size: 1.5em;
+    font-weight: 800;
+}
+.logo-img {
+    height: 55px; /* Altura do logo */
+    margin-right: 10px;
+}
+.logo-subtitle-esp {
+    font-size: 0.7em;
+    font-weight: 400;
+    color: white;
+    text-transform: capitalize;
+    margin-left: 5px; 
+}
+
+.header-nav-esp {
+    display: flex;
+    gap: 20px;
+}
+.nav-item-esp {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 29px 0;
+    transition: background-color 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+/* Correção da Aba Ativa: Apenas a Borda por baixo */
+.nav-item-esp.active-tab-indicator {
+    background-color: transparent; 
+    color: white; 
+    border-color: var(--color-secondary-light); /* Azul Claro na Aba Ativa */
+}
+.nav-item-esp:hover {
+    background-color: transparent; 
+    color: var(--color-secondary-light);
+}
+
+
+.header-icons-esp {
+    display: flex;
+    gap: 15px;
+}
+.logout-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: white;
+}
+.logout-btn:hover .icon-esp {
+    color: var(--color-secondary-light);
+}
+
+/* --- Rodapé (Correção de Centralização Esquerda/Centro/Direita) --- */
+.footer-items-wrapper {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; /* Esquerda (PT|EN) | Centro (Botão) | Direita (Projeto) */
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.footer-lang-esp {
+    justify-self: start; /* Alinha PT|EN à esquerda */
+    font-weight: 600;
+}
+
+.explore-button-esp {
+    background-color: var(--color-secondary-light);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    justify-self: center; /* Centraliza o botão */
+}
+.explore-button-esp:hover {
+    background-color: #4a8ac2; 
+}
+
+.footer-project-esp {
+    font-size: 0.9em;
+    font-weight: 600;
+    justify-self: end; /* Alinha o projeto à direita */
+}
+
+/* --- CONTEÚDO PRINCIPAL --- */
+.main-content-esp {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Painel do Utilizador */
+.user-panel-esp {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+.user-avatar-esp {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #d1d5db;
+    margin-right: 20px;
+}
+.user-title-esp {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0 0 5px 0;
+}
+.user-email-esp {
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+.edit-button-esp {
+    background-color: white;
+    border: 1px solid #d1d5db;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.tabs-container-esp {
+    border-bottom: 2px solid var(--color-border);
+    margin-bottom: 20px;
+    display: flex;
+}
+
+.tab-button-esp {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    color: #6b7280;
+    transition: color 0.2s;
+}
+
+.tab-button-esp.active-tab-indicator {
+    color: var(--color-primary-dark);
+    border-bottom: 3px solid var(--color-primary-dark);
+    margin-bottom: -2px; 
+}
+.tab-button-esp:hover {
+    color: var(--color-primary-dark);
+}
+
+/* Filtros de Estado e Cards (Mantido) */
+.filters-row-esp {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.status-button-esp {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 9999px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+.status-all { background-color: var(--status-all); }
+.status-approved { background-color: var(--status-approved); }
+.status-pending { background-color: var(--status-pending); }
+.status-scheduled { background-color: var(--status-scheduled); }
+.status-rejected { background-color: var(--status-rejected); }
+
+.list-items-container-esp {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.event-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.event-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+}
+
+.event-approved { background-color: var(--status-approved); }
+.event-scheduled { background-color: var(--status-scheduled); }
+
+.event-details {
+    padding: 15px 25px;
+    background-color: rgba(255, 255, 255, 0.7); 
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.material-list {
+    list-style-type: none;
+    padding: 0;
+    font-size: 0.9em;
+}
+.material-list li {
+    margin-bottom: 5px;
+}
