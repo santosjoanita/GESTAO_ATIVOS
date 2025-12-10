@@ -1,34 +1,23 @@
-// gestaoativos/src/pages/Perfil.jsx
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft } from 'lucide-react'; 
 import { Link, useNavigate } from 'react-router-dom'; 
 import './Perfil.css'; 
-
 import logo from '../assets/img/esposende.png'; 
 
-const mockUserData = {
-    nome: "Bruno Ribeiro",
-    email: "bruno.ribeiro@cm-esposende.pt",
-    projetoAtual: "FEIRA DO LIVRO"
+const formatDate = (dateString) => {
+    if (!dateString) return 'Data não especificada';
+    const datePart = dateString.split('T')[0]; 
+    if (!datePart) return 'Data inválida';
+
+    const [year, month, day] = datePart.split('-');
+    return `${day}/${month}/${year}`;
 };
 
-const mockEvents = [
-    { id: 1, title: "Feira do livro", date: "dd/mm/aaaa - dd/mm/aaaa", status: "APROVADO", colorClass: "event-approved" },
-    { id: 2, title: 'Concerto "Singing Christmas"', date: "dd/mm/aaaa - dd/mm/aaaa", status: "AGENDADO", colorClass: "event-scheduled" },
-];
-
-const mockRequisitions = [
-    { id: 3, title: "Workshop \"Hoje é dia de: Arranjos Natalícios\"", event: "Workshop \"Hoje é dia de: Arranjos Natalícios\"", date: "dd/mm/aaaa - dd/mm/aaaa", status: "REJEITADO", colorClass: "event-rejected" },
-    { id: 4, title: "Reunião de Coordenação", event: "Reunião de Coordenação", date: "dd/mm/aaaa - dd/mm/aaaa", status: "PENDENTE", colorClass: "event-pending" },
-];
-
-// Componente Card de Evento
 const EventCard = ({ event, isExpanded, onToggle }) => (
     <div className={`event-card ${event.colorClass} ${isExpanded ? 'expanded' : ''}`}>
         <div className="event-header-row" onClick={onToggle}>
             <div>
-                <p className="event-title">{event.title}</p>
+                <p className="event-title">{event.title} <span className="status-tag">({event.status})</span></p>
                 <p className="event-date">Data: {event.date}</p>
             </div>
             <div className="event-arrow-container">
@@ -38,11 +27,8 @@ const EventCard = ({ event, isExpanded, onToggle }) => (
         
         {isExpanded && (
             <div className="event-details">
-                <h4 className="details-title">Detalhes de Material:</h4>
-                <ul className="material-list">
-                    <li>Tenda Desmontável: Solicitado 4, Aprovado 4.</li>
-                    <li>Gerador Portátil (5KVA): Solicitado 1, Aprovado 0.</li>
-                </ul>
+                <h4 className="details-title">Requisições do Evento:</h4>
+                <p className="material-list">Sem requisições.</p>
             </div>
         )}
     </div>
@@ -50,9 +36,53 @@ const EventCard = ({ event, isExpanded, onToggle }) => (
 
 
 const Perfil = ({ onLogout }) => {
+    const [userData, setUserData] = useState({
+        nome: 'A carregar...',
+        email: '',
+        projetoAtual: 'Sem requisição', 
+        perfil: ''
+    });
+    const [eventsList, setEventsList] = useState([]);
     const [activeTab, setActiveTab] = useState('eventos'); 
     const [expandedCardId, setExpandedCardId] = useState(null); 
     const navigate = useNavigate();
+
+    const fetchUserData = async () => {
+        const userId = 1; 
+
+        try {
+            const response = await fetch(`http://localhost:3001/api/eventos/perfil/${userId}`);
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                setUserData({
+                    nome: data.nome,
+                    email: data.email,
+                    projetoAtual: data.projetoAtual || 'Sem requisição', 
+                    perfil: data.perfil
+                });
+                
+                const transformedEvents = data.eventos.map(event => ({
+                    id: event.id_evento,
+                    title: event.nome_evento,
+                    date: `${formatDate(event.data_inicio)} a ${formatDate(event.data_fim)}` ,
+                    status: event.estado_nome,
+                    colorClass: `event-${event.estado_nome.toLowerCase()}` 
+                }));
+                setEventsList(transformedEvents);
+
+            } else {
+                setUserData(prev => ({ ...prev, nome: 'Erro ao carregar dados' }));
+            }
+        } catch (error) {
+            setUserData(prev => ({ ...prev, nome: 'Erro de conexão' }));
+        }
+    };
+
+    useEffect(() => {
+        fetchUserData();
+    }, []); 
 
     const toggleCard = (id) => {
         setExpandedCardId(expandedCardId === id ? null : id);
@@ -63,7 +93,12 @@ const Perfil = ({ onLogout }) => {
         setExpandedCardId(null); 
     };
     
-    // LOGOUT FUNCIONAL
+    const handleProfileIconClick = () => {
+        setActiveTab('eventos');
+        setExpandedCardId(null);
+        navigate('/perfil'); 
+    };
+
     const handleLogout = () => {
         if (onLogout) {
             onLogout();
@@ -71,12 +106,11 @@ const Perfil = ({ onLogout }) => {
         navigate('/'); 
     };
 
-    const displayItems = activeTab === 'eventos' ? mockEvents : mockRequisitions;
+    const displayItems = activeTab === 'eventos' ? eventsList : []; 
 
     return (
         <div className="perfil-page-app">
             
-            {/* --- CABEÇALHO --- */}
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <div className="logo-esp">
@@ -85,14 +119,13 @@ const Perfil = ({ onLogout }) => {
                     
                     <nav className="header-nav-esp">
                         <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
-                        {/* Página Inicial ativa, mas sem fundo azul (apenas a borda) */}
-                        <Link to="/perfil" className="nav-item-esp active-tab-indicator">PÁGINA INICIAL</Link> 
+                        <Link to="/perfil" className="nav-item-esp active-tab-indicator">PÁGINA INICIAL</Link>
                         <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
                     </nav>
 
                     <div className="header-icons-esp">
                         <ShoppingCart size={24} className="icon-esp" />
-                        <User size={24} className="icon-esp" /> 
+                        <User size={24} className="icon-esp" onClick={handleProfileIconClick} /> 
                         <button onClick={handleLogout} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>
@@ -100,15 +133,13 @@ const Perfil = ({ onLogout }) => {
                 </div>
             </header>
 
-            {/* --- CONTEÚDO PRINCIPAL --- */}
             <main className="main-content-esp">
                 
-                {/* BLOCO SUPERIOR DO UTILIZADOR */}
                 <div className="user-panel-esp">
                     <div className="user-avatar-esp"></div>
                     <div>
-                        <h2 className="user-title-esp">Olá, {mockUserData.nome}.</h2>
-                        <p className="user-email-esp">{mockUserData.email}</p>
+                        <h2 className="user-title-esp">Olá, {userData.nome}.</h2>
+                        <p className="user-email-esp">{userData.email}</p>
                         <button className="edit-button-esp">EDITAR DADOS PESSOAIS</button>
                     </div>
                 </div>
@@ -124,7 +155,6 @@ const Perfil = ({ onLogout }) => {
                     >REQUISIÇÕES</button>
                 </div>
 
-                {/* FILTROS DE ESTADO */}
                 <div className="filters-row-esp">
                     <button className="status-button-esp status-all">TODOS</button>
                     <button className="status-button-esp status-approved">APROVADO</button>
@@ -133,7 +163,6 @@ const Perfil = ({ onLogout }) => {
                     <button className="status-button-esp status-rejected">REJEITADO</button>
                 </div>
 
-                {/* LISTA DE EVENTOS/REQUISIÇÕES */}
                 <div className="list-items-container-esp">
                     {displayItems.map(item => (
                         <EventCard
@@ -143,18 +172,20 @@ const Perfil = ({ onLogout }) => {
                             onToggle={() => toggleCard(item.id)}
                         />
                     ))}
+                    {eventsList.length === 0 && activeTab === 'eventos' && <p>Nenhum evento encontrado.</p>}
                 </div>
 
             </main>
 
-            {/* --- RODAPÉ --- */}
             <footer className="fixed-footer-esp">
                 <div className="footer-content-esp centered-content">
                     <div className="footer-items-wrapper"> 
                         <span className="footer-lang-esp">PT | EN</span>
                         <button className="explore-button-esp">EXPLORAR MATERIAL</button>
                         <span className="footer-project-esp">
-                            ATUALMENTE A TRABALHAR EM: {mockUserData.projetoAtual}
+                            {userData.projetoAtual === 'Sem requisição' 
+                                ? 'Sem requisição ativa' 
+                                : `ATUALMENTE A TRABALHAR EM: ${userData.projetoAtual}`}
                         </span>
                     </div>
                 </div>
