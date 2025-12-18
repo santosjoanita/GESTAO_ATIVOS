@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft } from 'lucide-react'; 
 import { Link, useNavigate } from 'react-router-dom'; 
@@ -33,6 +34,7 @@ const EventCard = ({ event, isExpanded, onToggle }) => (
         )}
     </div>
 );
+// --- (Fim das Funções Auxiliares) ---
 
 
 const Perfil = ({ onLogout }) => {
@@ -94,8 +96,6 @@ const Perfil = ({ onLogout }) => {
     };
     
     const handleProfileIconClick = () => {
-        setActiveTab('eventos');
-        setExpandedCardId(null);
         navigate('/perfil'); 
     };
 
@@ -119,13 +119,15 @@ const Perfil = ({ onLogout }) => {
                     
                     <nav className="header-nav-esp">
                         <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
-                        <Link to="/perfil" className="nav-item-esp active-tab-indicator">PÁGINA INICIAL</Link>
+                        <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link> 
                         <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
                     </nav>
 
                     <div className="header-icons-esp">
                         <ShoppingCart size={24} className="icon-esp" />
-                        <User size={24} className="icon-esp" onClick={handleProfileIconClick} /> 
+                        <Link to="/perfil" className="nav-icon active-icon-indicator"> 
+                             <User size={24} className="icon-esp" onClick={handleProfileIconClick} /> 
+                    </Link>
                         <button onClick={handleLogout} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>

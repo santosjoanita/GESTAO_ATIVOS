@@ -1,11 +1,9 @@
-
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HomeLayout from '../HomeLayout'; 
 import AuthModal from '../Autenticação/AuthModal.jsx'; 
 
-const Login = () => {
+const Login = ({ onLoginSuccess }) => {
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -36,9 +34,17 @@ const Login = () => {
             const data = await response.json();
 
             if (response.ok) {
+         
+                if (onLoginSuccess) {
+                    onLoginSuccess(data.user);
+                }
                 
                 setShowAuthModal(false); 
-                navigate('/perfil'); 
+
+                
+                setTimeout(() => {
+                    navigate('/home');
+                }, 50); 
                 
             } else {
                 
@@ -54,6 +60,7 @@ const Login = () => {
 
     return (
         <>
+            {/* O HomeLayout é o componente da Landing Page */}
             <HomeLayout onLoginButtonClick={handleAccessClick} />
             
             {showAuthModal && (
