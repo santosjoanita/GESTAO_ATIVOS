@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShoppingCart, User, CornerDownLeft } from 'lucide-react'; 
+import MapPicker from './MapPicker'; 
 import './EventoForm.css'; 
 import '../Pages/Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
-import MapaImage from '../assets/img/mapa.jpg'; 
 
 const EventoForm = ({ onLogout }) => {
     const navigate = useNavigate();
+    
+    // Estado para campos de texto
     const [formData, setFormData] = useState({
         nome: '',
         descricao: '',
@@ -18,6 +20,18 @@ const EventoForm = ({ onLogout }) => {
         hora_fim: '',
     });
 
+    // Estado para os ficheiros (Anexos)
+    const [selectedFiles, setSelectedFiles] = useState([]);
+
+    // Função para receber a morada do mapa e atualizar o campo de localização
+    const handleLocationSelect = (locationData) => {
+        setFormData(prev => ({
+            ...prev,
+            localizacao: locationData.address
+        }));
+    };
+
+    // Captura mudanças nos inputs de texto
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -26,54 +40,57 @@ const EventoForm = ({ onLogout }) => {
         }));
     };
 
+    // Captura os ficheiros selecionados
+    const handleFileChange = (e) => {
+        setSelectedFiles(e.target.files);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        // Usamos FormData para permitir o envio de ficheiros (multipart/form-data)
+        const dataToSend = new FormData();
+        
+        // Adicionar campos de texto ao FormData
+        Object.keys(formData).forEach(key => {
+            dataToSend.append(key, formData[key]);
+        });
+
+        // Adicionar ficheiros ao FormData
+        for (let i = 0; i < selectedFiles.length; i++) {
+            dataToSend.append('anexos', selectedFiles[i]);
+        }
+
         try {
             const response = await fetch('http://localhost:3001/api/eventos', { 
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    nome: formData.nome,
-                    descricao: formData.descricao,
-                    localizacao: formData.localizacao,
-                    data_inicio: formData.data_inicio,
-                    hora_inicio: formData.hora_inicio,
-                    data_fim: formData.data_fim,
-                    hora_fim: formData.hora_fim,
-                }),
+                // NOTA: Não definir Content-Type, o browser faz isso automaticamente para FormData
+                body: dataToSend, 
             });
 
             if (response.ok) {
-                const data = await response.json();
-                alert(`Sucesso! ${data.message} ID: ${data.eventId}`);
-                navigate('/perfil');
+                alert(`Sucesso! Evento criado.`);
+                navigate('/home');
             } else {
                 const errorData = await response.json();
                 alert(`Falha ao criar evento: ${errorData.message}`);
             }
             
         } catch (error) {
-            alert('Erro de conexão ao servidor. Verifique se o auth-service está ativo.');
+            console.error("Erro ao submeter:", error);
+            alert('Erro de conexão ao servidor.');
         }
     };
 
-    const handleCancel = () => {
-        navigate('/perfil');
-    };
+    const handleCancel = () => navigate('/home');
     
     const handleLogout = () => {
-        if (onLogout) {
-            onLogout();
-        }
+        if (onLogout) onLogout();
         navigate('/'); 
     };
 
     return (
         <div className="form-page-layout">
-            
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <div className="logo-esp">
@@ -82,13 +99,13 @@ const EventoForm = ({ onLogout }) => {
                     
                     <nav className="header-nav-esp">
                         <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
-                        <Link to="/perfil" className="nav-item-esp">PÁGINA INICIAL</Link>
+                        <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
                         <Link to="/novo-evento" className="nav-item-esp active-tab-indicator">NOVO EVENTO</Link> 
                     </nav>
 
                     <div className="header-icons-esp">
                         <ShoppingCart size={24} className="icon-esp" />
-                        <User size={24} className="icon-esp" /> 
+                        <Link to="/perfil"> <User size={24} className="icon-esp" /> </Link>
                         <button onClick={handleLogout} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>
@@ -98,36 +115,57 @@ const EventoForm = ({ onLogout }) => {
 
             <main className="main-form-content">
                 <div className="form-modal-container"> 
-                    
                     <form onSubmit={handleSubmit} className="event-form-grid">
-                        
                         <h2 className="form-title">NOVO PEDIDO DE EVENTO</h2>
                         
                         <div className="input-map-container-layout">
-                            
                             <div className="input-column-layout">
-                                <div className="form-group full-width"><label>Nome do evento *</label><input type="text" name="nome" value={formData.nome} onChange={handleChange} required /></div>
-                                <div className="form-group full-width"><label>Descrição do Evento *</label><textarea name="descricao" value={formData.descricao} onChange={handleChange} required></textarea></div>
-                                <div className="form-group full-width"><label>Localização *</label><input type="text" name="localizacao" value={formData.localizacao} onChange={handleChange} required /></div>
+                                <div className="form-group full-width">
+                                    <label>Nome do evento *</label>
+                                    <input type="text" name="nome" value={formData.nome} onChange={handleChange} required />
+                                </div>
+                                <div className="form-group full-width">
+                                    <label>Descrição do Evento *</label>
+                                    <textarea name="descricao" value={formData.descricao} onChange={handleChange} required></textarea>
+                                </div>
+                                <div className="form-group full-width">
+                                    <label>Localização (Clique no mapa) *</label>
+                                    <input 
+                                        type="text" 
+                                        name="localizacao" 
+                                        value={formData.localizacao} 
+                                        onChange={handleChange} 
+                                        placeholder="Selecione no mapa ao lado..."
+                                        required 
+                                    />
+                                </div>
                             </div>
 
                             <div className="map-column-layout">
                                 <div className="map-image-placeholder-layout">
-                                    <img src={MapaImage} alt="Mapa de Esposende" className="map-image-content"/>
+                                    {/* COMPONENTE DO MAPA LEAFLET */}
+                                    <MapPicker onLocationSelect={handleLocationSelect} />
                                 </div>
                             </div>
                         </div>
 
                         <div className="date-time-row-layout">
                             <div className="form-group date-time-group"><label>Data de início *</label><input type="date" name="data_inicio" value={formData.data_inicio} onChange={handleChange} required /></div>
-                            <div className="form-group date-time-group"><label>Hora de início *</label><input type="time" name="hora_inicio" value={formData.hora_inicio} onChange={handleChange} /></div>
-                            <div className="form-group date-time-group"><label>Data de fim *</label><input type="date" name="data_fim" value={formData.data_fim} onChange={handleChange} /></div>
-                            <div className="form-group date-time-group"><label>Hora de fim *</label><input type="time" name="hora_fim" value={formData.hora_fim} onChange={handleChange} /></div>
+                            <div className="form-group date-time-group"><label>Hora de início</label><input type="time" name="hora_inicio" value={formData.hora_inicio} onChange={handleChange} /></div>
+                            <div className="form-group date-time-group"><label>Data de fim</label><input type="date" name="data_fim" value={formData.data_fim} onChange={handleChange} /></div>
+                            <div className="form-group date-time-group"><label>Hora de fim</label><input type="time" name="hora_fim" value={formData.hora_fim} onChange={handleChange} /></div>
                         </div>
 
                         <div className="form-group full-width attachments-row-layout">
-                            <label>Anexos/Documentos de Apoio</label>
-                            <input type="file" name="anexos" disabled title="Implementação de ficheiros será feita depois." />
+                            <label>Anexos / Documentos de Apoio (Plantas, Licenças)</label>
+                            {/* INPUT DE FICHEIROS ATIVADO */}
+                            <input 
+                                type="file" 
+                                name="anexos" 
+                                multiple 
+                                onChange={handleFileChange} 
+                                className="file-input-field"
+                            />
                         </div>
 
                         <div className="form-actions-layout">
@@ -137,18 +175,6 @@ const EventoForm = ({ onLogout }) => {
                     </form>
                 </div>
             </main>
-
-            <footer className="fixed-footer-esp">
-                <div className="footer-content-esp centered-content">
-                    <div className="footer-items-wrapper"> 
-                        <span className="footer-lang-esp">PT | EN</span>
-                        <button className="explore-button-esp">EXPLORAR MATERIAL</button>
-                        <span className="footer-project-esp">
-                            Sem requisição ativa
-                        </span>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 };

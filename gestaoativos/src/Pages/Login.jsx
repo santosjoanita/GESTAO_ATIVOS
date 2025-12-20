@@ -21,43 +21,31 @@ const Login = ({ onLoginSuccess }) => {
     };
 
     const handleLoginSubmit = async (username, password) => {
-        setIsLoading(true);
-        setError('');
+    setIsLoading(true);
+    setError('');
 
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-         
-                if (onLoginSuccess) {
-                    onLoginSuccess(data.user);
-                }
-                
-                setShowAuthModal(false); 
-
-                
-                setTimeout(() => {
-                    navigate('/home');
-                }, 50); 
-                
-            } else {
-                
-                setError(data.message || 'Credenciais inválidas. Tente novamente.');
-            }
-        } catch (err) {
-            
-            setError('Falha ao comunicar com o servidor de autenticação.');
-        } finally {
-            setIsLoading(false);
-        }
+    console.log("Ignorando validação do servidor para testes...");
+    
+    const mockUser = { 
+        id: 1, 
+        nome: 'Bruno Ribeiro', 
+        id_perfil: 1, 
+        email: 'bruno.ribeiro@cm-esposende.pt' 
     };
 
+    localStorage.setItem('user', JSON.stringify(mockUser));
+
+    if (onLoginSuccess) {
+        onLoginSuccess(mockUser);
+    }
+
+    setShowAuthModal(false);
+    setTimeout(() => {
+        navigate('/home');
+    }, 50);
+
+    setIsLoading(false);
+};
     return (
         <>
             {/* O HomeLayout é o componente da Landing Page */}

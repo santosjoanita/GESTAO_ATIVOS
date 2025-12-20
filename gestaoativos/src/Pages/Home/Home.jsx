@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, CornerDownLeft, Bell, Calendar, Repeat, Search } from 'lucide-react';
 import './Home.css'; 
-import '../Perfil.css'; 
 import logo from '../../assets/img/esposende.png'; 
 
 const activityMap = [
