@@ -1,0 +1,95 @@
+.gestao-page-layout {
+    min-height: 100vh;
+    background-color: #f0f2f5;
+    display: flex;
+    flex-direction: column;
+}
+
+.gestao-main-content {
+    flex: 1;
+    padding: 100px 0; /* Espaço para header e footer */
+    display: flex;
+    justify-content: center;
+}
+
+.gestao-centered-wrapper {
+    width: 90%;
+    max-width: 1000px;
+}
+
+.gestao-section-title {
+    color: #1f3a52;
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+/* Estilo dos Cards */
+.gestao-item-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.gestao-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.item-main-text {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.item-sub-text {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin-top: 4px;
+}
+
+/* Botões de Ação */
+.gestao-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-action {
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: 0.2s;
+}
+
+.btn-check { background-color: #27ae60; color: white; }
+.btn-check:hover { background-color: #219150; }
+
+.btn-cross { background-color: #e74c3c; color: white; }
+.btn-cross:hover { background-color: #c0392b; }
+
+/* Ajustes no Header/Footer do Gestor */
+.logout-btn-clean {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: white;
+}
+
+.gestao-empty-state {
+    text-align: center;
+    padding: 50px;
+    color: #95a5a6;
+    font-style: italic;
+}

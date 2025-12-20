@@ -1,63 +1,62 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
-const bcrypt = require('bcrypt');
-const cors = require('cors'); 
+const cors = require('cors');
+const bcrypt = require('bcrypt'); 
 const app = express();
 const port = 3001;
-
-const eventosRoutes = require('./routes/eventosRoutes'); 
-const materialRoutes = require('./routes/materialRoutes'); 
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'mysql-db',
     user: process.env.DB_USER || 'user_gestao',
     password: process.env.DB_PASS || 'user_password_segura',
-    database: process.env.DB_NAME || 'gestao_ativos_db',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    database: process.env.DB_NAME || 'gestao_ativos_db'
 });
 
 app.use(express.json());
-app.use(cors({
-    origin: 'http://localhost:3000', 
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-    const searchEmail = `${username}@cm-esposende.pt`; 
+    const email = username.includes('@') ? username : `${username}@cm-esposende.pt`; 
+
     try {
-        const query = `SELECT id_user, nome, email, password_hash, id_perfil FROM Utilizador WHERE email = ?;`;
-        const [rows] = await pool.execute(query, [searchEmail]); 
-        const user = rows[0];
-        if (!user) return res.status(401).send('Incorreto');
-        const isMatch = await bcrypt.compare(password, user.password_hash);
-        if (!isMatch) return res.status(401).send('Incorreto');
-        res.status(200).json({ user: { id: user.id_user, nome: user.nome, id_perfil: user.id_perfil } });
-    } catch (e) { res.status(500).send(e); }
+        const [rows] = await pool.execute(
+            `SELECT id_user, nome, email, password_hash, id_perfil FROM Utilizador WHERE email = ?`, 
+            [email]
+        );
+
+        if (rows.length > 0) {
+            const user = rows[0];
+            let isMatch = false;
+
+            // Se a password na BD começar por $2, é um hash (caso do Bruno)
+            if (user.password_hash.startsWith('$2')) {
+                isMatch = await bcrypt.compare(password, user.password_hash);
+            } else {
+                // Caso contrário é texto simples (caso do José António)
+                isMatch = (password === user.password_hash);
+            }
+
+            if (isMatch) {
+                const { password_hash, ...userSafe } = user;
+                console.log(`Sucesso: ${user.nome} entrou como Perfil ${user.id_perfil}`);
+                return res.json(userSafe);
+            }
+        }
+        res.status(401).json({ message: "Credenciais inválidas" });
+    } catch (error) {
+        res.status(500).send("Erro no servidor");
+    }
 });
 
-app.post('/api/requisicoes', async (req, res) => {
-    const { id_evento, id_user, data_reserva, notas } = req.body;
-    try {
-        const query = `INSERT INTO Requisicao (id_evento, id_user, data_requisicao, estado, notas) VALUES (?, ?, ?, 'Pendente', ?)`;
-        const [result] = await pool.execute(query, [id_evento, id_user, data_reserva, notas]);
-        res.status(201).json({ id_requisicao: result.insertId });
-    } catch (e) { res.status(500).send(e); }
+// Rotas de Gestão (Requisições e Eventos)
+app.get('/api/gestao/requisicoes/todas', async (req, res) => {
+    const [rows] = await pool.execute(`
+        SELECT r.*, e.nome_evento, u.nome as requerente 
+        FROM Requisicao r 
+        JOIN Evento e ON r.id_evento = e.id_evento 
+        JOIN Utilizador u ON r.id_user = u.id_user`);
+    res.json(rows);
 });
 
-app.get('/api/requisicoes/user/:id_user', async (req, res) => {
-    try {
-        const query = `SELECT r.*, e.nome as nome_evento FROM Requisicao r JOIN Evento e ON r.id_evento = e.id_evento WHERE r.id_user = ?`;
-        const [rows] = await pool.execute(query, [req.params.id_user]);
-        res.json(rows);
-    } catch (e) { res.status(500).send(e); }
-});
-
-app.use('/api/eventos', eventosRoutes); 
-app.use('/api/materiais', materialRoutes);
-app.use('/uploads', express.static('uploads'));
-
-app.listen(port, () => console.log(`3001`));
+app.listen(port, () => console.log(`Servidor na porta ${port}`));

@@ -8,52 +8,50 @@ const Login = ({ onLoginSuccess }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate(); 
-    
-    const API_URL = 'http://localhost:3001/api/login';
-
-    const handleAccessClick = () => {
-        setShowAuthModal(true); 
-        setError('');
-    };
-
-    const handleCloseAuthModal = () => {
-        setShowAuthModal(false);
-    };
 
     const handleLoginSubmit = async (username, password) => {
-    setIsLoading(true);
-    setError('');
+        setIsLoading(true);
+        setError('');
 
-    console.log("Ignorando validação do servidor para testes...");
-    
-    const mockUser = { 
-        id: 1, 
-        nome: 'Bruno Ribeiro', 
-        id_perfil: 1, 
-        email: 'bruno.ribeiro@cm-esposende.pt' 
+        try {
+            const response = await fetch('http://localhost:3001/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                const user = await response.json();
+                
+                // Limpa sessões antigas e guarda a nova
+                localStorage.clear();
+                localStorage.setItem('user', JSON.stringify(user));
+                
+                if (onLoginSuccess) onLoginSuccess(user);
+                setShowAuthModal(false);
+
+                // Redirecionamento dinâmico
+                if (user.id_perfil === 2) {
+                    navigate('/gestao'); // José António
+                } else {
+                    navigate('/home');   // Bruno Ribeiro
+                }
+            } else {
+                setError('Utilizador ou password incorretos.');
+            }
+        } catch (err) {
+            setError('Erro ao ligar ao servidor.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    localStorage.setItem('user', JSON.stringify(mockUser));
-
-    if (onLoginSuccess) {
-        onLoginSuccess(mockUser);
-    }
-
-    setShowAuthModal(false);
-    setTimeout(() => {
-        navigate('/home');
-    }, 50);
-
-    setIsLoading(false);
-};
     return (
         <>
-            {/* O HomeLayout é o componente da Landing Page */}
-            <HomeLayout onLoginButtonClick={handleAccessClick} />
-            
+            <HomeLayout onLoginButtonClick={() => setShowAuthModal(true)} />
             {showAuthModal && (
                 <AuthModal 
-                    onClose={handleCloseAuthModal}
+                    onClose={() => setShowAuthModal(false)}
                     onLoginSubmit={handleLoginSubmit} 
                     isLoading={isLoading}
                     error={error}

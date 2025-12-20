@@ -5,6 +5,7 @@ import Perfil from '../Pages/Perfil';
 import Home from '../Pages/Home/Home';
 import EventoForm from '../forms/EventoForm'; 
 import Requisicao from '../forms/requisicao/Requisicao';
+import GestorDashboard from '../Pages/Gestor/GestorDashboard';
 
 const App = () => {
     const [currentUser, setCurrentUser] = useState(() => {
@@ -52,6 +53,10 @@ const App = () => {
                 <Route 
                     path="/nova-requisicao" 
                     element={<ProtectedRoute element={<Requisicao onLogout={handleLogout} />} />} 
+                />
+                <Route 
+                path="/gestao" 
+                element={<ProtectedRoute element={<GestorDashboard onLogout={handleLogout} />} />} 
                 />
             </Routes>
         </BrowserRouter>
