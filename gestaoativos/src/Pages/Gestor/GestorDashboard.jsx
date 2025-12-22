@@ -1,117 +1,75 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, ShoppingCart, User, LogOut, Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import './GestorDashboard.css'; 
-import logo from '../../assets/img/esposende.png'; 
+import { CheckCircle, XCircle, LogOut, ShoppingCart, User, Search } from 'lucide-react';
+import './GestorDashboard.css';
+import logo from '../../assets/img/esposende.png';
 
 const GestorDashboard = ({ onLogout }) => {
-    const [requisicoes, setRequisicoes] = useState([]);
-    const [eventos, setEventos] = useState([]);
+    const [items, setItems] = useState([]);
     const [tab, setTab] = useState('requisicoes');
-    const navigate = useNavigate();
 
-    const fetchData = async () => {
-        try {
-            const resReq = await fetch('http://localhost:3001/api/gestao/requisicoes/todas');
-            setRequisicoes(await resReq.json());
-            const resEv = await fetch('http://localhost:3001/api/gestao/eventos/todos'); 
-            setEventos(await resEv.json());
-        } catch (err) { console.error("Erro ao carregar dados:", err); }
+    const loadData = async () => {
+        const url = tab === 'requisicoes' ? '/api/gestao/requisicoes/todas' : '/api/gestao/eventos/todos';
+        const res = await fetch(`http://localhost:3001${url}`);
+        const data = await res.json();
+        setItems(Array.isArray(data) ? data : []);
     };
 
-    useEffect(() => { fetchData(); }, []);
+    useEffect(() => { loadData(); }, [tab]);
 
-    const handleDecisaoReq = async (id, novoEstado) => {
-        const res = await fetch(`http://localhost:3001/api/gestao/requisicoes/${id}/estado`, {
+    const handleAcao = async (id, body) => {
+        await fetch(`http://localhost:3001/api/gestao/${tab}/${id}/estado`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ estado: novoEstado })
+            body: JSON.stringify(body)
         });
-        if (res.ok) fetchData();
-    };
-
-    const handleDecisaoEvento = async (id, idEstado) => {
-        const res = await fetch(`http://localhost:3001/api/gestao/eventos/${id}/estado`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_estado: idEstado })
-        });
-        if (res.ok) fetchData();
+        loadData();
     };
 
     return (
-        <div className="gestao-page-layout">
-            {/* HEADER PADRÃO ESPOSENDE */}
+        <div className="gestao-layout">
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
-                    <div className="logo-esp"><img src={logo} alt="Logo" className="logo-img" /></div>
+                    <img src={logo} alt="Logo" className="logo-img" />
                     <nav className="header-nav-esp">
-                        <button onClick={() => setTab('requisicoes')} className={`nav-item-esp ${tab === 'requisicoes' ? 'active-tab-indicator' : ''}`}>REQUISIÇÕES</button>
-                        <button onClick={() => setTab('eventos')} className={`nav-item-esp ${tab === 'eventos' ? 'active-tab-indicator' : ''}`}>EVENTOS</button>
-                        <button onClick={() => setTab('stock')} className={`nav-item-esp ${tab === 'stock' ? 'active-tab-indicator' : ''}`}>STOCK</button>
+                        <button onClick={() => setTab('requisicoes')} className={tab === 'requisicoes' ? 'active' : ''}>REQUISIÇÕES</button>
+                        <button onClick={() => setTab('eventos')} className={tab === 'eventos' ? 'active' : ''}>EVENTOS</button>
                     </nav>
                     <div className="header-icons-esp">
-                        <ShoppingCart size={24} className="icon-esp" />
-                        <User size={24} className="icon-esp" />
-                        <button onClick={onLogout} className="logout-btn-clean">
-                            <LogOut size={24} className="icon-esp" />
-                        </button>
+                        <ShoppingCart size={22} color="white" />
+                        <User size={22} color="white" />
+                        <LogOut size={22} color="white" onClick={onLogout} style={{cursor:'pointer'}} />
                     </div>
                 </div>
             </header>
 
-            <main className="gestao-main-content">
-                <div className="gestao-centered-wrapper">
-                    <h2 className="gestao-section-title">PAINEL DE GESTÃO - {tab.toUpperCase()}</h2>
-                    
-                    <div className="gestao-list-container">
-                        {tab === 'requisicoes' && requisicoes.map(r => (
-                            <div key={r.id_requisicao} className="gestao-item-card">
-                                <div className="gestao-info">
-                                    <span className="item-main-text">{r.nome_evento}</span>
-                                    <span className="item-sub-text">Requerente: {r.requerente} | <strong>{r.estado}</strong></span>
+            <main className="gestao-main centered-content">
+                <h2 className="gestao-title">Gestão de Ativos - {tab.toUpperCase()}</h2>
+                <div className="gestao-grid">
+                    {items.map(item => {
+                        const status = (item.estado || item.estado_nome || 'Pendente').toLowerCase();
+                        return (
+                            <div key={item.id_requisicao || item.id_evento} className="gestao-card">
+                                <div className="card-info">
+                                    <strong>{item.nome_evento}</strong>
+                                    <p>{item.requerente ? `Por: ${item.requerente}` : `Status: ${status}`}</p>
                                 </div>
-                                {r.estado === 'Pendente' && (
-                                    <div className="gestao-actions">
-                                        <button onClick={() => handleDecisaoReq(r.id_requisicao, 'Aprovada')} className="btn-action btn-check"><CheckCircle size={20}/></button>
-                                        <button onClick={() => handleDecisaoReq(r.id_requisicao, 'Rejeitada')} className="btn-action btn-cross"><XCircle size={20}/></button>
+                                {status === 'pendente' && (
+                                    <div className="card-actions">
+                                        <button onClick={() => handleAcao(item.id_requisicao || item.id_evento, tab === 'requisicoes' ? {estado:'Aprovada'} : {id_estado: 2})} className="btn-approve">APROVAR</button>
+                                        <button onClick={() => handleAcao(item.id_requisicao || item.id_evento, tab === 'requisicoes' ? {estado:'Rejeitada'} : {id_estado: 3})} className="btn-reject">REJEITAR</button>
                                     </div>
                                 )}
                             </div>
-                        ))}
-
-                        {tab === 'eventos' && eventos.map(e => (
-                            <div key={e.id_evento} className="gestao-item-card">
-                                <div className="gestao-info">
-                                    <span className="item-main-text">{e.nome_evento}</span>
-                                    <span className="item-sub-text">Estado: {e.estado_nome}</span>
-                                </div>
-                                {e.estado_nome === 'Pendente' && (
-                                    <div className="gestao-actions">
-                                        <button onClick={() => handleDecisaoEvento(e.id_evento, 2)} className="btn-action btn-check">APROVAR</button>
-                                        <button onClick={() => handleDecisaoEvento(e.id_evento, 3)} className="btn-action btn-cross">REJEITAR</button>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-
-                        {tab === 'stock' && (
-                            <div className="gestao-empty-state">Módulo de Stock em desenvolvimento...</div>
-                        )}
-                    </div>
+                        );
+                    })}
                 </div>
             </main>
 
-            {/* FOOTER PADRÃO ESPOSENDE */}
             <footer className="fixed-footer-esp">
                 <div className="footer-content-esp centered-content">
-                    <div className="footer-items-wrapper"> 
-                        <span className="footer-lang-esp">PT | EN</span>
-                        <button className="explore-button-esp" onClick={() => navigate('/home')}>
-                            <Search size={16} /> VOLTAR À HOME
-                        </button>
-                        <span className="footer-project-esp">PAINEL ADMINISTRATIVO</span>
-                    </div>
+                    <span style={{color:'white'}}>PT | EN</span>
+                    <button className="explore-btn"><Search size={16} /> VOLTAR À HOME</button>
+                    <span style={{color:'white'}}>PAINEL ADMINISTRATIVO</span>
                 </div>
             </footer>
         </div>

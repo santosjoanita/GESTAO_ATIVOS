@@ -19,7 +19,7 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) 
                 <p className="event-date">Data: {event.date}</p>
             </div>
             <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
-                {showTrabalhar && (
+                {showTrabalhar && event.status === 'Aprovada' && (
                     <button className="edit-button-esp" onClick={() => onTrabalhar(event.title)}>
                         TRABALHAR
                     </button>
@@ -39,76 +39,60 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) 
 );
 
 const Perfil = ({ onLogout }) => {
-    const [userData, setUserData] = useState({
-        nome: 'A carregar...',
-        email: '',
-        projetoAtual: 'Sem requisição', 
-        perfil: ''
-    });
+    const [userData, setUserData] = useState({ nome: '...', email: '', projetoAtual: 'Sem requisição' });
     const [eventsList, setEventsList] = useState([]);
     const [requisicoesList, setRequisicoesList] = useState([]);
-    const [activeTab, setActiveTab] = useState('eventos'); 
+    const [activeTab, setActiveTab] = useState('todos'); 
     const [expandedCardId, setExpandedCardId] = useState(null); 
     const navigate = useNavigate();
 
     const fetchPerfilData = async () => {
-    const user = JSON.parse(localStorage.getItem('user')) || { id: 1 };
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) return;
+
     try {
-        // 1. Vai à BD buscar os dados do utilizador e eventos
-        const resPerfil = await fetch(`http://localhost:3001/api/eventos/perfil/${user.id}`);
-        if (resPerfil.ok) {
-            const data = await resPerfil.json();
-            setUserData({
-                nome: data.nome,
-                email: data.email,
-                projetoAtual: localStorage.getItem('projeto_ativo') || 'Sem requisição',
-                perfil: data.perfil
-            });
-            // Transforma os eventos da BD para os cards
-            setEventsList(data.eventos.map(ev => ({
-                id: ev.id_evento,
-                title: ev.nome_evento,
-                date: `${formatDate(ev.data_inicio)} a ${formatDate(ev.data_fim)}`,
-                status: ev.estado_nome,
-                colorClass: `event-${ev.estado_nome.toLowerCase()}`
-            })));
-        }
+        const resReq = await fetch(`http://localhost:3001/api/requisicoes/user/${user.id_user}`);
+        const dataReq = await resReq.json();
+        
+        const resEv = await fetch(`http://localhost:3001/api/eventos/user/${user.id_user}`);
+        const dataEv = await resEv.json();
 
-        // 2. Vai à BD buscar as requisições criadas (as que aparecem no card com botão Trabalhar)
-        const resReq = await fetch(`http://localhost:3001/api/requisicoes/user/${user.id}`);
-        if (resReq.ok) {
-            const dataReq = await resReq.json();
-            setRequisicoesList(dataReq.map(r => ({
-                id: r.id_requisicao,
-                title: r.nome_evento,
-                date: formatDate(r.data_requisicao),
-                status: r.estado,
-                colorClass: `event-${r.estado.toLowerCase()}`
-            })));
-        }
-    } catch (error) {
-        console.error("Erro ao carregar dados da Base de Dados:", error);
-    }
+        const getStatusColor = (status) => {
+            const s = status.toLowerCase();
+            if (s.includes('aprovad')) return 'event-aprovado';
+            if (s.includes('rejeitad')) return 'event-rejeitado'; 
+            return 'event-pendente';
+        };
+
+        setRequisicoesList(Array.isArray(dataReq) ? dataReq.map(r => ({
+            id: r.id_requisicao,
+            title: r.nome_evento,
+            date: formatDate(r.data_requisicao),
+            status: r.estado,
+            colorClass: getStatusColor(r.estado) 
+        })) : []);
+
+        setEventsList(Array.isArray(dataEv) ? dataEv.map(e => ({
+            id: e.id_evento,
+            title: e.nome_evento,
+            date: formatDate(e.data_inicio),
+            status: e.estado_nome,
+            colorClass: getStatusColor(e.estado_nome) // Usa a função unificada
+        })) : []);
+
+    } catch (error) { console.error(error); }
 };
-
-    useEffect(() => {
-        fetchPerfilData();
-    }, []);
-
-    const handleTrabalhar = (nome) => {
-        setUserData(prev => ({ ...prev, projetoAtual: nome }));
-        localStorage.setItem('projeto_ativo', nome);
-        navigate('/explorar-material');
-    };
+    useEffect(() => { fetchPerfilData(); }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem('user');
-        localStorage.removeItem('projeto_ativo');
+        localStorage.clear();
         if (onLogout) onLogout();
         navigate('/');
     };
 
-    const displayItems = activeTab === 'eventos' ? eventsList : requisicoesList;
+    const displayItems = activeTab === 'eventos' ? eventsList : 
+                         activeTab === 'requisicoes' ? requisicoesList : 
+                         [...eventsList, ...requisicoesList];
 
     return (
         <div className="perfil-page-app">
@@ -139,20 +123,17 @@ const Perfil = ({ onLogout }) => {
                 </div>
 
                 <div className="tabs-container-esp">
+                    <button className={`tab-button-esp ${activeTab === 'todos' ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab('todos')}>TODOS</button>
                     <button className={`tab-button-esp ${activeTab === 'eventos' ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab('eventos')}>EVENTOS</button>
                     <button className={`tab-button-esp ${activeTab === 'requisicoes' ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab('requisicoes')}>REQUISIÇÕES</button>
                 </div>
 
                 <div className="list-items-container-esp">
                     {displayItems.map(item => (
-                        <EventCard
-                            key={item.id}
-                            event={item}
-                            isExpanded={expandedCardId === item.id}
+                        <EventCard key={`${item.id}-${item.title}`} event={item} isExpanded={expandedCardId === item.id} 
                             onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
-                            onTrabalhar={handleTrabalhar}
-                            showTrabalhar={activeTab === 'requisicoes'}
-                        />
+                            onTrabalhar={(name) => { setUserData({...userData, projetoAtual: name}); localStorage.setItem('projeto_ativo', name); navigate('/explorar-material'); }} 
+                            showTrabalhar={activeTab === 'requisicoes'} />
                     ))}
                 </div>
             </main>
@@ -162,9 +143,7 @@ const Perfil = ({ onLogout }) => {
                     <div className="footer-items-wrapper"> 
                         <span className="footer-lang-esp">PT | EN</span>
                         <button className="explore-button-esp" onClick={() => navigate('/explorar-material')}>EXPLORAR MATERIAL</button>
-                        <span className="footer-project-esp">
-                            {userData.projetoAtual === 'Sem requisição' ? 'SEM REQUISIÇÃO ATIVA' : `ATUALMENTE A TRABALHAR EM: ${userData.projetoAtual}`}
-                        </span>
+                        <span className="footer-project-esp">ATUALMENTE A TRABALHAR EM: {userData.projetoAtual}</span>
                     </div>
                 </div>
             </footer>

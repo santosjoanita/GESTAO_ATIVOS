@@ -20,7 +20,7 @@ const EventoForm = ({ onLogout }) => {
         hora_fim: '',
     });
 
-    // Estado para os ficheiros (Anexos)
+    // Estado para os ficheiros 
     const [selectedFiles, setSelectedFiles] = useState([]);
 
     // Função para receber a morada do mapa e atualizar o campo de localização
@@ -31,7 +31,6 @@ const EventoForm = ({ onLogout }) => {
         }));
     };
 
-    // Captura mudanças nos inputs de texto
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -40,48 +39,49 @@ const EventoForm = ({ onLogout }) => {
         }));
     };
 
-    // Captura os ficheiros selecionados
     const handleFileChange = (e) => {
         setSelectedFiles(e.target.files);
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        
-        // Usamos FormData para permitir o envio de ficheiros (multipart/form-data)
-        const dataToSend = new FormData();
-        
-        // Adicionar campos de texto ao FormData
-        Object.keys(formData).forEach(key => {
-            dataToSend.append(key, formData[key]);
-        });
+    e.preventDefault();
+    
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+        alert("Sessão expirada. Faça login novamente.");
+        return;
+    }
 
-        // Adicionar ficheiros ao FormData
-        for (let i = 0; i < selectedFiles.length; i++) {
-            dataToSend.append('anexos', selectedFiles[i]);
-        }
-
-        try {
-            const response = await fetch('http://localhost:3001/api/eventos', { 
-                method: 'POST',
-                // NOTA: Não definir Content-Type, o browser faz isso automaticamente para FormData
-                body: dataToSend, 
-            });
-
-            if (response.ok) {
-                alert(`Sucesso! Evento criado.`);
-                navigate('/home');
-            } else {
-                const errorData = await response.json();
-                alert(`Falha ao criar evento: ${errorData.message}`);
-            }
-            
-        } catch (error) {
-            console.error("Erro ao submeter:", error);
-            alert('Erro de conexão ao servidor.');
-        }
+    const dataToSend = {
+        nome_evento: formData.nome, 
+        descricao: formData.descricao,
+        localizacao: formData.localizacao,
+        data_inicio: formData.data_inicio,
+        data_fim: formData.data_fim || formData.data_inicio,
+        id_user: user.id_user 
     };
 
+    try {
+        const response = await fetch('http://localhost:3001/api/eventos', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json' // Agora enviamos JSON
+            },
+            body: JSON.stringify(dataToSend), 
+        });
+
+        if (response.ok) {
+            alert(`Sucesso! Evento criado.`);
+            navigate('/home');
+        } else {
+            const errorData = await response.json();
+            alert(`Falha: ${errorData.error || 'Erro desconhecido'}`);
+        }
+    } catch (error) {
+        console.error("Erro ao submeter:", error);
+        alert('Erro de conexão ao servidor.');
+    }
+};
     const handleCancel = () => navigate('/home');
     
     const handleLogout = () => {

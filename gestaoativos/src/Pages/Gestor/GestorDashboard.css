@@ -1,95 +1,93 @@
-.gestao-page-layout {
+/* Layout Geral */
+.gestao-layout {
     min-height: 100vh;
     background-color: #f0f2f5;
-    display: flex;
-    flex-direction: column;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.gestao-main-content {
-    flex: 1;
-    padding: 100px 0; /* Espaço para header e footer */
-    display: flex;
-    justify-content: center;
+.gestao-main {
+    padding-top: 100px;
+    padding-bottom: 60px;
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
-.gestao-centered-wrapper {
-    width: 90%;
-    max-width: 1000px;
-}
-
-.gestao-section-title {
+.gestao-title {
     color: #1f3a52;
-    font-size: 1.5rem;
-    margin-bottom: 25px;
+    font-size: 28px;
     font-weight: 800;
+    margin-bottom: 30px;
+    text-align: center;
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
-/* Estilo dos Cards */
-.gestao-item-card {
+/* Grid de Cards */
+.gestao-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    gap: 20px;
+}
+
+.gestao-card {
     background: white;
     border-radius: 15px;
-    padding: 20px;
-    margin-bottom: 15px;
+    padding: 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid #1f3a52;
+    transition: transform 0.2s;
 }
 
-.gestao-info {
-    display: flex;
-    flex-direction: column;
+.gestao-card:hover {
+    transform: translateY(-3px);
 }
 
-.item-main-text {
-    font-size: 1.1rem;
-    font-weight: bold;
+.card-info strong {
+    font-size: 20px;
     color: #2c3e50;
+    display: block;
+    margin-bottom: 5px;
 }
 
-.item-sub-text {
-    font-size: 0.9rem;
+.card-info p {
     color: #7f8c8d;
-    margin-top: 4px;
+    font-size: 15px;
 }
 
 /* Botões de Ação */
-.gestao-actions {
+.card-actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
 }
 
-.btn-action {
+.btn-approve, .btn-reject {
     border: none;
-    padding: 8px 16px;
+    padding: 10px 18px;
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: 0.2s;
+    transition: 0.3s;
+    font-size: 13px;
 }
 
-.btn-check { background-color: #27ae60; color: white; }
-.btn-check:hover { background-color: #219150; }
-
-.btn-cross { background-color: #e74c3c; color: white; }
-.btn-cross:hover { background-color: #c0392b; }
-
-/* Ajustes no Header/Footer do Gestor */
-.logout-btn-clean {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
+.btn-approve {
+    background-color: #27ae60;
     color: white;
 }
 
-.gestao-empty-state {
-    text-align: center;
-    padding: 50px;
-    color: #95a5a6;
-    font-style: italic;
+.btn-approve:hover { background-color: #2ecc71; }
+
+.btn-reject {
+    background-color: #e74c3c;
+    color: white;
 }
+
+.btn-reject:hover { background-color: #ff7675; }
+
+/* Cores de Status Automáticas */
+.aprovada, .aprovado { color: #27ae60; font-weight: bold; }
+.rejeitada, .rejeitado { color: #e74c3c; font-weight: bold; }
+.pendente { color: #f39c12; font-weight: bold; }

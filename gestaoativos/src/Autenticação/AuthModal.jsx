@@ -53,9 +53,7 @@ const AuthModal = ({ onClose, onLoginSubmit, isLoading, error }) => {
 
                     {error && <div className="alert-error-message">{error}</div>}
 
-                    <a href="#" className="forgot-password-link">
-                        ESQUECEU-SE DA PASSWORD?
-                    </a>
+                  
 
                     <button
                         type="submit"
@@ -67,9 +65,7 @@ const AuthModal = ({ onClose, onLoginSubmit, isLoading, error }) => {
 
                 </form>
 
-                <a href="#" className="register-link">
-                    REGISTE-SE AQUI
-                </a>
+              
             </div>
         </div>
     );

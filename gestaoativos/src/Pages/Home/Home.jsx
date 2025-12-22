@@ -2,39 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, CornerDownLeft, Bell, Calendar, Repeat, Search } from 'lucide-react';
 import './Home.css'; 
-import logo from '../../assets/img/esposende.png'; 
+import logo from '../../assets/img/esposende.png';
 
 const activityMap = [
-    { key: 'requisicoes_ativas', titulo: "REQUISIÇÕES ATIVAS", cor: 'active', icone: Repeat },
-    { key: 'requisicoes_pendentes', titulo: "REQUISIÇÕES PENDENTES", cor: 'pending', icone: Repeat },
-    { key: 'eventos_agendados', titulo: "EVENTOS E REQUISIÇÕES AGENDADAS", cor: 'scheduled', icone: Calendar },
-    { key: 'requisicoes_rejeitadas', titulo: "REQUISIÇÕES REJEITADAS", cor: 'rejected', icone: Repeat },
+    { key: 'eventosCount', titulo: "EVENTOS CRIADOS", cor: 'active', icone: Calendar },
+    { key: 'requisicoesCount', titulo: "REQUISIÇÕES EFETUADAS", cor: 'pending', icone: Repeat },
 ];
 
 const Home = ({ onLogout }) => {
     const [notifications, setNotifications] = useState([]);
-    const [activityCounts, setActivityCounts] = useState({});
+    const [activityCounts, setActivityCounts] = useState({ eventosCount: 0, requisicoesCount: 0 });
     const [projetoAtual, setProjetoAtual] = useState("A carregar...");
     const navigate = useNavigate();
     
-    const userId = 1; 
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user ? user.id_user : null;
 
-    // --- LÓGICA DE BUSCA DE DADOS ---
     const fetchDashboardData = async () => {
+        if (!userId) return;
+
         try {
+            // Rota de summary que criámos no server.js
             const response = await fetch(`http://localhost:3001/api/eventos/summary/${userId}`);
             
             if (response.ok) {
                 const data = await response.json();
                 
-                const formattedNotifications = data.notifications.map(n => ({
-                    ...n,
-                    message: `A ${n.tipo.toUpperCase()} '${n.nome.toUpperCase()}' acaba em ${n.dias_restantes} dia${n.dias_restantes > 1 ? 's' : ''}`
-                }));
-
-                setNotifications(formattedNotifications);
-                setActivityCounts(data.activity_counts);
-                setProjetoAtual(data.projetoAtual || "Sem requisição ativa");
+                // Atualiza contadores e projeto ativo
+                setActivityCounts({
+                    eventosCount: data.eventosCount || 0,
+                    requisicoesCount: data.requisicoesCount || 0
+                });
+                
+                setProjetoAtual(localStorage.getItem('projeto_ativo') || "Sem requisição ativa");
+                
+                // Simulação de notificações (ou podes expandir a rota summary para enviar estas notificações)
+                setNotifications([]); 
 
             } else {
                 console.error("Erro ao carregar dados do dashboard.");
@@ -46,21 +49,12 @@ const Home = ({ onLogout }) => {
 
     useEffect(() => {
         fetchDashboardData();
-    }, []); 
+    }, [userId]); 
 
-    // --- LÓGICA DE NAVEGAÇÃO E LOGOUT ---
     const handleLogout = () => {
-        if (onLogout) {
-            onLogout();
-        }
-
-        localStorage.removeItem('currentUser'); 
-        
+        localStorage.clear();
+        if (onLogout) onLogout();
         navigate('/');
-    };
-
-    const handleNavigateToPerfil = () => {
-        navigate('/perfil');
     };
 
     return (
@@ -93,91 +87,65 @@ const Home = ({ onLogout }) => {
 
             <main className="main-home-content">
                 
+                {/* 1. NOTIFICAÇÕES */}
                 <section className="home-section">
                     <h3 className="section-title"><Bell size={24} /> NOTIFICAÇÕES:</h3>
                     <div className="notifications-container">
                         {notifications.length > 0 ? (
                             notifications.map(notificacao => (
-                                <div key={notificacao.id} className={`notification-item-home ${notificacao.status_nome.toLowerCase().replace(' ', '-')}`}>
+                                <div key={notificacao.id} className="notification-item-home">
                                     <p>{notificacao.message}</p>
-                                    <button onClick={handleNavigateToPerfil} className="notification-details-link">VER DETALHES</button>
+                                    <button onClick={() => navigate('/perfil')} className="notification-details-link">VER DETALHES</button>
                                 </div>
                             ))
                         ) : (
-                            <p className="no-notifications">Não há eventos ou requisições a expirar nos próximos 3 dias.</p>
+                            <p className="no-notifications">Não existem notificações pendentes.</p>
                         )}
                     </div>
                 </section>
                 
-                {/* 2. PAINEL DE ATIVIDADE (DINÂMICO) */}
+                {/* 2. PAINEL DE ATIVIDADE */}
                 <section className="home-section">
                     <h3 className="section-title">O SEU PAINEL DE ATIVIDADE:</h3>
                     <div className="activity-panel-container">
-                        {activityMap.map(item => {
-                            const count = activityCounts[item.key] || 0;
-                            const displayCount = (item.key === 'requisicoes_rejeitadas' && count === 0) ? '' : count; 
-
-                            return (
-                                <button 
-                                    key={item.key} 
-                                    onClick={handleNavigateToPerfil} 
-                                    className={`activity-card ${item.cor}`}
-                                >
-                                    <item.icone size={28} />
-                                    <h4>{displayCount} {item.titulo}</h4>
-                                    <span className="activity-link">VER DETALHES</span>
-                                </button>
-                            );
-                        })}
+                        {activityMap.map(item => (
+                            <button 
+                                key={item.key} 
+                                onClick={() => navigate('/perfil')} 
+                                className={`activity-card ${item.cor}`}
+                            >
+                                <item.icone size={28} />
+                                <h4>{activityCounts[item.key]} {item.titulo}</h4>
+                                <span className="activity-link">VER DETALHES</span>
+                            </button>
+                        ))}
                     </div>
                 </section>
 
-               <section className="home-section">
+                <section className="home-section">
                     <h3 className="section-title">GUIA RÁPIDO DE UTILIZAÇÃO</h3>
                     <div className="quick-guide-container">
-                        
                         <p className="guide-instruction">
-                            Para solicitar material, clique no botão 
-                            <span className="inline-button-icon">
-                                <Repeat size={16} className="inline-icon" /> NOVA REQUISIÇÃO
-                            </span> no cabeçalho.
+                            Para solicitar material, use o menu <strong>NOVA REQUISIÇÃO</strong>.
                         </p>
-                        
                         <p className="guide-instruction">
-                            Para criar um Evento, clique no botão 
-                            <span className="inline-button-icon">
-                                <Calendar size={16} className="inline-icon" /> NOVO EVENTO
-                            </span> no cabeçalho.
+                            Para criar um Evento, use o menu <strong>NOVO EVENTO</strong>.
                         </p>
-
                         <p className="guide-instruction">
-                            Para ver o estado de todas as requisições/eventos, clique no 
-                            <span className="inline-icon-only">
-                                <User size={18} className="inline-icon" />
-                            </span> 
-                            ÍCONE DO PERFIL.
+                            Para acompanhar aprovações e o estado dos pedidos (Verde/Vermelho), consulte o seu <strong>PERFIL</strong>.
                         </p>
-
-                        <p className="guide-instruction">
-                            Para explorar o catálogo de material, clique no botão 
-                            <span className="inline-button-icon explore-material">
-                                <Search size={16} className="inline-icon" /> EXPLORAR MATERIAL
-                            </span> no rodapé.
-                        </p>
-                        
                     </div>
                 </section>
                 
             </main>
 
-            {/* --- RODAPÉ --- */}
             <footer className="fixed-footer-esp">
                 <div className="footer-content-esp centered-content">
                     <div className="footer-items-wrapper"> 
                         <span className="footer-lang-esp">PT | EN</span>
-                        <button className="explore-button-esp">EXPLORAR MATERIAL</button>
+                        <button className="explore-button-esp" onClick={() => navigate('/explorar-material')}>EXPLORAR MATERIAL</button>
                         <span className="footer-project-esp">
-                            ATUALMENTE A TRABALHAR EM: {projetoAtual}
+                            {projetoAtual === 'Sem requisição ativa' ? 'SEM PROJETO ATIVO' : `PROJETO: ${projetoAtual}`}
                         </span>
                     </div>
                 </div>
