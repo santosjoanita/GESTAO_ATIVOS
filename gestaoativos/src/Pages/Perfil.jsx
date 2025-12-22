@@ -37,7 +37,7 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) 
         )}
     </div>
 );
-
+ // Componente principal da página de perfil
 const Perfil = ({ onLogout }) => {
     const [userData, setUserData] = useState({ nome: '...', email: '', projetoAtual: 'Sem requisição' });
     const [eventsList, setEventsList] = useState([]);
@@ -116,7 +116,7 @@ const Perfil = ({ onLogout }) => {
                 <div className="user-panel-esp">
                     <div className="user-avatar-esp"></div>
                     <div>
-                        <h2 className="user-title-esp">Olá, {userData.nome}.</h2>
+                        <h2 className="user-title-esp">Olá, {user?.nome || 'Utilizador'}.</h2>
                         <p className="user-email-esp">{userData.email}</p>
                         <button className="edit-button-esp">EDITAR DADOS PESSOAIS</button>
                     </div>

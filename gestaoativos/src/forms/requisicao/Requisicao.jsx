@@ -20,30 +20,39 @@ const Requisicao = ({ onLogout }) => {
             .catch(err => console.error("Erro ao carregar eventos"));
     }, []);
 
-    const handleSubmeter = async (e) => {
-        e.preventDefault();
-        const user = JSON.parse(localStorage.getItem('user'));
-        
-        try {
-            const response = await fetch('http://localhost:3001/api/requisicoes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id_evento: formData.id_evento,
-                    id_user: user?.id || 1,
-                    notas: `Importar: ${formData.importar_id}`
-                })
-            });
+  const handleSubmeter = async (e) => {
+    e.preventDefault();
+    const user = JSON.parse(localStorage.getItem('user'));
+    
+    const userId = user?.id_user || user?.id;
 
-            if (response.ok) {
-                const eventoNome = eventos.find(ev => ev.id_evento == formData.id_evento)?.nome_evento;
-                localStorage.setItem('projeto_ativo', eventoNome);
-                window.dispatchEvent(new Event('storage'));
-                navigate('/home');
-            }
-        } catch (err) { console.error(err); }
-    };
+    if (!userId) {
+        alert("Erro: Utilizador não identificado. Faça login novamente.");
+        return;
+    }
 
+    try {
+        const response = await fetch('http://localhost:3001/api/requisicoes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id_evento: formData.id_evento,
+                id_user: userId,
+                data_requisicao: new Date().toISOString().slice(0, 10)
+            })
+        });
+
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error);
+        }
+
+        alert("Requisição submetida!");
+        navigate('/home');
+    } catch (err) {
+        alert("Erro 500: Verifique se o evento foi selecionado corretamente.");
+    }
+};
     return (
         <div className="requisicao-page-layout">
             <header className="fixed-header-esp">

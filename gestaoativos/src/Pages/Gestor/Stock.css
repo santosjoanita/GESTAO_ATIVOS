@@ -1,0 +1,100 @@
+.stock-container {
+    padding: 120px 20px 60px; 
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.stock-grid {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+}
+
+/* LADO ESQUERDO: TABELA */
+.stock-table-section {
+    flex: 2;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.stock-table-section table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stock-table-section th {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 2px solid #1f3a52;
+    color: #1f3a52;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+.stock-table-section td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.stock-table-section button {
+    background-color: #1f3a52;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.stock-table-section button:hover {
+    background-color: #34495e;
+}
+
+/* LADO DIREITO: FORMULÁRIO */
+.stock-form-section {
+    flex: 1;
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    position: sticky;
+    top: 120px;
+}
+
+.stock-form-section h3 {
+    color: #1f3a52;
+    margin-bottom: 20px;
+    border-left: 4px solid #1f3a52;
+    padding-left: 10px;
+}
+
+.stock-form-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.stock-form-section input {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.btn-submeter {
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-submeter:hover {
+    background-color: #2ecc71;
+}

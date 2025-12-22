@@ -6,6 +6,7 @@ import Home from '../Pages/Home/Home';
 import EventoForm from '../forms/EventoForm'; 
 import Requisicao from '../forms/requisicao/Requisicao';
 import GestorDashboard from '../Pages/Gestor/GestorDashboard';
+import Stock from '../Pages/Gestor/Stock';
 
 const App = () => {
     const [currentUser, setCurrentUser] = useState(() => {
@@ -57,6 +58,10 @@ const App = () => {
                 <Route 
                 path="/gestao" 
                 element={<ProtectedRoute element={<GestorDashboard onLogout={handleLogout} />} />} 
+                />
+                <Route 
+                path="/stock" 
+                element={<ProtectedRoute element={<Stock onLogout={handleLogout} />} />} 
                 />
             </Routes>
         </BrowserRouter>
