@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft } from 'lucide-react'; 
+import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft, LogOut } from 'lucide-react'; 
 import { Link, useNavigate } from 'react-router-dom'; 
 import './Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
 
 const formatDate = (dateString) => {
     if (!dateString) return 'Data não especificada';
-    const datePart = dateString.split('T')[0]; 
-    const [year, month, day] = datePart.split('-');
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
     return `${day}/${month}/${year}`;
 };
 
@@ -19,7 +21,7 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) 
                 <p className="event-date">Data: {event.date}</p>
             </div>
             <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
-                {showTrabalhar && event.status === 'Aprovada' && (
+                {showTrabalhar && (event.status === 'Aprovada' || event.status === 'Aprovado') && (
                     <button className="edit-button-esp" onClick={() => onTrabalhar(event.title)}>
                         TRABALHAR
                     </button>
@@ -37,52 +39,60 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) 
         )}
     </div>
 );
- // Componente principal da página de perfil
+
 const Perfil = ({ onLogout }) => {
-    const [userData, setUserData] = useState({ nome: '...', email: '', projetoAtual: 'Sem requisição' });
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isGestor = user?.id_perfil == 2;
+    const navigate = useNavigate();
+
+    const [userData, setUserData] = useState({ 
+        nome: user?.nome || '...', 
+        email: user?.email || '', 
+        projetoAtual: localStorage.getItem('projeto_ativo') || 'Sem requisição' 
+    });
     const [eventsList, setEventsList] = useState([]);
     const [requisicoesList, setRequisicoesList] = useState([]);
     const [activeTab, setActiveTab] = useState('todos'); 
     const [expandedCardId, setExpandedCardId] = useState(null); 
-    const navigate = useNavigate();
 
     const fetchPerfilData = async () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) return;
+        if (!user) return;
 
-    try {
-        const resReq = await fetch(`http://localhost:3001/api/requisicoes/user/${user.id_user}`);
-        const dataReq = await resReq.json();
-        
-        const resEv = await fetch(`http://localhost:3001/api/eventos/user/${user.id_user}`);
-        const dataEv = await resEv.json();
+        try {
+            const resReq = await fetch(`http://localhost:3001/api/requisicoes/user/${user.id_user}`);
+            const dataReq = await resReq.json();
+            
+            const resEv = await fetch(`http://localhost:3001/api/eventos/user/${user.id_user}`);
+            const dataEv = await resEv.json();
+            const getStatusColor = (status) => {
+            const s = (status || '').toString().toLowerCase(); 
+                if (s.includes('aprovad')) return 'aprovado';
+                if (s.includes('rejeitad')) return 'rejeitado'; 
+                return 'pendente';
+            };  
+            setRequisicoesList(Array.isArray(dataReq) ? dataReq.map(r => ({
+                id: r.id_req,
+                title: r.nome_evento,
+                date: formatDate(r.data_pedido), 
+                status: r.estado_nome || r.estado || 'Pendente',
+                colorClass: getStatusColor(r.estado_nome || r.estado) 
+            })) : []);
 
-        const getStatusColor = (status) => {
-            const s = status.toLowerCase();
-            if (s.includes('aprovad')) return 'event-aprovado';
-            if (s.includes('rejeitad')) return 'event-rejeitado'; 
-            return 'event-pendente';
-        };
+            setEventsList(Array.isArray(dataEv) ? dataEv.map(e => ({
+                id: e.id_evento,
+                title: e.nome_evento,
+                date: formatDate(e.data_inicio),
+                status: e.estado_nome,
+                colorClass: getStatusColor(e.estado_nome)
+            })) : []);
 
-        setRequisicoesList(Array.isArray(dataReq) ? dataReq.map(r => ({
-            id: r.id_requisicao,
-            title: r.nome_evento,
-            date: formatDate(r.data_requisicao),
-            status: r.estado,
-            colorClass: getStatusColor(r.estado) 
-        })) : []);
+        } catch (error) { console.error(error); }
+    };
 
-        setEventsList(Array.isArray(dataEv) ? dataEv.map(e => ({
-            id: e.id_evento,
-            title: e.nome_evento,
-            date: formatDate(e.data_inicio),
-            status: e.estado_nome,
-            colorClass: getStatusColor(e.estado_nome) // Usa a função unificada
-        })) : []);
-
-    } catch (error) { console.error(error); }
-};
-    useEffect(() => { fetchPerfilData(); }, []);
+    useEffect(() => { 
+        if (!user) navigate('/');
+        else fetchPerfilData(); 
+    }, []);
 
     const handleLogout = () => {
         localStorage.clear();
@@ -100,14 +110,26 @@ const Perfil = ({ onLogout }) => {
                 <div className="header-content-esp centered-content">
                     <div className="logo-esp"><img src={logo} alt="Logo" className="logo-img" /></div>
                     <nav className="header-nav-esp">
-                        <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
-                        <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link> 
-                        <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
+                        {isGestor ? (
+                            /* HEADER EXCLUSIVO DO GESTOR */
+                            <Link to="/gestao" className="nav-item-esp">VOLTAR À DASHBOARD</Link>
+                        ) : (
+                            /* HEADER DO FUNCIONÁRIO */
+                            <>
+                                <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
+                                <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link> 
+                                <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
+                            </>
+                        )}
                     </nav>
                     <div className="header-icons-esp">
                         <ShoppingCart size={24} className="icon-esp" />
-                        <User size={24} className="icon-esp active-icon-indicator" />
-                        <button onClick={handleLogout} className="logout-btn"><CornerDownLeft size={24} className="icon-esp" /></button>
+                        <Link to="/perfil" className="icon-link-active">
+                            <User size={24} className="icon-esp active-icon-indicator" />
+                        </Link>
+                        <button onClick={handleLogout} className="logout-btn">
+                            <LogOut size={24} className="icon-esp" />
+                        </button>
                     </div>
                 </div>
             </header>
@@ -117,7 +139,7 @@ const Perfil = ({ onLogout }) => {
                     <div className="user-avatar-esp"></div>
                     <div>
                         <h2 className="user-title-esp">Olá, {user?.nome || 'Utilizador'}.</h2>
-                        <p className="user-email-esp">{userData.email}</p>
+                        <p className="user-email-esp">{user?.email}</p>
                         <button className="edit-button-esp">EDITAR DADOS PESSOAIS</button>
                     </div>
                 </div>
@@ -129,12 +151,16 @@ const Perfil = ({ onLogout }) => {
                 </div>
 
                 <div className="list-items-container-esp">
-                    {displayItems.map(item => (
-                        <EventCard key={`${item.id}-${item.title}`} event={item} isExpanded={expandedCardId === item.id} 
-                            onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
-                            onTrabalhar={(name) => { setUserData({...userData, projetoAtual: name}); localStorage.setItem('projeto_ativo', name); navigate('/explorar-material'); }} 
-                            showTrabalhar={activeTab === 'requisicoes'} />
-                    ))}
+                    {displayItems.length > 0 ? (
+                        displayItems.map(item => (
+                            <EventCard key={`${item.id}-${item.title}`} event={item} isExpanded={expandedCardId === item.id} 
+                                onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
+                                onTrabalhar={(name) => { setUserData({...userData, projetoAtual: name}); localStorage.setItem('projeto_ativo', name); navigate('/explorar-material'); }} 
+                                showTrabalhar={activeTab === 'requisicoes' || activeTab === 'todos'} />
+                        ))
+                    ) : (
+                        <p className="no-items-msg">Nenhum item encontrado.</p>
+                    )}
                 </div>
             </main>
 
@@ -142,8 +168,16 @@ const Perfil = ({ onLogout }) => {
                 <div className="footer-content-esp centered-content">
                     <div className="footer-items-wrapper"> 
                         <span className="footer-lang-esp">PT | EN</span>
-                        <button className="explore-button-esp" onClick={() => navigate('/explorar-material')}>EXPLORAR MATERIAL</button>
-                        <span className="footer-project-esp">ATUALMENTE A TRABALHAR EM: {userData.projetoAtual}</span>
+                        {isGestor ? (
+                            /* FOOTER EXCLUSIVO DO GESTOR */
+                            <button className="explore-button-esp" onClick={() => navigate('/stock')}>ATUALIZAR STOCK</button>
+                        ) : (
+                            /* FOOTER DO FUNCIONÁRIO */
+                            <button className="explore-button-esp" onClick={() => navigate('/explorar-material')}>EXPLORAR MATERIAL</button>
+                        )}
+                        <span className="footer-project-esp">
+                            {isGestor ? "PAINEL ADMINISTRATIVO" : `ATUALMENTE A TRABALHAR EM: ${userData.projetoAtual}`}
+                        </span>
                     </div>
                 </div>
             </footer>

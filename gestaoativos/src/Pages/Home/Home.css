@@ -18,7 +18,7 @@
 .main-home-content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 100px 20px 40px;
 }
 
 .home-section {
@@ -26,13 +26,15 @@
 }
 
 .section-title {
-    font-size: 1.4em;
-    font-weight: 700;
-    color: var(--color-primary-dark);
-    margin-bottom: 20px;
+    font-size: 1.5em;
+    font-weight: 800;
+    color: #1f3a52;
+    margin-bottom: 25px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    border-bottom: 2px solid #eee; 
+    padding-bottom: 10px;
 }
 
 /* --- 1. NOTIFICAÇÕES --- */

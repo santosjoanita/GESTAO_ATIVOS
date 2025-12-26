@@ -1,170 +1,279 @@
-/* Layout Geral */
-.gestao-layout {
-    min-height: 100vh;
-    background-color: #f0f2f5;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+:root {
+    --primary-blue: #1f3a52;   
+    --success-green: #27ae60;
+    --danger-red: #e74c3c;
+    --pending-orange: #f39c12;
+    --bg-gray: #f0f2f5;
+    --white: #ffffff;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.gestao-layout {
+    min-height: 100vh;
+    background-color: var(--bg-gray);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+/* HEADER FIXO E NAVEGAÇÃO*/
+.fixed-header-esp {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 80px;
+    background-color: var(--primary-blue);
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: center;
+}
+
+.header-content-esp {
+    width: 90%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.logo-img {
+    height: 60px; 
+    width: auto;
+    transition: var(--transition);
+}
+
+.logo-img:hover {
+    transform: scale(1.08);
+}
+
+/* NAVEGAÇÃO */
+.header-nav-esp {
+    display: flex;
+    gap: 5px;
+    height: 100%;
+}
+
+.nav-item-esp {
+    background: none;
+    border: none;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: 0 25px;
+    height: 80px; 
+    cursor: pointer;
+    position: relative;
+    transition: var(--transition);
+    opacity: 0.6;
+}
+
+.nav-item-esp:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* INDICADOR DA TAB ATIVA */
+.nav-item-esp.active-tab-indicator {
+    opacity: 1;
+}
+
+.nav-item-esp.active-tab-indicator::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: var(--white);
+    border-radius: 4px 4px 0 0;
+}
+
+/* ÍCONES */
+.header-icons-esp {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.icon-esp {
+    color: var(--white);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.icon-esp:hover {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.logout-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* CONTEÚDO PRINCIPAL */
 .gestao-main {
-    padding-top: 120px; /* Ajustado para não bater no header */
+    padding-top: 120px;
     padding-bottom: 60px;
     max-width: 1200px;
     margin: 0 auto;
 }
 
 .gestao-title {
-    color: #1f3a52;
-    font-size: 28px;
+    color: var(--primary-blue);
+    font-size: 26px;
     font-weight: 800;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     text-align: center;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 
-/* Grid de Cards */
 .gestao-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-    gap: 20px;
+    gap: 25px;
     padding: 0 20px;
 }
 
 .gestao-card {
-    background: white;
-    border-radius: 15px;
+    background: var(--white);
+    border-radius: 16px;
     padding: 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    border-left: 8px solid #1f3a52; /* Borda um pouco mais grossa para destaque */
-    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-left: 8px solid var(--primary-blue);
+    transition: var(--transition);
     cursor: pointer;
 }
 
 .gestao-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
 .card-info strong {
-    font-size: 20px;
+    font-size: 18px;
     color: #2c3e50;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
 }
 
-.status-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 800;
-    margin-top: 5px;
+.card-info p {
+    color: #7f8c8d;
+    font-size: 14px;
+    margin: 2px 0;
 }
-
-/* Botões de Ação */
 .card-actions {
     display: flex;
-    flex-direction: column; /* Botões empilhados para caber melhor no card lateral */
-    gap: 8px;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .btn-approve, .btn-reject {
     border: none;
-    padding: 8px 15px;
+    padding: 10px 18px;
     border-radius: 8px;
-    font-weight: bold;
+    font-weight: 700;
     cursor: pointer;
-    transition: 0.3s;
+    transition: var(--transition);
     font-size: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
+    text-transform: uppercase;
 }
 
-.btn-approve { background-color: #27ae60; color: white; }
-.btn-approve:hover { background-color: #2ecc71; }
+.btn-approve { 
+    background-color: var(--success-green); 
+    color: white; 
+}
+.btn-approve:hover { 
+    background-color: #2ecc71; 
+    transform: scale(1.05);
+}
 
-.btn-reject { background-color: #e74c3c; color: white; }
-.btn-reject:hover { background-color: #ff7675; }
+.btn-reject { 
+    background-color: var(--danger-red); 
+    color: white; 
+}
+.btn-reject:hover { 
+    background-color: #ff7675; 
+    transform: scale(1.05);
+}
 
-/* MODAL DE DETALHES (Novo) */
+/* STATUS BADGES */
+.status-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-top: 8px;
+}
+
+/* MODAL DE DETALHES */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(31, 58, 82, 0.85); /* Azul de Esposende com opacidade */
+    background: rgba(31, 58, 82, 0.9);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 2000;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(8px);
 }
 
 .modal-content {
-    background: white;
+    background: var(--white);
     width: 90%;
-    max-width: 650px;
-    border-radius: 20px;
+    max-width: 600px;
+    border-radius: 24px;
     overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-    animation: slideUp 0.3s ease-out;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes slideUp {
-    from { transform: translateY(30px); opacity: 0; }
+    from { transform: translateY(40px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
 
 .modal-header {
-    background: #1f3a52;
-    color: white;
-    padding: 20px 25px;
+    background: var(--primary-blue);
+    color: var(--white);
+    padding: 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.close-btn {
-    background: transparent;
-    border: none;
-    color: white;
-    cursor: pointer;
-    opacity: 0.7;
-    transition: 0.2s;
-}
-
-.close-btn:hover { opacity: 1; }
-
 .modal-body {
-    padding: 25px;
-    max-height: 70vh;
+    padding: 30px;
+    max-height: 65vh;
     overflow-y: auto;
-}
-
-.modal-list-req {
-    list-style: none;
-    padding: 0;
-    margin-top: 15px;
 }
 
 .modal-list-req li {
     background: #f8f9fa;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     padding: 15px;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-left: 4px solid #ddd;
 }
 
-/* Cores de Status */
-.aprovada, .aprovado { color: #27ae60 !important; background: #eafaf1; padding: 2px 8px; border-radius: 5px; }
-.rejeitada, .rejeitado { color: #e74c3c !important; background: #fdedec; padding: 2px 8px; border-radius: 5px; }
-.pendente { color: #f39c12 !important; background: #fef5e7; padding: 2px 8px; border-radius: 5px; }
+/* CORES DINÂMICAS DE ESTADO */
+.aprovada, .aprovado { color: var(--success-green) !important; background: #eafaf1; }
+.rejeitada, .rejeitado { color: var(--danger-red) !important; background: #fdedec; }
+.pendente { color: var(--pending-orange) !important; background: #fef5e7; }
