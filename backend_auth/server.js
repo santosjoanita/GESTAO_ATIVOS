@@ -109,7 +109,7 @@ app.get('/api/eventos/user/:id', async (req, res) => {
 // 3. PAINEL DE GESTÃO (ADMIN/GESTOR)
 // ==========================================
 
-app.get('/api/gestao/requisicoes/todas', async (req, res) => {
+app.get('/api/gestao/requisicoes', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
             SELECT r.*, e.nome_evento, u.nome as requerente, es.nome as estado_nome
@@ -122,7 +122,7 @@ app.get('/api/gestao/requisicoes/todas', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.get('/api/gestao/eventos/todos', async (req, res) => {
+app.get('/api/gestao/eventos', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
             SELECT e.*, es.nome as estado_nome, u.nome as requerente

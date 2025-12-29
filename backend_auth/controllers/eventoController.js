@@ -7,8 +7,7 @@ const ESTADO_PENDENTE_ID = 1;
   @param {object} res 
  */
 const createEvent = async (req, res) => {
-    // Nota: O id_user deve vir do token de sessão após a autenticação.
-    // id para testar 
+  
     const id_user = 1; 
     const { 
         nome, 
@@ -18,7 +17,6 @@ const createEvent = async (req, res) => {
         hora_inicio, 
         data_fim, 
         hora_fim 
-        // tratar dos anexos separadamente
     } = req.body;
 
     if (!nome || !descricao || !localizacao || !data_inicio) {

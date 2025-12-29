@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # 1. BANCO DE DADOS: MySQL
+  # 1. BASE DE DADOS: MySQL
   mysql-db:
     image: mysql:8.0
     container_name: gestaoativos_mysql

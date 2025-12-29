@@ -1,6 +1,26 @@
-EXPLORAR MATERIAL:
--Falta o header.
--E a seta para a direita.
+PRIORIDADE ALTA:
+Encriptar a password-hash na db
+Mudar o botão de stock no DASHBOARD para o header
+Adicionar movimentos de STOCK
+Botão de ocultar produtos/materiais
+Criar outro backend para gerir a lógica dos produtos/materiais (CRUD)
+Explorar material (mudar para catálogo) encima
 
-PERFIL:
--Meter o trabalhar na requisição para os cards funcionarem.
+
+PRIORIDADE MÉDIA:
+No detalhe do evento na DASHBOARD, mostrar os anexos (se existirem)
+Ao clicar em editar, abrir um editor
+Botão de adicionar novo material no STOCK
+Acertar a linguaguem do sistema (pt-PT)
+Responsividade
+Validação de datas nas Requisições
+Página inicial à esquerda.
+
+PRIORIDADE BAIXA:
+Gestão Requisições
+O gestor tem o mesmo que o funcionario.
+Tirar o "escrever" no espaço de localização, procurar no leaflet o mapa que inclui pesquisa
+Ordernar os eventos por data no perfil.
+Adicionar os filtros no perfil (aprovado rejeitado pendente)
+
+

@@ -98,7 +98,7 @@ router.post('/', upload.array('anexos'), async (req, res) => {
     }
 });
 
-// --- RESTANTES ROTAS (GET PERFIL E SUMMARY MANTÊM-SE IGUAIS) ---
+// --- RESTANTES ROTAS  ---
 router.get('/perfil/:userId', async (req, res) => {
     const { userId } = req.params;
     try {
