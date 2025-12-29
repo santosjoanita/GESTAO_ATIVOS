@@ -45,17 +45,28 @@ const GestorDashboard = ({ onLogout }) => {
     };
 
     const handleAcao = async (id, body) => {
-        try {
-            await fetch(`http://localhost:3001/api/gestao/${tab}/${id}/estado`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            loadData();
-        } catch (err) {
-            console.error("Erro ao atualizar estado:", err);
+    if (!id || id === 'undefined') {
+        console.error("Erro: ID não definido para a ação.");
+        return;
+    }
+
+    try {
+        const res = await fetch(`http://localhost:3001/api/gestao/${tab}/${id}/estado`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body) 
+        });
+
+        if (res.ok) {
+            loadData(); 
+        } else {
+            const errorText = await res.text();
+            console.error("Erro no servidor:", errorText);
         }
-    };
+    } catch (err) {
+        console.error("Erro ao atualizar estado:", err);
+    }
+};
 
     return (
         <div className="gestao-layout">
@@ -112,15 +123,22 @@ const GestorDashboard = ({ onLogout }) => {
                                 </div>
                                 
                                 {statusText.toLowerCase().includes('pendente') && (
-                                    <div className="card-actions" onClick={e => e.stopPropagation()}>
-                                        <button onClick={() => handleAcao(itemId, { id_estado: 2 })} className="btn-approve">
-                                            APROVAR
-                                        </button>
-                                        <button onClick={() => handleAcao(itemId, { id_estado: 3 })} className="btn-reject">
-                                            REJEITAR
-                                        </button>
-                                    </div>
-                                )}
+                            <div className="card-actions" onClick={e => e.stopPropagation()}>
+                                {/* Usamos itemId em vez de item.id_req */}
+                                <button 
+                                    onClick={() => handleAcao(itemId, { id_estado: 2 })} 
+                                    className="btn-approve"
+                                > 
+                                    APROVAR
+                                </button>
+                                <button 
+                                    onClick={() => handleAcao(itemId, { id_estado: 3 })}  
+                                    className="btn-reject"
+                                >
+                                    REJEITAR
+                                </button>
+                            </div>
+                        )}
                             </div>
                         );
                     })}
