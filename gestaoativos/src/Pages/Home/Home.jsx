@@ -143,7 +143,7 @@ const Home = ({ onLogout }) => {
                 <div className="footer-content-esp centered-content">
                     <div className="footer-items-wrapper"> 
                         <span className="footer-lang-esp">PT | EN</span>
-                        <button className="explore-button-esp" onClick={() => navigate('/explorar-material')}>EXPLORAR MATERIAL</button>
+                        <button className="explore-button-esp" onClick={() => navigate('/explorar')}>EXPLORAR MATERIAL</button>
                         <span className="footer-project-esp">
                             {projetoAtual === 'Sem requisição ativa' ? 'SEM PROJETO ATIVO' : `PROJETO: ${projetoAtual}`}
                         </span>

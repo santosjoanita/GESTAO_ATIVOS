@@ -155,7 +155,7 @@ const Perfil = ({ onLogout }) => {
                         displayItems.map(item => (
                             <EventCard key={`${item.id}-${item.title}`} event={item} isExpanded={expandedCardId === item.id} 
                                 onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
-                                onTrabalhar={(name) => { setUserData({...userData, projetoAtual: name}); localStorage.setItem('projeto_ativo', name); navigate('/explorar-material'); }} 
+                                onTrabalhar={(name) => { setUserData({...userData, projetoAtual: name}); localStorage.setItem('projeto_ativo', name); navigate('/explorar'); }} 
                                 showTrabalhar={activeTab === 'requisicoes' || activeTab === 'todos'} />
                         ))
                     ) : (
@@ -173,7 +173,7 @@ const Perfil = ({ onLogout }) => {
                             <button className="explore-button-esp" onClick={() => navigate('/stock')}>ATUALIZAR STOCK</button>
                         ) : (
                             /* FOOTER DO FUNCIONÁRIO */
-                            <button className="explore-button-esp" onClick={() => navigate('/explorar-material')}>EXPLORAR MATERIAL</button>
+                            <button className="explore-button-esp" onClick={() => navigate('/explorar')}>EXPLORAR MATERIAL</button>
                         )}
                         <span className="footer-project-esp">
                             {isGestor ? "PAINEL ADMINISTRATIVO" : `ATUALMENTE A TRABALHAR EM: ${userData.projetoAtual}`}

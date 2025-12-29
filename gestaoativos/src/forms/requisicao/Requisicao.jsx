@@ -120,7 +120,7 @@ const Requisicao = ({ onLogout }) => {
                 <div className="footer-content-esp centered-content">
                     <div className="footer-items-wrapper"> 
                         <span className="footer-lang-esp">PT | EN</span>
-                        <button className="explore-button-esp" onClick={() => navigate('/explorar-material')}>
+                        <button className="explore-button-esp" onClick={() => navigate('/explorar')}>
                             <Search size={16} /> EXPLORAR MATERIAL
                         </button>
                         <span className="footer-project-esp">SEM REQUISIÇÃO ATIVA</span>
