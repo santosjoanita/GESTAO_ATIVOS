@@ -43,31 +43,36 @@ const EventoForm = ({ onLogout }) => {
         setSelectedFiles(e.target.files);
     };
 
-    const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
     
     const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) {
+    if (!user || (!user.id && !user.id_user)) {
         alert("Sessão expirada. Faça login novamente.");
         return;
     }
 
-    const dataToSend = {
-        nome_evento: formData.nome, 
-        descricao: formData.descricao,
-        localizacao: formData.localizacao,
-        data_inicio: formData.data_inicio,
-        data_fim: formData.data_fim || formData.data_inicio,
-        id_user: user.id_user 
-    };
+    const formDataToSend = new FormData();
+    
+    // Campos de texto
+    formDataToSend.append('nome_evento', formData.nome);
+    formDataToSend.append('descricao', formData.descricao);
+    formDataToSend.append('localizacao', formData.localizacao);
+    formDataToSend.append('data_inicio', formData.data_inicio);
+    formDataToSend.append('data_fim', formData.data_fim || formData.data_inicio);
+    formDataToSend.append('id_user', user.id || user.id_user);
+
+    // Adicionar múltiplos ficheiros (Anexos)
+    if (selectedFiles.length > 0) {
+        for (let i = 0; i < selectedFiles.length; i++) {
+            formDataToSend.append('anexos', selectedFiles[i]);
+        }
+    }
 
     try {
         const response = await fetch('http://localhost:3001/api/eventos', { 
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json' // Agora enviamos JSON
-            },
-            body: JSON.stringify(dataToSend), 
+            body: formDataToSend, 
         });
 
         if (response.ok) {

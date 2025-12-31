@@ -1,11 +1,35 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
-const bcrypt = require('bcrypt'); 
+const bcrypt = require('bcrypt');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
 const app = express();
 const port = 3001;
 
-// --- CONFIGURAÇÃO DA BASE DE DADOS ---
+// --- CONFIGURAÇÃO DE UPLOADS ---
+const uploadDir = 'uploads';
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage });
+
+// --- MIDDLEWARES ---
+app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(express.json({ limit: '20mb' })); 
+app.use('/uploads', express.static('uploads'));
+
+// --- CONEXÃO BD ---
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'mysql-db',
     user: process.env.DB_USER || 'user_gestao',
@@ -15,124 +39,75 @@ const pool = mysql.createPool({
     connectionLimit: 10
 });
 
-app.use(cors({ origin: 'http://localhost:3000' }));
-app.use(express.json());
-
 // ==========================================
-// 1. AUTENTICAÇÃO E SEGURANÇA
+// 1. AUTENTICAÇÃO
 // ==========================================
-
-
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
     const emailCompleto = username.includes('@') ? username : `${username}@cm-esposende.pt`;
 
     try {
         const [rows] = await pool.execute('SELECT * FROM Utilizador WHERE email = ?', [emailCompleto]);
-        
-        if (rows.length === 0) return res.status(401).json({ erro: "User não encontrado" });
+        if (rows.length === 0) return res.status(401).json({ erro: "Utilizador não encontrado" });
 
         const user = rows[0];
-
         const isMatch = await bcrypt.compare(password, user.password_hash);
         
         if (!isMatch) {
-            console.log("Hash incompatível detetado. A gerar hash nativo do Docker...");
-            
             const novoHashNativo = await bcrypt.hash(password, 10);
-            
             await pool.execute('UPDATE Utilizador SET password_hash = ? WHERE id_user = ?', [novoHashNativo, user.id_user]);
-            
-            console.log("Hash atualizado com sucesso na BD. Tenta agora o login novamente!");
-            return res.status(401).json({ erro: "Sistema sincronizado. Tenta login outra vez!" });
+            return res.status(401).json({ erro: "Ambiente sincronizado. Tenta login outra vez!" });
         }
 
-        console.log("LOGIN SUCESSO!");
         res.json({ id: user.id_user, nome: user.nome, id_perfil: user.id_perfil });
-
     } catch (error) {
-        console.error(error);
         res.status(500).json({ error: "Erro interno" });
     }
 });
 
 // ==========================================
-// 2. DASHBOARD E EVENTOS
+// 2. DASHBOARD GESTOR
 // ==========================================
-
-app.get('/api/eventos/summary/:id', async (req, res) => {
-    try {
-        const [evs] = await pool.execute('SELECT COUNT(*) as total FROM Evento WHERE id_user = ?', [req.params.id]);
-        const [reqs] = await pool.execute('SELECT COUNT(*) as total FROM Requisicao WHERE id_user = ?', [req.params.id]);
-        res.json({ 
-            eventosCount: evs[0].total || 0, 
-            requisicoesCount: reqs[0].total || 0, 
-            notifications: [] 
-        });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.get('/api/eventos/user/:id', async (req, res) => {
+app.get('/api/gestao/requisicoes/todas', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
-            SELECT e.*, es.nome as estado_nome FROM Evento e 
-            JOIN Estado es ON e.id_estado = es.id_estado WHERE e.id_user = ?`, [req.params.id]);
-        res.json(rows || []);
+            SELECT r.id_req, u.nome as requerente, e.nome_evento, es.nome as estado_nome
+            FROM Requisicao r
+            JOIN Utilizador u ON r.id_user = u.id_user
+            JOIN Evento e ON r.id_evento = e.id_evento
+            JOIN Estado es ON r.id_estado = es.id_estado
+            ORDER BY r.id_req DESC`);
+        res.json(rows);
     } catch (e) { res.status(500).json([]); }
 });
 
-app.post('/api/eventos', async (req, res) => {
-    const { nome_evento, data_inicio, data_fim, localizacao, id_user } = req.body;
-    if (!nome_evento || !id_user) return res.status(400).json({ error: "Dados incompletos." });
-    try {
-        await pool.execute(
-            `INSERT INTO Evento (nome_evento, data_inicio, data_fim, localizacao, id_user, id_estado) VALUES (?, ?, ?, ?, ?, 1)`, 
-            [nome_evento, data_inicio, data_fim, localizacao, id_user]
-        );
-        res.status(201).json({ message: "Evento criado" });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-app.post('/api/requisicoes', async (req, res) => {
-    const { id_user, id_evento } = req.body;
-    try {
-        const hoje = new Date().toISOString().slice(0, 10);
-        await pool.execute(
-            `INSERT INTO Requisicao (id_user, id_evento, id_estado, data_pedido) VALUES (?, ?, 1, ?)`,
-            [id_user, id_evento, hoje]
-        );
-        res.status(201).json({ message: "Requisição criada" });
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
-// ==========================================
-// 3. PAINEL DE GESTÃO (ADMIN/GESTOR)
-// ==========================================
-
-app.get('/api/gestao/eventos', async (req, res) => {
+app.get('/api/gestao/eventos/todos', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
-            SELECT e.*, es.nome as estado_nome, u.nome as requerente
-            FROM Evento e 
-            LEFT JOIN Estado es ON e.id_estado = es.id_estado 
-            LEFT JOIN Utilizador u ON e.id_user = u.id_user
+            SELECT e.id_evento, e.nome_evento, e.localizacao, u.nome as requerente, es.nome as estado_nome
+            FROM Evento e
+            JOIN Utilizador u ON e.id_user = u.id_user
+            JOIN Estado es ON e.id_estado = es.id_estado
             ORDER BY e.id_evento DESC`);
         res.json(rows);
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    } catch (e) { res.status(500).json([]); }
 });
 
-app.put('/api/gestao/eventos/:id/estado', async (req, res) => {
-    const { id_estado } = req.body; 
+app.put('/api/gestao/:tipo/:id/estado', async (req, res) => {
+    const { tipo, id } = req.params;
+    const { id_estado } = req.body;
+    const tabela = tipo === 'requisicoes' ? 'Requisicao' : 'Evento';
+    const pk = tipo === 'requisicoes' ? 'id_req' : 'id_evento';
+
     try {
-        await pool.execute("UPDATE Evento SET id_estado = ? WHERE id_evento = ?", [id_estado, req.params.id]);
-        res.status(200).send("Evento atualizado");
-    } catch (err) { res.status(500).send(err.message); }
+        await pool.execute(`UPDATE ${tabela} SET id_estado = ? WHERE ${pk} = ?`, [id_estado, id]);
+        res.send("Estado atualizado com sucesso");
+    } catch (e) { res.status(500).send(e.message); }
 });
 
 // ==========================================
-// 4. GESTÃO DE MATERIAIS
+// 3. GESTÃO DE MATERIAIS (STOCK)
 // ==========================================
-
 app.get('/api/materiais', async (req, res) => {
     const isAdmin = req.query.admin === 'true';
     const query = isAdmin 
@@ -147,37 +122,45 @@ app.get('/api/materiais', async (req, res) => {
 app.post('/api/materiais/update', async (req, res) => {
     const { 
         id_material, nome, quantidade_total, categoria, 
-        especificacoes, descricao_tecnica, local_armazenamento, visivel 
+        especificacoes, descricao_tecnica, local_armazenamento, 
+        visivel, imagem_url, id_user_responsavel 
     } = req.body;
+
     try {
         if (id_material) {
             await pool.execute(
                 `UPDATE Material SET nome=?, quantidade_total=?, categoria=?, especificacoes=?, 
-                descricao_tecnica=?, local_armazenamento=?, visivel=?, quantidade_disp=? WHERE id_material=?`,
-                [nome, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, visivel ?? 1, quantidade_total, id_material]
+                descricao_tecnica=?, local_armazenamento=?, visivel=?, imagem_url=?, quantidade_disp=? WHERE id_material=?`,
+                [nome, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, visivel ?? 1, imagem_url, quantidade_total, id_material]
+            );
+            await pool.execute(
+                `INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'Editou', ?)`,
+                [id_user_responsavel || 1, nome, quantidade_total]
             );
         } else {
             await pool.execute(
                 `INSERT INTO Material (nome, quantidade_total, quantidade_disp, categoria, especificacoes, 
-                descricao_tecnica, local_armazenamento, visivel) VALUES (?, ?, ?, ?, ?, ?, ?, 1)`,
-                [nome, quantidade_total, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento]
+                descricao_tecnica, local_armazenamento, imagem_url, visivel) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
+                [nome, quantidade_total, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, imagem_url]
+            );
+            await pool.execute(
+                `INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'Adicionou', ?)`,
+                [id_user_responsavel || 1, nome, quantidade_total]
             );
         }
         res.status(200).send("OK");
     } catch (err) { res.status(500).send(err.message); }
 });
 
-app.post('/api/materiais/movimentar', async (req, res) => {
-    const { id_material, quantidade, tipo } = req.body; 
+app.get('/api/stock/historico', async (req, res) => {
     try {
-        const operador = tipo === 'entrada' ? '+' : '-';
-        await pool.execute(
-            `UPDATE Material SET quantidade_total = quantidade_total ${operador} ?, 
-            quantidade_disp = quantidade_disp ${operador} ? WHERE id_material = ?`,
-            [quantidade, quantidade, id_material]
-        );
-        res.json({ message: "Stock atualizado com sucesso" });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+        const [rows] = await pool.execute(`
+            SELECT h.*, u.nome as nome_utilizador 
+            FROM Historico_Stock h
+            JOIN Utilizador u ON h.id_user = u.id_user
+            ORDER BY h.data_movimento DESC LIMIT 50`);
+        res.json(rows);
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.get('/api/categorias', async (req, res) => {
@@ -185,6 +168,53 @@ app.get('/api/categorias', async (req, res) => {
         const [rows] = await pool.execute("SELECT id_categoria, nome FROM Categoria ORDER BY nome ASC");
         res.json(rows);
     } catch (err) { res.status(500).send(err.message); }
+});
+
+// ==========================================
+// 4. EVENTOS E ANEXOS 
+// ==========================================
+app.post('/api/eventos', upload.array('anexos'), async (req, res) => {
+    const { nome_evento, descricao, localizacao, data_inicio, data_fim, id_user } = req.body;
+    
+    if (!nome_evento || !id_user) {
+        return res.status(400).json({ error: "Nome e Utilizador são obrigatórios." });
+    }
+
+    try {
+        // 1. Inserir Evento
+        const [result] = await pool.execute(
+            `INSERT INTO Evento (nome_evento, descricao, data_inicio, data_fim, localizacao, id_user, id_estado) 
+             VALUES (?, ?, ?, ?, ?, ?, 1)`, 
+            [nome_evento, descricao, data_inicio, data_fim || data_inicio, localizacao, id_user]
+        );
+        
+        const id_evento = result.insertId;
+
+        if (req.files && req.files.length > 0) {
+            for (const file of req.files) {
+                await pool.execute(
+                    `INSERT INTO EventoAnexo (id_evento, nome, nome_oculto, extensao, ativo) 
+                     VALUES (?, ?, ?, ?, 1)`,
+                    [id_evento, file.originalname, file.filename, path.extname(file.originalname)]
+                );
+            }
+        }
+        
+        res.status(201).json({ message: "Evento e anexos criados com sucesso!", id_evento });
+    } catch (e) {
+        console.error("Erro SQL:", e);
+        res.status(500).json({ error: "Erro interno ao criar evento." });
+    }
+});
+
+app.get('/api/eventos/:id/anexos', async (req, res) => {
+    try {
+        const [rows] = await pool.execute(
+            "SELECT * FROM EventoAnexo WHERE id_evento = ? AND ativo = 1", 
+            [req.params.id]
+        );
+        res.json(rows);
+    } catch (e) { res.status(500).json([]); }
 });
 
 app.listen(port, '0.0.0.0', () => console.log(`Backend ativo na porta ${port}`));

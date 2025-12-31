@@ -60,9 +60,9 @@ const App = () => {
                 path="/gestao" 
                 element={<ProtectedRoute element={<GestorDashboard onLogout={handleLogout} />} />} 
                 />
-                <Route 
-                path="/stock" 
-                element={<ProtectedRoute element={<Stock onLogout={handleLogout} />} />} 
+               <Route 
+               path="/stock" 
+                element={<ProtectedRoute allowedPerfil={2} element={<Stock onLogout={handleLogout} />} />} 
                 />
                 <Route 
                 path="/explorar" 
