@@ -1,5 +1,5 @@
 PRIORIDADE ALTA:
-Encriptar a password-hash na db
+Encriptar a password-hash na db (feito mas está como login 2x)
 Mudar o botão de stock no DASHBOARD para o header
 Adicionar movimentos de STOCK
 Botão de ocultar produtos/materiais
