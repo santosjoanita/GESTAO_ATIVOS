@@ -267,3 +267,30 @@
     letter-spacing: 1px;
     text-transform: uppercase;
 }
+@media (max-width: 1024px) {
+    .grid-10-itens {
+        grid-template-columns: repeat(3, 1fr); /* 3 colunas em tablets */
+    }
+}
+
+@media (max-width: 768px) {
+    .explorar-content-wrapper {
+        flex-direction: column; 
+    }
+
+    .sidebar-filtros {
+        width: 100%;
+        height: auto;
+        position: relative;
+        top: 0;
+    }
+
+    .grid-10-itens {
+        grid-template-columns: repeat(2, 1fr); 
+        padding: 10px;
+    }
+
+    .logo-img-large {
+        height: 45px;
+    }
+}

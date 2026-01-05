@@ -87,3 +87,19 @@
 }
 
 .btn-submeter:hover { background-color: #162a3c; }
+
+@media (max-width: 480px) {
+    .requisicao-white-card {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    .requisicao-card-title {
+        font-size: 1.4rem;
+    }
+
+    .req-button-row {
+        flex-direction: column; 
+        
+    }
+}

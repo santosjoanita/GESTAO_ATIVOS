@@ -291,3 +291,29 @@
     font-size: 13px;
 }
 
+@media (max-width: 768px) {
+    .gestao-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fixed-header-esp {
+        height: auto;
+        padding: 10px 0;
+    }
+
+    .header-content-esp {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .header-nav-esp {
+        flex-wrap: wrap;
+        justify-content: center;
+        height: auto;
+    }
+
+    .nav-item-esp {
+        height: 40px;
+        padding: 0 15px;
+    }
+}
