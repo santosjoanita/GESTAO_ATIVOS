@@ -14,45 +14,47 @@ const Requisicao = ({ onLogout }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetch('http://localhost:3001/api/eventos')
+        fetch('http://localhost:3001/api/eventos/lista-simples')
             .then(res => res.json())
             .then(data => setEventos(data))
             .catch(err => console.error("Erro ao carregar eventos"));
     }, []);
 
-  const handleSubmeter = async (e) => {
-    e.preventDefault();
-    const user = JSON.parse(localStorage.getItem('user'));
-    
-    const userId = user?.id_user || user?.id;
+    const handleSubmeter = async (e) => {
+        e.preventDefault();
+        const user = JSON.parse(localStorage.getItem('user'));
+        
+        // 2. ATUALIZADO: Verificação robusta do ID
+        const userId = user?.id_user || user?.id;
 
-    if (!userId) {
-        alert("Erro: Utilizador não identificado. Faça login novamente.");
-        return;
-    }
-
-    try {
-        const response = await fetch('http://localhost:3001/api/requisicoes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id_evento: formData.id_evento,
-                id_user: userId,
-                data_requisicao: new Date().toISOString().slice(0, 10)
-            })
-        });
-
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.error);
+        if (!userId) {
+            alert("Erro: Utilizador não identificado. Faça login novamente.");
+            return;
         }
 
-        alert("Requisição submetida!");
-        navigate('/home');
-    } catch (err) {
-        alert("Erro 500: Verifique se o evento foi selecionado corretamente.");
-    }
-};
+        try {
+            const response = await fetch('http://localhost:3001/api/requisicoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_evento: formData.id_evento,
+                    id_user: userId,
+                    data_pedido: new Date().toISOString().slice(0, 19).replace('T', ' ') // Formato SQL
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || "Erro na submissão");
+            }
+
+            alert("Requisição submetida com sucesso!");
+            navigate('/perfil'); 
+        } catch (err) {
+            alert("Erro: Verifique se selecionou um evento válido.");
+        }
+    };
+
     return (
         <div className="requisicao-page-layout">
             <header className="fixed-header-esp">
@@ -66,7 +68,7 @@ const Requisicao = ({ onLogout }) => {
                     <div className="header-icons-esp">
                         <ShoppingCart size={24} className="icon-esp" />
                         <Link to="/perfil"><User size={24} className="icon-esp" /></Link>
-                        <button onClick={() => { localStorage.removeItem('user'); navigate('/'); }} className="logout-btn">
+                        <button onClick={() => { localStorage.clear(); navigate('/'); }} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>
                     </div>
@@ -85,48 +87,28 @@ const Requisicao = ({ onLogout }) => {
                                 value={formData.id_evento}
                                 onChange={(e) => setFormData({...formData, id_evento: e.target.value})}
                             >
-                                <option value="">Selecione...</option>
+                                <option value="">Selecione um evento aprovado...</option>
                                 {eventos.map(ev => (
-                                    <option key={ev.id_evento} value={ev.id_evento}>{ev.nome_evento}</option>
+                                    <option key={ev.id_evento} value={ev.id_evento}>
+                                        {ev.nome_evento}
+                                    </option>
                                 ))}
                             </select>
                         </div>
 
                         <div className="req-field-group">
-                            <label>Período de Reserva (automático)</label>
-                            <input type="text" value="automático" disabled className="input-disabled" />
-                        </div>
-
-                        <div className="req-field-group">
-                            <label>Importar Requisição</label>
-                            <select 
-                                value={formData.importar_id}
-                                onChange={(e) => setFormData({...formData, importar_id: e.target.value})}
-                            >
-                                <option value="">Selecione...</option>
-                                {/* Aqui poderias carregar requisições antigas para duplicar */}
-                            </select>
+                            <label>Período de Reserva</label>
+                            <input type="text" value="Definido pelo Evento" disabled className="input-disabled" />
                         </div>
 
                         <div className="req-button-row">
                             <button type="button" className="btn-cancelar" onClick={() => navigate('/home')}>CANCELAR</button>
-                            <button type="submit" className="btn-submeter">SUBMETER</button>
+                            <button type="submit" className="btn-submeter">CRIAR REQUISIÇÃO</button>
                         </div>
                     </form>
                 </div>
             </main>
 
-            <footer className="fixed-footer-esp">
-                <div className="footer-content-esp centered-content">
-                    <div className="footer-items-wrapper"> 
-                        <span className="footer-lang-esp">PT | EN</span>
-                        <button className="explore-button-esp" onClick={() => navigate('/explorar')}>
-                            <Search size={16} /> EXPLORAR MATERIAL
-                        </button>
-                        <span className="footer-project-esp">SEM REQUISIÇÃO ATIVA</span>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 };

@@ -69,6 +69,7 @@ const Home = ({ onLogout }) => {
                     
                     <nav className="header-nav-esp">
                         <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
+                        <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                         <Link to="/home" className="nav-item-esp active-tab-indicator">PÁGINA INICIAL</Link>
                         <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
                     </nav>
@@ -142,8 +143,6 @@ const Home = ({ onLogout }) => {
             <footer className="fixed-footer-esp">
                 <div className="footer-content-esp centered-content">
                     <div className="footer-items-wrapper"> 
-                        <span className="footer-lang-esp">PT | EN</span>
-                        <button className="explore-button-esp" onClick={() => navigate('/explorar')}>EXPLORAR MATERIAL</button>
                         <span className="footer-project-esp">
                             {projetoAtual === 'Sem requisição ativa' ? 'SEM PROJETO ATIVO' : `PROJETO: ${projetoAtual}`}
                         </span>

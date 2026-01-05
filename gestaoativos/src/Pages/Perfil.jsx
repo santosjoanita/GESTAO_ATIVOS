@@ -21,7 +21,7 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) 
                 <p className="event-date">Data: {event.date}</p>
             </div>
             <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
-                {showTrabalhar && (event.status === 'Aprovada' || event.status === 'Aprovado') && (
+                {showTrabalhar && (event.status.toLowerCase().includes('aprovad')) && (
                     <button className="edit-button-esp" onClick={() => onTrabalhar(event.title)}>
                         TRABALHAR
                     </button>
@@ -34,7 +34,11 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) 
         {isExpanded && (
             <div className="event-details">
                 <h4 className="details-title">Detalhes da Requisição:</h4>
-                <p className="material-list">ID Único: #{event.id}</p>
+                <div className="details-info-grid" style={{ padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px', marginTop: '10px' }}>
+                    <p><strong>ID Único:</strong> #{event.id}</p>
+                    <p><strong>Localização:</strong> {event.localizacao || 'Não especificada'}</p>
+                    <p><strong>Finalidade:</strong> {event.finalidade || 'N/A'}</p>
+                </div>
             </div>
         )}
     </div>
@@ -112,13 +116,17 @@ const Perfil = ({ onLogout }) => {
                     <nav className="header-nav-esp">
                         {isGestor ? (
                             /* HEADER EXCLUSIVO DO GESTOR */
-                            <Link to="/gestao" className="nav-item-esp">VOLTAR À DASHBOARD</Link>
+                            <>
+                                <Link to="/gestao" className="nav-item-esp">VOLTAR À DASHBOARD</Link>
+                                <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
+                            </>
                         ) : (
                             /* HEADER DO FUNCIONÁRIO */
                             <>
-                                <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
                                 <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link> 
+                                <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
                                 <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
+                                <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                             </>
                         )}
                     </nav>
@@ -151,30 +159,36 @@ const Perfil = ({ onLogout }) => {
                 </div>
 
                 <div className="list-items-container-esp">
-                    {displayItems.length > 0 ? (
-                        displayItems.map(item => (
-                            <EventCard key={`${item.id}-${item.title}`} event={item} isExpanded={expandedCardId === item.id} 
+                {displayItems.length > 0 ? (
+                    displayItems
+                        .sort((a, b) => {
+                            const dateA = a.date.split('/').reverse().join('');
+                            const dateB = b.date.split('/').reverse().join('');
+                            return dateB.localeCompare(dateA); 
+                        })
+                        .map(item => (
+                            <EventCard 
+                                key={`${item.id}-${item.title}`} 
+                                event={item} 
+                                isExpanded={expandedCardId === item.id} 
                                 onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
-                                onTrabalhar={(name) => { setUserData({...userData, projetoAtual: name}); localStorage.setItem('projeto_ativo', name); navigate('/explorar'); }} 
-                                showTrabalhar={activeTab === 'requisicoes' || activeTab === 'todos'} />
+                                onTrabalhar={(name) => { 
+                                    setUserData({...userData, projetoAtual: name}); 
+                                    localStorage.setItem('projeto_ativo', name); 
+                                    navigate('/explorar'); 
+                                }} 
+                                showTrabalhar={!isGestor && (activeTab === 'requisicoes' || activeTab === 'todos')} 
+                            />
                         ))
-                    ) : (
-                        <p className="no-items-msg">Nenhum item encontrado.</p>
-                    )}
-                </div>
+                ) : (
+                    <p className="no-items-msg">Nenhum item encontrado.</p>
+                )}
+            </div>
             </main>
 
             <footer className="fixed-footer-esp">
                 <div className="footer-content-esp centered-content">
                     <div className="footer-items-wrapper"> 
-                        <span className="footer-lang-esp">PT | EN</span>
-                        {isGestor ? (
-                            /* FOOTER EXCLUSIVO DO GESTOR */
-                            <button className="explore-button-esp" onClick={() => navigate('/stock')}>ATUALIZAR STOCK</button>
-                        ) : (
-                            /* FOOTER DO FUNCIONÁRIO */
-                            <button className="explore-button-esp" onClick={() => navigate('/explorar')}>EXPLORAR MATERIAL</button>
-                        )}
                         <span className="footer-project-esp">
                             {isGestor ? "PAINEL ADMINISTRATIVO" : `ATUALMENTE A TRABALHAR EM: ${userData.projetoAtual}`}
                         </span>

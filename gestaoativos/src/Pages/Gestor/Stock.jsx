@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, User, Package, Plus, Save, Upload, X } from 'lucide-react';
+import { LogOut, User, Package, Plus, Save, Upload, X, Eye, EyeOff } from 'lucide-react';
 import './Stock.css';
 import logo from '../../assets/img/esposende.png';
 
@@ -8,7 +8,7 @@ const Stock = () => {
     const navigate = useNavigate();
     const [materiais, setMateriais] = useState([]);
     const [categoriasBD, setCategoriasBD] = useState([]);
-    const [showModal, setShowModal] = useState(false); // Controla o formulário
+    const [showModal, setShowModal] = useState(false);
     const [selectedMaterial, setSelectedMaterial] = useState(null);
     const user = JSON.parse(localStorage.getItem('user'));
 
@@ -29,12 +29,34 @@ const Stock = () => {
 
     useEffect(() => { fetchMateriais(); fetchCategorias(); }, []);
 
+    // NOVA FUNÇÃO: Ocultar/Mostrar com confirmação
+    const handleToggleVisibilidade = async (material) => {
+        const novaVisibilidade = material.visivel ? 0 : 1;
+        const acaoTexto = novaVisibilidade ? "mostrar" : "ocultar";
+
+        if (window.confirm(`Tem a certeza que quer ${acaoTexto} o material "${material.nome}" no Catálogo?`)) {
+            try {
+                await fetch(`http://localhost:3001/api/materiais/${material.id_material}/visibilidade`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        visivel: novaVisibilidade,
+                        id_user: user?.id_user 
+                    })
+                });
+                fetchMateriais();
+            } catch (err) { 
+                console.error("Erro ao mudar visibilidade", err); 
+            }
+        }
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
         const res = await fetch('http://localhost:3001/api/materiais/update', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ ...formData, id_material: selectedMaterial?.id_material, id_user_responsavel: user?.id })
+            body: JSON.stringify({ ...formData, id_material: selectedMaterial?.id_material, id_user: user?.id_user })
         });
         if (res.ok) { fetchMateriais(); setShowModal(false); resetForm(); }
     };
@@ -81,7 +103,7 @@ const Stock = () => {
                                 <th>Material</th>
                                 <th>Stock</th>
                                 <th>Estado</th>
-                                <th>Ação</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -89,15 +111,27 @@ const Stock = () => {
                                 <tr key={m.id_material}>
                                     <td><strong>{m.nome}</strong></td>
                                     <td>{m.quantidade_total}</td>
-                                    <td>{m.visivel ? 'Visível' : 'Oculto'}</td>
-                                    <td><button className="btn-edit" onClick={() => abrirEdicao(m)}>EDITAR</button></td>
+                                    <td>
+                                        <span className={`status-badge ${m.visivel ? 'aprovado' : 'rejeitado'}`}>
+                                            {m.visivel ? 'Visível' : 'Oculto'}
+                                        </span>
+                                    </td>
+                                    <td className="table-actions-cell">
+                                        <button className="btn-edit" onClick={() => abrirEdicao(m)}>EDITAR</button>
+                                        <button 
+                                            className={m.visivel ? "btn-reject" : "btn-approve"} 
+                                            onClick={() => handleToggleVisibilidade(m)}
+                                            style={{ marginLeft: '10px', padding: '5px 10px', fontSize: '11px' }}
+                                        >
+                                            {m.visivel ? "OCULTAR" : "MOSTRAR"}
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
 
-                {/* MODAL DO FORMULÁRIO */}
                 {showModal && (
                     <div className="modal-overlay">
                         <div className="modal-content stock-modal">

@@ -28,12 +28,16 @@ services:
       DB_USER: user_gestao
       DB_PASS: user_password_segura
       DB_NAME: gestao_ativos_db
+      NODE_ENV: development
     ports:
       - "3001:3001"
+    volumes:
+      - ./backend_auth:/usr/src/app
+      - /usr/src/app/node_modules
     depends_on:
       - mysql-db
 
-  # 3. FRONTEND (Mantido)
+  # 3. FRONTEND
   frontend:
     build:
       context: ./gestaoativos  
@@ -41,8 +45,12 @@ services:
     container_name: gestaoativos_frontend
     environment:
       VITE_API_BASE_URL: http://localhost:3001 
+      CHOKIDAR_USEPOLLING: "true"
     ports:
-      - "3000:80"
+      - "3000:80"  
+    volumes:
+      - ./gestaoativos:/usr/src/app
+      - /usr/src/app/node_modules
     depends_on:
       - auth-service
     
