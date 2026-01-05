@@ -1,0 +1,72 @@
+
+@media (max-width: 768px) {
+    /* HEADERS RESPONSIVOS */
+    .fixed-header-esp {
+        height: auto !important;
+        padding: 10px 0;
+    }
+
+    .header-content-esp {
+        flex-direction: column !important;
+        gap: 12px;
+        width: 95%;
+    }
+
+    .header-nav-esp {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .nav-item-esp {
+        font-size: 11px !important;
+        padding: 6px 10px !important;
+    }
+
+    /* COMPENSAÇÃO DE ESPAÇO  */
+    .explorar-container, 
+    .gestao-layout, 
+    .perfil-page-app, 
+    .requisicao-page-layout {
+        padding-top: 160px !important; 
+    }
+
+    /* FOOTERS RESPONSIVOS */
+    .fixed-footer-esp, .footer-trabalho {
+        height: auto !important;
+        padding: 15px 10px !important;
+        position: fixed;
+        bottom: 0;
+    }
+
+    .footer-content-esp, .footer-inner {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .status-text, .footer-project-esp {
+        font-size: 11px !important;
+    }
+
+    /* GRIDS (Catálogo e Dashboard) */
+    .grid-10-itens {
+        grid-template-columns: repeat(2, 1fr) !important; 
+        gap: 15px !important;
+    }
+
+    .gestao-grid {
+        grid-template-columns: 1fr !important; 
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-10-itens {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .requisicao-white-card {
+        width: 100%;
+        padding: 20px;
+    }
+}

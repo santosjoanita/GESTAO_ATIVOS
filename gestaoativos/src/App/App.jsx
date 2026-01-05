@@ -8,6 +8,7 @@ import Requisicao from '../forms/requisicao/Requisicao';
 import GestorDashboard from '../Pages/Gestor/GestorDashboard';
 import Stock from '../Pages/Gestor/Stock';
 import Explorar from '../Pages/Material/Explorar';
+import '../assets/css/global.css';
 
 const App = () => {
     const [currentUser, setCurrentUser] = useState(() => {
