@@ -21,39 +21,59 @@ const Requisicao = ({ onLogout }) => {
     }, []);
 
     const handleSubmeter = async (e) => {
-        e.preventDefault();
-        const user = JSON.parse(localStorage.getItem('user'));
-        
-        // 2. ATUALIZADO: Verificação robusta do ID
-        const userId = user?.id_user || user?.id;
+    e.preventDefault();
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user?.id_user || user?.id;
 
-        if (!userId) {
-            alert("Erro: Utilizador não identificado. Faça login novamente.");
+    if (!userId) {
+        alert("Erro: Utilizador não identificado. Faça login novamente.");
+        return;
+    }
+
+    // --- VALIDAÇÃO DE DATAS E EVENTO ---
+    
+    if (!formData.id_evento) {
+        alert("Por favor, selecione um evento associado.");
+        return;
+    }
+
+    const eventoSelecionado = eventos.find(ev => ev.id_evento === parseInt(formData.id_evento));
+    
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    if (eventoSelecionado && eventoSelecionado.data_fim) {
+        const dataFimEvento = new Date(eventoSelecionado.data_fim);
+        if (dataFimEvento < hoje) {
+            alert("Este evento já terminou. Não é possível criar novas requisições para ele.");
             return;
         }
+    }
 
-        try {
-            const response = await fetch('http://localhost:3001/api/requisicoes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id_evento: formData.id_evento,
-                    id_user: userId,
-                    data_pedido: new Date().toISOString().slice(0, 19).replace('T', ' ') // Formato SQL
-                })
-            });
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || "Erro na submissão");
-            }
+    try {
+        const response = await fetch('http://localhost:3001/api/requisicoes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id_evento: formData.id_evento,
+                id_user: userId,
+                data_pedido: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            })
+        });
 
-            alert("Requisição submetida com sucesso!");
-            navigate('/perfil'); 
-        } catch (err) {
-            alert("Erro: Verifique se selecionou um evento válido.");
+        if (!response.ok) {
+            const err = await response.json();
+            throw new Error(err.error || "Erro na submissão");
         }
-    };
+
+        alert("Requisição submetida com sucesso!");
+        navigate('/perfil'); 
+    } catch (err) {
+        console.error("Erro no fetch:", err);
+        alert(`Erro: ${err.message || "Verifique se selecionou um evento válido."}`);
+    }
+};
 
     return (
         <div className="requisicao-page-layout">

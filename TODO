@@ -5,7 +5,7 @@ Criar outro backend para gerir a lógica dos produtos/materiais (CRUD)
 
 RIORIDADE MÉDIA:
 Responsividade
-Validação de datas nas Requisições
+
 
 
 PRIORIDADE BAIXA:
@@ -28,4 +28,4 @@ Ordernar os eventos por data no perfil.
 Página inicial à esquerda.
 Explorar material (mudar para catálogo) encima
 Botão de ocultar produtos/materiais
-
+Validação de datas nas Requisições
