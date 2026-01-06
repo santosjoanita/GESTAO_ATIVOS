@@ -97,10 +97,15 @@ const Home = ({ onLogout }) => {
                             notifications.map(n => (
                                 <div key={n.id} className="notification-item-home warning">
                                     <div className="notification-content">
-                                        <p><strong>URGENTE:</strong> O evento "{n.nome_evento}" termina em <strong>{n.dias_restantes} dias</strong>.</p>
+                                        <p>
+                                            <strong>URGENTE:</strong> O evento "{n.nome_evento}" 
+                                            {n.dias_restantes < 0 
+                                                ? ` terminou há ${Math.abs(n.dias_restantes)} dias` 
+                                                : ` termina em ${n.dias_restantes} dias`}
+                                            .
+                                        </p>                                        
                                         <span>Por favor, verifique a recolha dos materiais.</span>
                                     </div>
-                                    <button onClick={() => navigate('/perfil')} className="btn-ver-detalhes">VER</button>
                                 </div>
                             ))
                         ) : (

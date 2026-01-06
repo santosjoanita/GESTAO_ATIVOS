@@ -13,15 +13,19 @@ const formatDate = (dateString) => {
     return `${day}/${month}/${year}`;
 };
 
-const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) => (
+const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao }) => (
     <div className={`event-card ${event.colorClass} ${isExpanded ? 'expanded' : ''}`}>
         <div className="event-header-row" onClick={onToggle}>
             <div>
                 <p className="event-title">{event.title} <span className="status-tag">({event.status})</span></p>
-                <p className="event-date">Data: {event.date}</p>
+                {!isRequisicao && (
+                    <p className="event-date">
+                        Data: {event.date} {event.data_fim ? ` até ${formatDate(event.data_fim)}` : ''}
+                    </p>
+                )}
             </div>
             <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
-                {showTrabalhar && (event.status.toLowerCase().includes('aprovad')) && (
+                {isRequisicao && (event.status.toLowerCase().includes('aprovad')) && (
                     <button className="edit-button-esp" onClick={() => onTrabalhar(event.title)}>
                         TRABALHAR
                     </button>
@@ -36,6 +40,11 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) 
                 <h4 className="details-title">Detalhes:</h4>
                 <div className="details-info-grid">
                     <p><strong>Localização:</strong> {event.localizacao || 'Esposende (Centro)'}</p>
+                    {!isRequisicao && (
+                        <p style={{marginTop: '10px', color: '#1f4e79', fontWeight: 'bold'}}>
+                            Existem {event.num_requisicoes || 0} requisições neste evento.
+                        </p>
+                    )}
                 </div>
             </div>
         )}
@@ -76,18 +85,15 @@ const Perfil = ({ onLogout }) => {
                 return 'pendente';
             };
 
-            // LÓGICA DE NUMERAÇÃO NO FRONTEND
             const reqComNumeracao = Array.isArray(dataReq) ? dataReq.map((r, index, array) => {
-                // Filtra requisições do mesmo evento para contar a ordem
                 const doMesmoEvento = array.filter(item => item.id_evento === r.id_evento);
-                // Encontra a posição (ordem) baseada no ID (mais antigo = 1)
                 const ordem = doMesmoEvento.sort((a,b) => a.id_req - b.id_req).findIndex(item => item.id_req === r.id_req) + 1;
                 
                 return {
-                    id: r.id_req,
-                    id_evento: r.id_evento,
+                    id: `req-${r.id_req}`, 
+                    id_orig: r.id_req,
+                    isRequisicao: true,
                     title: `${r.nome_evento} - Requisição ${ordem}`,
-                    date: formatDate(r.data_pedido), 
                     status: r.estado_nome || r.estado || 'Pendente',
                     localizacao: r.localizacao,
                     colorClass: getStatusColor(r.estado_nome || r.estado)
@@ -96,14 +102,24 @@ const Perfil = ({ onLogout }) => {
 
             setRequisicoesList(reqComNumeracao);
 
-            setEventsList(Array.isArray(dataEv) ? dataEv.map(e => ({
-                id: e.id_evento,
-                title: e.nome_evento,
-                date: formatDate(e.data_inicio),
-                status: e.estado_nome,
-                localizacao: e.localizacao, 
-                colorClass: getStatusColor(e.estado_nome)
-            })) : []);
+            const eventosComContagem = Array.isArray(dataEv) ? dataEv.map(e => {
+                const totalReqs = Array.isArray(dataReq) ? dataReq.filter(r => r.id_evento === e.id_evento).length : 0;
+                
+                return {
+                    id: `ev-${e.id_evento}`,
+                    isRequisicao: false,
+                    title: e.nome_evento,
+                    date: formatDate(e.data_inicio),
+                    data_fim: e.data_fim,
+                    status: e.estado_nome,
+                    localizacao: e.localizacao, 
+                    num_requisicoes: totalReqs,
+                    colorClass: getStatusColor(e.estado_nome)
+                };
+            }) : [];
+
+            setEventsList(eventosComContagem);
+
         } catch (error) { console.error(error); }
     };
 
@@ -139,27 +155,15 @@ const Perfil = ({ onLogout }) => {
                     <div className="logo-esp"><img src={logo} alt="Logo" className="logo-img" /></div>
                     <nav className="header-nav-esp">
                         {isGestor ? (
-                            <>
-                                <Link to="/gestao" className="nav-item-esp">VOLTAR À DASHBOARD</Link>
-                                <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
-                            </>
+                            <><Link to="/gestao" className="nav-item-esp">VOLTAR À DASHBOARD</Link><Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link></>
                         ) : (
-                            <>
-                                <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link> 
-                                <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
-                                <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
-                                <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
-                            </>
+                            <><Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link><Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link><Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link><Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link></>
                         )}
                     </nav>
                     <div className="header-icons-esp">
                         <ShoppingCart size={24} className="icon-esp" />
-                        <Link to="/perfil" className="icon-link-active">
-                            <User size={24} className="icon-esp active-icon-indicator" />
-                        </Link>
-                        <button onClick={handleLogout} className="logout-btn">
-                            <LogOut size={24} className="icon-esp" />
-                        </button>
+                        <Link to="/perfil" className="icon-link-active"><User size={24} className="icon-esp active-icon-indicator" /></Link>
+                        <button onClick={handleLogout} className="logout-btn"><LogOut size={24} className="icon-esp" /></button>
                     </div>
                 </div>
             </header>
@@ -181,38 +185,26 @@ const Perfil = ({ onLogout }) => {
 
                 <div className="status-filter-bar-esp">
                     {['todos', 'pendente', 'aprovado', 'rejeitado'].map((estado) => (
-                        <button 
-                            key={estado}
-                            className={`status-filter-btn ${filtroEstado === estado ? 'active-status' : ''}`}
-                            onClick={() => setFiltroEstado(estado)}
-                        >
-                            {estado.toUpperCase()}
-                        </button>
+                        <button key={estado} className={`status-filter-btn ${filtroEstado === estado ? 'active-status' : ''}`} onClick={() => setFiltroEstado(estado)}>{estado.toUpperCase()}</button>
                     ))}
                 </div>
 
                 <div className="list-items-container-esp">
                     {displayItems.length > 0 ? (
-                        displayItems
-                            .sort((a, b) => {
-                                const dateA = a.date.split('/').reverse().join('');
-                                const dateB = b.date.split('/').reverse().join('');
-                                return dateB.localeCompare(dateA); 
-                            })
-                            .map(item => (
-                                <EventCard 
-                                    key={`${item.id}-${item.title}`} 
-                                    event={item} 
-                                    isExpanded={expandedCardId === item.id} 
-                                    onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
-                                    onTrabalhar={(name) => { 
-                                        setUserData({...userData, projetoAtual: name}); 
-                                        localStorage.setItem('projeto_ativo', name); 
-                                        navigate('/explorar'); 
-                                    }} 
-                                    showTrabalhar={!isGestor && (activeTab === 'requisicoes' || activeTab === 'todos')} 
-                                />
-                            ))
+                        displayItems.map(item => (
+                            <EventCard 
+                                key={item.id} 
+                                event={item} 
+                                isRequisicao={item.isRequisicao}
+                                isExpanded={expandedCardId === item.id} 
+                                onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
+                                onTrabalhar={(name) => { 
+                                    setUserData({...userData, projetoAtual: name}); 
+                                    localStorage.setItem('projeto_ativo', name); 
+                                    navigate('/explorar'); 
+                                }} 
+                            />
+                        ))
                     ) : (
                         <p className="no-items-msg">Nenhum item encontrado.</p>
                     )}

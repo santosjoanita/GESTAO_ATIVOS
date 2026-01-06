@@ -59,16 +59,20 @@ app.get('/api/notificacoes/prazos/:id', async (req, res) => {
             SELECT 
                 r.id_req as id,
                 e.nome_evento,
-                DATEDIFF(e.data_fim, CURDATE()) as dias_restantes,
-                'requisição' as tipo
+                e.data_fim,
+                DATEDIFF(e.data_fim, CURDATE()) as dias_restantes
             FROM Requisicao r
             JOIN Evento e ON r.id_evento = e.id_evento
             WHERE r.id_user = ? 
-              AND DATEDIFF(e.data_fim, CURDATE()) BETWEEN 0 AND 3
-              AND r.id_estado = 2 -- Apenas as que foram aprovadas/estão ativas
+              AND e.data_fim IS NOT NULL
+              AND DATEDIFF(e.data_fim, CURDATE()) BETWEEN -30 AND 30
+              AND r.id_estado = 2 
             ORDER BY dias_restantes ASC`, [req.params.id]);
         res.json(rows);
-    } catch (e) { res.status(500).json([]); }
+    } catch (e) { 
+        console.error("Erro nas notificações:", e);
+        res.status(500).json([]); 
+    }
 });
 
 app.get('/api/eventos/lista-simples', async (req, res) => {
