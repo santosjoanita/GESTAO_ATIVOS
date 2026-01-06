@@ -18,7 +18,7 @@ const Explorar = () => {
     const itensPorPagina = 10; 
 
     const listaArmazens = [
-        "Douro", "Instalações SIGE", "Fórum Rodrigues Sampaio", 
+        "Bouro", "Instalações SIGE", "Fórum Rodrigues Sampaio", 
         "Biblioteca Municipal", "Auditório Municipal", "Instalações DSSA", 
         "Instalações SMPC (Serviço Municipal de Proteção Civil)", 
         "Armazém Municipal Central", "Estaleiro Municipal"

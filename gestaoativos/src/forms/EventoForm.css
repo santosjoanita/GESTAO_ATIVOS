@@ -2,10 +2,11 @@
 
 :root {
     --form-primary-color: #1f4e79; 
+    --color-bg-light: #f4f7f6;
 }
 
 .form-page-layout {
-    padding-top: 80px; 
+    padding-top: 100px; 
     padding-bottom: 60px; 
     min-height: 100vh;
     background-color: var(--color-bg-light); 
@@ -21,7 +22,7 @@
 .form-modal-container {
     background-color: white;
     border-radius: 15px; 
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 850px; 
     padding: 35px; 
@@ -29,11 +30,12 @@
 
 .form-title {
     color: var(--form-primary-color);
-    font-size: 1.8em;
-    font-weight: 700;
+    font-size: 1.5em;
+    font-weight: 800;
     text-align: center;
-    margin: 0 0 25px 0;
+    margin: 0 0 30px 0;
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .event-form-grid {
@@ -44,7 +46,7 @@
 
 .input-map-container-layout {
     display: flex;
-    gap: 20px;
+    gap: 25px;
 }
 
 .input-column-layout {
@@ -57,16 +59,16 @@
 .map-column-layout {
     flex: 40%; 
     display: flex;
-    align-items: flex-start; 
+    flex-direction: column;
+    gap: 10px;
 }
 
 .map-image-placeholder-layout {
     width: 100%;
-    height: 180px; 
-    border: 1px solid #ccc; 
-    border-radius: 4px;
+    height: 220px; 
+    border: 1px solid #ddd; 
+    border-radius: 8px;
     overflow: hidden; 
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .map-image-content {
@@ -81,57 +83,79 @@
 }
 
 .form-group label {
-    font-size: 0.9em;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 5px;
+    font-size: 0.85em;
+    font-weight: 700;
+    color: var(--form-primary-color);
+    margin-bottom: 6px;
+    text-transform: uppercase;
 }
 
-input[type="text"], textarea, input[type="date"], input[type="time"], input[type="file"] {
+input[type="text"], 
+textarea, 
+select,
+input[type="date"], 
+input[type="time"], 
+input[type="file"] {
     border: 1px solid #ccc;
-    padding: 8px 10px;
-    border-radius: 4px;
-    font-size: 1em;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.95em;
+    transition: border-color 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--form-primary-color);
 }
 
 textarea {
     resize: vertical;
-    min-height: 80px;
+    min-height: 100px;
 }
 
 .date-time-row-layout {
     display: flex;
     gap: 15px;
-    justify-content: flex-start;
 }
 
-.date-time-row-layout .date-time-group {
-    width: 20%; 
-    min-width: 120px; 
+.date-time-group {
+    flex: 1;
 }
 
 .form-actions-layout {
     display: flex;
     justify-content: flex-end; 
-    gap: 15px;
+    gap: 12px;
     margin-top: 30px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
 }
 
-.btn-cancelar-layout, .btn-submeter-layout {
-    padding: 10px 30px;
+/* CORREÇÃO DO TAMANHO DOS BOTÕES */
+.btn-cancelar-layout, 
+.btn-submeter-layout {
+    padding: 10px 20px; 
+    min-width: 140px;   
     border: none;
-    border-radius: 4px;
-    font-weight: bold;
+    border-radius: 6px;
+    font-weight: 800;
+    font-size: 0.85em;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-transform: uppercase;
+    transition: filter 0.2s;
 }
 
 .btn-cancelar-layout {
-    background-color: #a7a7a7; 
-    color: white;
+    background-color: #eee; 
+    color: #666;
 }
 
 .btn-submeter-layout {
     background-color: var(--form-primary-color); 
     color: white;
+}
+
+.btn-cancelar-layout:hover, 
+.btn-submeter-layout:hover {
+    filter: brightness(0.9);
 }

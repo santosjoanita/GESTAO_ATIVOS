@@ -201,6 +201,28 @@ const Stock = () => {
                                         </select>
                                     </div>
                                 </div>
+                                
+                                <div className="form-group" style={{ marginTop: '15px', display: 'flex', flexDirection: 'column' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#4a5568', marginBottom: '5px', textTransform: 'uppercase' }}>
+                                        Especificações Técnicas
+                                    </label>
+                                    <textarea 
+                                        value={formData.especificacoes} 
+                                        onChange={e => setFormData({...formData, especificacoes: e.target.value})}
+                                        placeholder="Dimensões, peso, voltagem..."
+                                        style={{ 
+                                            width: '100%', 
+                                            minHeight: '80px', 
+                                            padding: '10px', 
+                                            borderRadius: '6px', 
+                                            border: '1px solid #e2e8f0', 
+                                            background: '#f8fafc',
+                                            boxSizing: 'border-box',
+                                            fontFamily: 'inherit',
+                                            fontSize: '14px'
+                                        }}
+                                    />
+                                </div>
 
                                 <label>Foto do Material</label>
                                 <label className="file-input-label">
@@ -225,21 +247,21 @@ const Stock = () => {
 
                                 <label>Localização</label>
                                 <select 
-                                    value={formData.local_armazenamento} 
-                                    onChange={e => setFormData({...formData, local_armazenamento: e.target.value})} 
-                                    required
-                                >
-                                    <option value="">Selecionar armazém...</option>
-                                    <option value="Bouro">Bouro</option>
-                                    <option value="Armazém Municipal Central">Armazém Municipal Central</option>
-                                    <option value="Instalações SGE">Instalações SGE</option>
-                                    <option value="Instalações DSSA">Instalações DSSA</option>
-                                    <option value="Fórum Rodrigues Sampaio">Fórum Rodrigues Sampaio</option>
-                                    <option value="Biblioteca Municipal">Biblioteca Municipal</option>
-                                    <option value="Auditório Municipal">Auditório Municipal</option>
-                                    <option value="Instalações SMPC">Instalações SMPC</option>
-                                    <option value="Estaleiro Municipal">Estaleiro Municipal</option>
-                                </select>
+                        value={formData.local_armazenamento} 
+                        onChange={e => setFormData({...formData, local_armazenamento: e.target.value})} 
+                        required
+                    >
+                        <option value="">Selecionar armazém...</option>
+                        <option value="Bouro">Bouro</option>
+                        <option value="Armazém Municipal Central">Armazém Municipal Central</option>
+                        <option value="Instalações SGE">Instalações SGE</option>
+                        <option value="Instalações DSSA">Instalações DSSA</option>
+                        <option value="Fórum Rodrigues Sampaio">Fórum Rodrigues Sampaio</option>
+                        <option value="Biblioteca Municipal">Biblioteca Municipal</option>
+                        <option value="Auditório Municipal">Auditório Municipal</option>
+                        <option value="Instalações SMPC">Instalações SMPC</option>
+                        <option value="Estaleiro Municipal">Estaleiro Municipal</option>
+                    </select>
 
                                 <button type="submit" className="btn-submeter"><Save size={18}/> GUARDAR NO SISTEMA</button>
                             </form>
