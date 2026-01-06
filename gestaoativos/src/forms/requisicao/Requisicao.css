@@ -1,105 +1,104 @@
 .requisicao-page-layout {
-    min-height: 100vh;
-    background-color: #f8f9fa;
-    display: flex;
-    flex-direction: column;
+    padding-top: 140px !important;
+    background-color: #f4f7f6 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 100vh !important;
 }
 
 .requisicao-main-centered {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 100px 20px;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    width: 100% !important;
 }
 
 .requisicao-white-card {
-    background: white;
-    width: 90%;
-    max-width: 450px;
-    padding: 40px;
-    border-radius: 30px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-    box-sizing: border-box;
+    background: white !important;
+    width: 95% !important;
+    max-width: 500px !important;
+    padding: 40px !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1) !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
 }
+
 .requisicao-card-title {
-    color: #2c3e50;
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin-bottom: 30px;
+    color: #1f4e79 !important;
+    text-align: center !important;
+    font-size: 1.8rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 30px !important;
+    text-transform: uppercase !important;
 }
 
 .req-field-group {
-    margin-bottom: 20px;
+    width: 100% !important;
+    margin-bottom: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 .req-field-group label {
-    display: block;
-    font-size: 0.85rem;
-    color: #555;
-    margin-bottom: 8px;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+    color: #333 !important;
 }
 
 .req-field-group select, 
 .req-field-group input {
-    width: 100% !important; 
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #fff;
-    box-sizing: border-box;
-    font-size: 14px;
+    width: 100% !important;
+    padding: 12px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
 }
 
 .input-disabled {
-    background-color: #f1f3f5 !important; 
-    color: #7f8c8d;
-    cursor: not-allowed;
+    background-color: #f1f3f5 !important;
+    color: #7f8c8d !important;
+    cursor: not-allowed !important;
 }
 
 .req-button-row {
-    display: flex;
-    gap: 15px;
-    margin-top: 40px;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 15px !important;
+    margin-top: 35px !important;
+}
+
+.btn-cancelar, .btn-submeter {
+    flex: 1 1 0% !important;
+    height: 50px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: bold !important;
+    cursor: pointer !important;
+    text-transform: uppercase !important;
+    font-size: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .btn-cancelar {
-    flex: 1;
-    padding: 12px;
-    background-color: #b0b0b0;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
+    background-color: #b0b0b0 !important;
+    color: white !important;
 }
 
 .btn-submeter {
-    flex: 1;
-    padding: 12px;
-    background-color: #1f3a52; /* Azul escuro da imagem */
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
+    background-color: #1f4e79 !important;
+    color: white !important;
 }
 
-.btn-submeter:hover { background-color: #162a3c; }
+.logo-img {
+    height: 85px !important;
+    width: auto !important;
+}
 
-@media (max-width: 480px) {
-    .requisicao-white-card {
-        padding: 20px;
-        margin: 20px;
-    }
-
-    .requisicao-card-title {
-        font-size: 1.4rem;
-    }
-
-    .req-button-row {
-        flex-direction: column; 
-        
-    }
+.fixed-header-esp {
+    height: 100px !important;
+    z-index: 9999 !important;
 }

@@ -44,7 +44,7 @@ const HomeLayout = ({ onLoginButtonClick }) => {
 
                 <div className="button-wrapper"> 
                     <button
-                        onClick={onLoginButtonClick} // Chama a função que abre o modal no componente PAI
+                        onClick={onLoginButtonClick} 
                         className="app-button"
                     >
                         <LogIn className="w-6 h-6" /> 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft, LogOut } from 'lucide-react'; 
+import { ChevronDown, ChevronUp, ShoppingCart, User, LogOut } from 'lucide-react'; 
 import { Link, useNavigate } from 'react-router-dom'; 
 import './Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
@@ -26,18 +26,16 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, showTrabalhar }) 
                         TRABALHAR
                     </button>
                 )}
-                <div className="event-arrow-container" onClick={onToggle}>
+                <div className="event-arrow-container">
                     {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                 </div>
             </div>
         </div>
         {isExpanded && (
             <div className="event-details">
-                <h4 className="details-title">Detalhes da Requisição:</h4>
-                <div className="details-info-grid" style={{ padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '8px', marginTop: '10px' }}>
-                    <p><strong>ID Único:</strong> #{event.id}</p>
-                    <p><strong>Localização:</strong> {event.localizacao || 'Não especificada'}</p>
-                    <p><strong>Finalidade:</strong> {event.finalidade || 'N/A'}</p>
+                <h4 className="details-title">Detalhes:</h4>
+                <div className="details-info-grid">
+                    <p><strong>Localização:</strong> {event.localizacao || 'Esposende (Centro)'}</p>
                 </div>
             </div>
         )}
@@ -58,38 +56,54 @@ const Perfil = ({ onLogout }) => {
     const [requisicoesList, setRequisicoesList] = useState([]);
     const [activeTab, setActiveTab] = useState('todos'); 
     const [expandedCardId, setExpandedCardId] = useState(null); 
+    const [filtroEstado, setFiltroEstado] = useState('todos');
 
     const fetchPerfilData = async () => {
         if (!user) return;
-
         try {
-            const resReq = await fetch(`http://localhost:3001/api/requisicoes/user/${user.id_user}`);
-            const dataReq = await resReq.json();
+            const [resReq, resEv] = await Promise.all([
+                fetch(`http://localhost:3001/api/requisicoes/user/${user.id_user}`),
+                fetch(`http://localhost:3001/api/eventos/user/${user.id_user}`)
+            ]);
             
-            const resEv = await fetch(`http://localhost:3001/api/eventos/user/${user.id_user}`);
+            const dataReq = await resReq.json();
             const dataEv = await resEv.json();
+
             const getStatusColor = (status) => {
-            const s = (status || '').toString().toLowerCase(); 
+                const s = (status || '').toString().toLowerCase(); 
                 if (s.includes('aprovad')) return 'aprovado';
                 if (s.includes('rejeitad')) return 'rejeitado'; 
                 return 'pendente';
-            };  
-            setRequisicoesList(Array.isArray(dataReq) ? dataReq.map(r => ({
-                id: r.id_req,
-                title: r.nome_evento,
-                date: formatDate(r.data_pedido), 
-                status: r.estado_nome || r.estado || 'Pendente',
-                colorClass: getStatusColor(r.estado_nome || r.estado) 
-            })) : []);
+            };
+
+            // LÓGICA DE NUMERAÇÃO NO FRONTEND
+            const reqComNumeracao = Array.isArray(dataReq) ? dataReq.map((r, index, array) => {
+                // Filtra requisições do mesmo evento para contar a ordem
+                const doMesmoEvento = array.filter(item => item.id_evento === r.id_evento);
+                // Encontra a posição (ordem) baseada no ID (mais antigo = 1)
+                const ordem = doMesmoEvento.sort((a,b) => a.id_req - b.id_req).findIndex(item => item.id_req === r.id_req) + 1;
+                
+                return {
+                    id: r.id_req,
+                    id_evento: r.id_evento,
+                    title: `${r.nome_evento} - Requisição ${ordem}`,
+                    date: formatDate(r.data_pedido), 
+                    status: r.estado_nome || r.estado || 'Pendente',
+                    localizacao: r.localizacao,
+                    colorClass: getStatusColor(r.estado_nome || r.estado)
+                };
+            }) : [];
+
+            setRequisicoesList(reqComNumeracao);
 
             setEventsList(Array.isArray(dataEv) ? dataEv.map(e => ({
                 id: e.id_evento,
                 title: e.nome_evento,
                 date: formatDate(e.data_inicio),
                 status: e.estado_nome,
+                localizacao: e.localizacao, 
                 colorClass: getStatusColor(e.estado_nome)
             })) : []);
-
         } catch (error) { console.error(error); }
     };
 
@@ -104,9 +118,19 @@ const Perfil = ({ onLogout }) => {
         navigate('/');
     };
 
-    const displayItems = activeTab === 'eventos' ? eventsList : 
-                         activeTab === 'requisicoes' ? requisicoesList : 
-                         [...eventsList, ...requisicoesList];
+    const displayItems = (() => {
+        let list = activeTab === 'eventos' ? eventsList : 
+                   activeTab === 'requisicoes' ? requisicoesList : 
+                   [...eventsList, ...requisicoesList];
+
+        if (filtroEstado !== 'todos') {
+            list = list.filter(item => {
+                const status = (item.status || '').toLowerCase();
+                return status.includes(filtroEstado.substring(0, 5));
+            });
+        }
+        return list;
+    })();
 
     return (
         <div className="perfil-page-app">
@@ -115,13 +139,11 @@ const Perfil = ({ onLogout }) => {
                     <div className="logo-esp"><img src={logo} alt="Logo" className="logo-img" /></div>
                     <nav className="header-nav-esp">
                         {isGestor ? (
-                            /* HEADER EXCLUSIVO DO GESTOR */
                             <>
                                 <Link to="/gestao" className="nav-item-esp">VOLTAR À DASHBOARD</Link>
                                 <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                             </>
                         ) : (
-                            /* HEADER DO FUNCIONÁRIO */
                             <>
                                 <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link> 
                                 <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
@@ -148,7 +170,6 @@ const Perfil = ({ onLogout }) => {
                     <div>
                         <h2 className="user-title-esp">Olá, {user?.nome || 'Utilizador'}.</h2>
                         <p className="user-email-esp">{user?.email}</p>
-                        <button className="edit-button-esp">EDITAR DADOS PESSOAIS</button>
                     </div>
                 </div>
 
@@ -158,32 +179,44 @@ const Perfil = ({ onLogout }) => {
                     <button className={`tab-button-esp ${activeTab === 'requisicoes' ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab('requisicoes')}>REQUISIÇÕES</button>
                 </div>
 
+                <div className="status-filter-bar-esp">
+                    {['todos', 'pendente', 'aprovado', 'rejeitado'].map((estado) => (
+                        <button 
+                            key={estado}
+                            className={`status-filter-btn ${filtroEstado === estado ? 'active-status' : ''}`}
+                            onClick={() => setFiltroEstado(estado)}
+                        >
+                            {estado.toUpperCase()}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="list-items-container-esp">
-                {displayItems.length > 0 ? (
-                    displayItems
-                        .sort((a, b) => {
-                            const dateA = a.date.split('/').reverse().join('');
-                            const dateB = b.date.split('/').reverse().join('');
-                            return dateB.localeCompare(dateA); 
-                        })
-                        .map(item => (
-                            <EventCard 
-                                key={`${item.id}-${item.title}`} 
-                                event={item} 
-                                isExpanded={expandedCardId === item.id} 
-                                onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
-                                onTrabalhar={(name) => { 
-                                    setUserData({...userData, projetoAtual: name}); 
-                                    localStorage.setItem('projeto_ativo', name); 
-                                    navigate('/explorar'); 
-                                }} 
-                                showTrabalhar={!isGestor && (activeTab === 'requisicoes' || activeTab === 'todos')} 
-                            />
-                        ))
-                ) : (
-                    <p className="no-items-msg">Nenhum item encontrado.</p>
-                )}
-            </div>
+                    {displayItems.length > 0 ? (
+                        displayItems
+                            .sort((a, b) => {
+                                const dateA = a.date.split('/').reverse().join('');
+                                const dateB = b.date.split('/').reverse().join('');
+                                return dateB.localeCompare(dateA); 
+                            })
+                            .map(item => (
+                                <EventCard 
+                                    key={`${item.id}-${item.title}`} 
+                                    event={item} 
+                                    isExpanded={expandedCardId === item.id} 
+                                    onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
+                                    onTrabalhar={(name) => { 
+                                        setUserData({...userData, projetoAtual: name}); 
+                                        localStorage.setItem('projeto_ativo', name); 
+                                        navigate('/explorar'); 
+                                    }} 
+                                    showTrabalhar={!isGestor && (activeTab === 'requisicoes' || activeTab === 'todos')} 
+                                />
+                            ))
+                    ) : (
+                        <p className="no-items-msg">Nenhum item encontrado.</p>
+                    )}
+                </div>
             </main>
 
             <footer className="fixed-footer-esp">

@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShoppingCart, User, CornerDownLeft, Search } from 'lucide-react';
+import { ShoppingCart, User, CornerDownLeft } from 'lucide-react';
 import './Requisicao.css';
 import logo from '../../assets/img/esposende.png'; 
 
-const Requisicao = ({ onLogout }) => {
+const Requisicao = () => {
     const [eventos, setEventos] = useState([]);
-    const [formData, setFormData] = useState({
-        id_evento: '',
-        periodo_reserva: 'automático',
-        importar_id: ''
-    });
+    const [formData, setFormData] = useState({ id_evento: '' });
     const navigate = useNavigate();
+    
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user?.id_user || user?.id;
 
     useEffect(() => {
         fetch('http://localhost:3001/api/eventos/lista-simples')
@@ -21,59 +20,40 @@ const Requisicao = ({ onLogout }) => {
     }, []);
 
     const handleSubmeter = async (e) => {
-    e.preventDefault();
-    const user = JSON.parse(localStorage.getItem('user'));
-    const userId = user?.id_user || user?.id;
+        e.preventDefault();
 
-    if (!userId) {
-        alert("Erro: Utilizador não identificado. Faça login novamente.");
-        return;
-    }
-
-    // --- VALIDAÇÃO DE DATAS E EVENTO ---
-    
-    if (!formData.id_evento) {
-        alert("Por favor, selecione um evento associado.");
-        return;
-    }
-
-    const eventoSelecionado = eventos.find(ev => ev.id_evento === parseInt(formData.id_evento));
-    
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    if (eventoSelecionado && eventoSelecionado.data_fim) {
-        const dataFimEvento = new Date(eventoSelecionado.data_fim);
-        if (dataFimEvento < hoje) {
-            alert("Este evento já terminou. Não é possível criar novas requisições para ele.");
+        if (!userId) {
+            alert("Sessão expirada. Faça login novamente.");
             return;
         }
-    }
 
-
-    try {
-        const response = await fetch('http://localhost:3001/api/requisicoes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id_evento: formData.id_evento,
-                id_user: userId,
-                data_pedido: new Date().toISOString().slice(0, 19).replace('T', ' ')
-            })
-        });
-
-        if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.error || "Erro na submissão");
+        if (!formData.id_evento) {
+            alert("Selecione um evento.");
+            return;
         }
 
-        alert("Requisição submetida com sucesso!");
-        navigate('/perfil'); 
-    } catch (err) {
-        console.error("Erro no fetch:", err);
-        alert(`Erro: ${err.message || "Verifique se selecionou um evento válido."}`);
-    }
-};
+        try {
+            const response = await fetch('http://localhost:3001/api/requisicoes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_evento: parseInt(formData.id_evento),
+                    id_user: userId
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.detalhes || "Erro no servidor");
+            }
+
+            alert("Requisição criada com sucesso!");
+            navigate('/perfil'); 
+        } catch (err) {
+            console.error("Erro:", err);
+            alert(`Erro: ${err.message}`);
+        }
+    };
 
     return (
         <div className="requisicao-page-layout">
@@ -81,8 +61,9 @@ const Requisicao = ({ onLogout }) => {
                 <div className="header-content-esp centered-content">
                     <div className="logo-esp"><img src={logo} alt="Logo" className="logo-img" /></div>
                     <nav className="header-nav-esp">
-                        <Link to="/nova-requisicao" className="nav-item-esp active-tab-indicator">NOVA REQUISIÇÃO</Link>
-                        <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link> 
+                        <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
+                        <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
+                        <Link to="/nova-requisicao" className="nav-item-esp active-tab-indicator">NOVA REQUISIÇÃO</Link> 
                         <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
                     </nav>
                     <div className="header-icons-esp">
@@ -98,16 +79,15 @@ const Requisicao = ({ onLogout }) => {
             <main className="requisicao-main-centered">
                 <div className="requisicao-white-card">
                     <h2 className="requisicao-card-title">NOVA REQUISIÇÃO</h2>
-                    
                     <form onSubmit={handleSubmeter}>
                         <div className="req-field-group">
                             <label>Evento Associado *</label>
                             <select 
                                 required 
                                 value={formData.id_evento}
-                                onChange={(e) => setFormData({...formData, id_evento: e.target.value})}
+                                onChange={(e) => setFormData({id_evento: e.target.value})}
                             >
-                                <option value="">Selecione um evento aprovado...</option>
+                                <option value="">Selecione um evento...</option>
                                 {eventos.map(ev => (
                                     <option key={ev.id_evento} value={ev.id_evento}>
                                         {ev.nome_evento}
@@ -115,12 +95,10 @@ const Requisicao = ({ onLogout }) => {
                                 ))}
                             </select>
                         </div>
-
                         <div className="req-field-group">
                             <label>Período de Reserva</label>
                             <input type="text" value="Definido pelo Evento" disabled className="input-disabled" />
                         </div>
-
                         <div className="req-button-row">
                             <button type="button" className="btn-cancelar" onClick={() => navigate('/home')}>CANCELAR</button>
                             <button type="submit" className="btn-submeter">CRIAR REQUISIÇÃO</button>
@@ -128,7 +106,6 @@ const Requisicao = ({ onLogout }) => {
                     </form>
                 </div>
             </main>
-
         </div>
     );
 };

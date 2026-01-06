@@ -1,196 +1,166 @@
 @import url('../Perfil.css'); 
 
 :root {
-    --color-active: #92d050;    
-    --color-pending: #ffc000;   
-    --color-scheduled: #a9a2f6; 
-    --color-rejected: #f4b084;  
+    --form-primary-color: #1f4e79;
+    --color-bg-light: #f4f7f6;
+    --color-blue-light: #5b9bd5;
     --color-text-dark: #333;
 }
 
 .home-page-layout {
-    padding-top: 80px; 
+    padding-top: 100px; 
     padding-bottom: 60px; 
     min-height: 100vh;
     background-color: var(--color-bg-light); 
 }
 
 .main-home-content {
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 100px 20px 40px;
+    padding: 40px 20px;
 }
 
-.home-section {
-    margin-bottom: 40px;
+.logo-img {
+    height: 110px !important;
+    width: auto !important;
+    max-height: 110px !important;
+    object-fit: contain;
+    display: block;
+}
+
+.header-nav-esp {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    gap: 25px;
 }
 
 .section-title {
-    font-size: 1.5em;
+    font-size: 1.3em;
     font-weight: 800;
-    color: #1f3a52;
-    margin-bottom: 25px;
+    color: var(--form-primary-color);
+    margin: 40px 0 20px 0;
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 2px solid #eee; 
+    text-transform: uppercase;
+    border-bottom: 2px solid #eee;
     padding-bottom: 10px;
 }
 
-/* --- 1. NOTIFICAÇÕES --- */
-.notifications-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.notification-item-home {
-    background-color: white;
-    padding: 15px;
+.notification-item-home.warning {
+    border-left: 6px solid #f39c12;
+    background-color: #fff;
+    padding: 18px;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1em;
-    border-left: 5px solid;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.notification-item-home.warning {
-    border-left-color: var(--color-pending);
-    background-color: #fffbe6; 
+.notification-content p {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
 }
 
-.notification-item-home.rejected {
-    border-left-color: var(--color-rejected);
-    background-color: #ffe6e6; 
+.notification-content strong {
+    color: #d35400;
 }
 
-.notification-details-link {
-    font-size: 0.9em;
+.btn-ver-detalhes {
+    background: var(--form-primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
     font-weight: bold;
-    color: var(--color-primary-dark);
-    text-decoration: none;
+    cursor: pointer;
+    font-size: 11px;
+    transition: filter 0.2s;
 }
 
+.btn-ver-detalhes:hover {
+    filter: brightness(1.2);
+}
 
-/* --- 2. PAINEL DE ATIVIDADE --- */
 .activity-panel-container {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
 }
 
 .activity-card {
-    padding: 20px;
-    border-radius: 10px;
-    color: var(--color-text-dark); 
+    background: transparent !important;
+    border: 2px solid #1f4e79 !important;
+    padding: 40px 20px;
+    border-radius: 15px;
     text-decoration: none;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.activity-card h4, 
+.activity-card .activity-link, 
+.activity-card svg {
+    color: #1f4e79 !important;
 }
 
 .activity-card:hover {
-    transform: translateY(-3px);
+    background-color: rgba(31, 78, 121, 0.05) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(31, 78, 121, 0.1);
+}
+
+.activity-card.active, 
+.activity-card.pending {
+    background: transparent !important;
 }
 
 .activity-card h4 {
-    font-size: 1em;
-    font-weight: 700;
-    margin: 10px 0 5px 0;
-}
-
-.activity-card svg {
-    color: white; 
-}
-
-.activity-card.active {
-    background-color: var(--color-active);
-    color: white;
-}
-.activity-card.pending {
-    background-color: var(--color-pending);
-    color: var(--color-text-dark);
-}
-.activity-card.scheduled {
-    background-color: var(--color-scheduled);
-    color: white;
-}
-.activity-card.rejected {
-    background-color: var(--color-rejected);
-    color: var(--color-text-dark);
+    font-size: 1.1em;
+    font-weight: 800;
+    margin: 15px 0 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .activity-link {
     font-size: 0.8em;
     font-weight: bold;
     opacity: 0.8;
+    text-decoration: underline;
 }
 
 .quick-guide-container {
     background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
-.quick-guide-container p, .quick-guide-container li {
-    font-size: 0.95em;
-    line-height: 1.6;
-}
-.quick-guide-container ul {
-    margin-top: 10px;
-    padding-left: 20px;
-}
+
 .guide-instruction {
-    font-size: 1em;
+    font-size: 0.95em;
     line-height: 1.8;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    color: #555;
+    border-left: 3px solid #ddd;
+    padding-left: 15px;
 }
 
-.inline-button-icon {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 8px;
-    margin: 0 5px;
-    border-radius: 4px;
-    background-color: #e0e6f1; 
-    color: var(--color-primary-dark);
-    font-weight: bold;
-    font-size: 0.9em;
-    vertical-align: middle; 
+.guide-instruction strong {
+    color: var(--form-primary-color);
 }
 
-.inline-icon-only {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px; 
-    height: 24px;
-    border: 1px solid #ccc;
-    border-radius: 50%;
-    margin: 0 5px;
-    background-color: white;
-    vertical-align: middle;
-}
-
-.inline-icon {
-    color: var(--color-primary-dark);
-    margin-right: 4px;
-}
-
-.inline-icon-only .inline-icon {
-    margin-right: 0;
-    color: #333;
-}
-
-.explore-material {
-    background-color: var(--color-secondary-light);
-    color: white;
-}
-.explore-material .inline-icon {
-    color: white;
+.footer-project-esp {
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #fff;
+    font-size: 12px;
 }

@@ -4,15 +4,15 @@ Criar outro backend para gerir a lógica dos produtos/materiais (CRUD)
 
 
 RIORIDADE MÉDIA:
-Responsividade
 
 
 
 PRIORIDADE BAIXA:
-Gestão Requisições
+
 O gestor tem o mesmo que o funcionario (ACL)
 Tirar o "escrever" no espaço de localização, procurar no leaflet o mapa que inclui pesquisa
-Adicionar os filtros no perfil (aprovado rejeitado pendente)
+
+
 
 FEITO:
 Encriptar a password-hash na db 
@@ -29,3 +29,4 @@ Página inicial à esquerda.
 Explorar material (mudar para catálogo) encima
 Botão de ocultar produtos/materiais
 Validação de datas nas Requisições
+Adicionar os filtros no perfil (aprovado rejeitado pendente)

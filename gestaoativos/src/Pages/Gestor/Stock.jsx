@@ -10,6 +10,7 @@ const Stock = () => {
     const [categoriasBD, setCategoriasBD] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [selectedMaterial, setSelectedMaterial] = useState(null);
+    const [imageFile, setImageFile] = useState(null); 
     const user = JSON.parse(localStorage.getItem('user'));
 
     const [formData, setFormData] = useState({ 
@@ -29,40 +30,76 @@ const Stock = () => {
 
     useEffect(() => { fetchMateriais(); fetchCategorias(); }, []);
 
-    // NOVA FUNÇÃO: Ocultar/Mostrar com confirmação
     const handleToggleVisibilidade = async (material) => {
         const novaVisibilidade = material.visivel ? 0 : 1;
         const acaoTexto = novaVisibilidade ? "mostrar" : "ocultar";
 
-        if (window.confirm(`Tem a certeza que quer ${acaoTexto} o material "${material.nome}" no Catálogo?`)) {
+        if (window.confirm(`Tem a certeza que quer ${acaoTexto} o material "${material.nome}"?`)) {
             try {
                 await fetch(`http://localhost:3001/api/materiais/${material.id_material}/visibilidade`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        visivel: novaVisibilidade,
-                        id_user: user?.id_user 
-                    })
+                    body: JSON.stringify({ visivel: novaVisibilidade, id_user: user?.id_user })
                 });
                 fetchMateriais();
-            } catch (err) { 
-                console.error("Erro ao mudar visibilidade", err); 
-            }
+            } catch (err) { console.error(err); }
         }
     };
 
     const handleSave = async (e) => {
-        e.preventDefault();
-        const res = await fetch('http://localhost:3001/api/materiais/update', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ ...formData, id_material: selectedMaterial?.id_material, id_user: user?.id_user })
+    e.preventDefault();
+
+    // 1. Preparar o FormData 
+    const data = new FormData();
+    data.append('nome', formData.nome);
+    data.append('quantidade_total', formData.quantidade_total);
+    data.append('categoria', formData.categoria);
+    data.append('especificacoes', formData.especificacoes);
+    data.append('descricao_tecnica', formData.descricao_tecnica);
+    data.append('local_armazenamento', formData.local_armazenamento);
+    data.append('id_user', user?.id_user);
+
+    if (selectedMaterial) {
+        data.append('imagem_url', formData.imagem_url);
+    }
+
+    if (imageFile) {
+        data.append('imagem', imageFile); 
+    }
+
+    // 2. Lógica de Rota REST
+    const isEditing = !!selectedMaterial?.id_material;
+    
+
+    const url = isEditing 
+        ? `http://localhost:3001/api/materiais/${selectedMaterial.id_material}` 
+        : 'http://localhost:3001/api/materiais';
+    
+    const method = isEditing ? 'PUT' : 'POST';
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            body: data 
         });
-        if (res.ok) { fetchMateriais(); setShowModal(false); resetForm(); }
-    };
+
+        if (res.ok) { 
+            await fetchMateriais(); 
+            setShowModal(false); 
+            resetForm(); 
+        } else {
+            const errorMsg = await res.text();
+            alert("Erro ao guardar material: " + errorMsg);
+        }
+    } catch (err) {
+        console.error("Erro na ligação:", err);
+        alert("Erro ao ligar ao servidor. Verifique se o backend está a correr.");
+    }
+};
 
     const resetForm = () => {
         setSelectedMaterial(null);
+        setImageFile(null);
         setFormData({ nome: '', quantidade_total: 0, categoria: '', especificacoes: '', descricao_tecnica: '', local_armazenamento: '', imagem_url: '' });
     };
 
@@ -100,6 +137,7 @@ const Stock = () => {
                     <table>
                         <thead>
                             <tr>
+                                <th>Foto</th>
                                 <th>Material</th>
                                 <th>Stock</th>
                                 <th>Estado</th>
@@ -109,6 +147,13 @@ const Stock = () => {
                         <tbody>
                             {materiais.map(m => (
                                 <tr key={m.id_material}>
+                                    <td>
+                                        <img 
+                                            src={m.imagem_url ? `http://localhost:3001/uploads/${m.imagem_url}` : 'https://via.placeholder.com/50'} 
+                                            alt="Material" 
+                                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                                        />
+                                    </td>
                                     <td><strong>{m.nome}</strong></td>
                                     <td>{m.quantidade_total}</td>
                                     <td>
@@ -157,29 +202,43 @@ const Stock = () => {
                                     </div>
                                 </div>
 
-                                <label>Especificações</label>
-                                <input type="text" placeholder="ex: 200x50cm" value={formData.especificacoes} onChange={e => setFormData({...formData, especificacoes: e.target.value})} />
-
-                                <label>Descrição Técnica</label>
-                                <textarea value={formData.descricao_tecnica} onChange={e => setFormData({...formData, descricao_tecnica: e.target.value})} />
-
                                 <label>Foto do Material</label>
                                 <label className="file-input-label">
-                                    <Upload size={18} /> {formData.imagem_url ? "Trocar Foto" : "Selecionar Foto"}
+                                    <Upload size={18} /> {imageFile ? "Imagem Pronta" : "Selecionar Foto"}
                                     <input type="file" accept="image/*" onChange={(e) => {
                                         const file = e.target.files[0];
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => setFormData({...formData, imagem_url: reader.result});
-                                        if(file) reader.readAsDataURL(file);
+                                        if(file) {
+                                            setImageFile(file);
+                                            // Apenas para ver o preview no modal antes de guardar
+                                            setFormData({...formData, imagem_url: URL.createObjectURL(file)});
+                                        }
                                     }} style={{display: 'none'}} />
                                 </label>
-                                {formData.imagem_url && <img src={formData.imagem_url} className="preview-img-small" alt="Preview" />}
+                                {formData.imagem_url && (
+                                    <img 
+                                        src={formData.imagem_url.startsWith('blob') ? formData.imagem_url : `http://localhost:3001/uploads/${formData.imagem_url}`} 
+                                        className="preview-img-small" 
+                                        alt="Preview" 
+                                        style={{ width: '80px', height: '80px', marginTop: '10px', objectFit: 'cover' }}
+                                    />
+                                )}
 
                                 <label>Localização</label>
-                                <select value={formData.local_armazenamento} onChange={e => setFormData({...formData, local_armazenamento: e.target.value})} required>
-                                    <option value="">Selecionar local...</option>
+                                <select 
+                                    value={formData.local_armazenamento} 
+                                    onChange={e => setFormData({...formData, local_armazenamento: e.target.value})} 
+                                    required
+                                >
+                                    <option value="">Selecionar armazém...</option>
                                     <option value="Bouro">Bouro</option>
-                                    <option value="Armazém Central">Armazém Central</option>
+                                    <option value="Armazém Municipal Central">Armazém Municipal Central</option>
+                                    <option value="Instalações SGE">Instalações SGE</option>
+                                    <option value="Instalações DSSA">Instalações DSSA</option>
+                                    <option value="Fórum Rodrigues Sampaio">Fórum Rodrigues Sampaio</option>
+                                    <option value="Biblioteca Municipal">Biblioteca Municipal</option>
+                                    <option value="Auditório Municipal">Auditório Municipal</option>
+                                    <option value="Instalações SMPC">Instalações SMPC</option>
+                                    <option value="Estaleiro Municipal">Estaleiro Municipal</option>
                                 </select>
 
                                 <button type="submit" className="btn-submeter"><Save size={18}/> GUARDAR NO SISTEMA</button>

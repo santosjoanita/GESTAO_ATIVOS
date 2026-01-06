@@ -32,12 +32,12 @@ const Login = ({ onLoginSuccess }) => {
 
                 // Redirecionamento dinâmico
                 if (user.id_perfil === 2) {
-                    navigate('/gestao'); // José António
+                    navigate('/gestao'); 
                 } else {
-                    navigate('/home');   // Bruno Ribeiro
+                    navigate('/home');   
                 }
             } else {
-                setError('Utilizador ou password incorretos.');
+                setError('Utilizador ou palavra-passe incorretos.');
             }
         } catch (err) {
             setError('Erro ao ligar ao servidor.');

@@ -103,8 +103,9 @@ const EventoForm = ({ onLogout }) => {
                     </div>
                     
                     <nav className="header-nav-esp">
-                        <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
+                        <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                         <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
+                        <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
                         <Link to="/novo-evento" className="nav-item-esp active-tab-indicator">NOVO EVENTO</Link> 
                     </nav>
 

@@ -53,6 +53,24 @@ app.post('/api/login', async (req, res) => {
 });
 
 // --- 2. EVENTOS & ANEXOS ---
+app.get('/api/notificacoes/prazos/:id', async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT 
+                r.id_req as id,
+                e.nome_evento,
+                DATEDIFF(e.data_fim, CURDATE()) as dias_restantes,
+                'requisição' as tipo
+            FROM Requisicao r
+            JOIN Evento e ON r.id_evento = e.id_evento
+            WHERE r.id_user = ? 
+              AND DATEDIFF(e.data_fim, CURDATE()) BETWEEN 0 AND 3
+              AND r.id_estado = 2 -- Apenas as que foram aprovadas/estão ativas
+            ORDER BY dias_restantes ASC`, [req.params.id]);
+        res.json(rows);
+    } catch (e) { res.status(500).json([]); }
+});
+
 app.get('/api/eventos/lista-simples', async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT id_evento, nome_evento FROM Evento WHERE id_estado = 2');
@@ -117,12 +135,28 @@ app.get('/api/eventos/:id/anexos', async (req, res) => {
 app.get('/api/requisicoes/user/:id', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
-            SELECT r.*, e.nome_evento, es.nome as estado_nome FROM Requisicao r 
+            SELECT 
+                r.*, 
+                e.nome_evento, 
+                es.nome as estado_nome,
+                (SELECT COUNT(*) FROM Requisicao r2 
+                 WHERE r2.id_evento = r.id_evento AND r2.id_req <= r.id_req) as ordem
+            FROM Requisicao r 
             JOIN Evento e ON r.id_evento = e.id_evento 
             JOIN Estado es ON r.id_estado = es.id_estado 
-            WHERE r.id_user = ? ORDER BY r.id_req DESC`, [req.params.id]);
-        res.json(rows);
-    } catch (e) { res.status(500).json([]); }
+            WHERE r.id_user = ? 
+            ORDER BY r.id_req DESC`, [req.params.id]);
+
+        const formatadas = rows.map(r => ({
+            ...r,
+            nome_exibicao: `${r.nome_evento || 'Evento'} - Requisição ${r.ordem}`
+        }));
+
+        res.json(formatadas);
+    } catch (e) { 
+        console.error("Erro ao listar requisições:", e);
+        res.status(500).json([]); 
+    }
 });
 
 app.get('/api/gestao/requisicoes/todas', async (req, res) => {
@@ -138,14 +172,25 @@ app.get('/api/gestao/requisicoes/todas', async (req, res) => {
 });
 
 app.post('/api/requisicoes', async (req, res) => {
-    const { id_evento, id_user, data_pedido } = req.body;
+    const { id_evento, id_user } = req.body;
+
     try {
-        const [resReq] = await pool.execute(
-            `INSERT INTO Requisicao (id_evento, id_user, data_pedido, id_estado) VALUES (?, ?, ?, 1)`, 
-            [id_evento, id_user, data_pedido || new Date()]
+        if (!id_evento || !id_user) {
+            return res.status(400).json({ error: "Faltam dados obrigatórios." });
+        }
+
+        const [result] = await pool.execute(
+            `INSERT INTO Requisicao (id_evento, id_user, data_pedido, id_estado) 
+             VALUES (?, ?, NOW(), 1)`,
+            [id_evento, id_user]
         );
-        res.status(201).json({ id: resReq.insertId });
-    } catch (e) { res.status(500).json({ erro: e.message }); }
+
+        res.status(201).json({ id: result.insertId, message: "Requisição criada com sucesso!" });
+
+    } catch (error) {
+        console.error("ERRO NO BACKEND:", error.message);
+        res.status(500).json({ error: "Erro interno no servidor", detalhes: error.message });
+    }
 });
 
 // --- 4. MATERIAIS & CATÁLOGO ---
@@ -160,24 +205,75 @@ app.get('/api/materiais', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
-app.post('/api/materiais/update', async (req, res) => {
-    const { id_material, nome, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, imagem_url, id_user } = req.body;
+// --- 4. MATERIAIS & CATÁLOGO (PADRÃO REST) ---
+
+//  Criar novo material
+app.post('/api/materiais', upload.single('imagem'), async (req, res) => {
+    const { nome, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, id_user } = req.body;
+    const imagem_url = req.file ? req.file.filename : null;
+
     try {
-        if (id_material) {
-            await pool.execute(
-                `UPDATE Material SET nome=?, quantidade_total=?, categoria=?, especificacoes=?, descricao_tecnica=?, local_armazenamento=?, imagem_url=?, quantidade_disp=? WHERE id_material=?`, 
-                [nome, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, imagem_url, quantidade_total, id_material]
-            );
-            await pool.execute(`INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'Editou', ?)`, [id_user || 1, nome, quantidade_total]);
-        } else {
-            await pool.execute(
-                `INSERT INTO Material (nome, quantidade_total, quantidade_disp, categoria, especificacoes, descricao_tecnica, local_armazenamento, imagem_url, visivel) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`, 
-                [nome, quantidade_total, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, imagem_url]
-            );
-            await pool.execute(`INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'Adicionou', ?)`, [id_user || 1, nome, quantidade_total]);
-        }
-        res.send("OK");
-    } catch (e) { res.status(500).send(e.message); }
+        await pool.execute(
+            `INSERT INTO Material (nome, quantidade_total, quantidade_disp, categoria, especificacoes, descricao_tecnica, local_armazenamento, imagem_url, visivel) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`, 
+            [nome, quantidade_total, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, imagem_url]
+        );
+        
+        await pool.execute(
+            `INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'Adicionou', ?)`, 
+            [id_user || 1, nome, quantidade_total]
+        );
+        res.status(201).send("Criado com sucesso");
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
+});
+
+// Atualizar material existente
+app.put('/api/materiais/:id', upload.single('imagem'), async (req, res) => {
+    const { id } = req.params;
+    const { nome, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, id_user } = req.body;
+    
+    try {
+        // 1. Ir buscar os dados atuais para comparar o que mudou
+        const [rows] = await pool.execute('SELECT * FROM Material WHERE id_material = ?', [id]);
+        if (rows.length === 0) return res.status(404).send("Material não encontrado");
+        const antigo = rows[0];
+
+        let alteracoes = [];
+        if (antigo.nome !== nome) alteracoes.push("nome");
+        if (antigo.quantidade_total != quantidade_total) alteracoes.push("stock");
+        if (antigo.categoria !== categoria) alteracoes.push("categoria");
+        if (antigo.local_armazenamento !== local_armazenamento) alteracoes.push("localização");
+        if (antigo.especificacoes !== especificacoes) alteracoes.push("especificações");
+        if (req.file) alteracoes.push("foto");
+
+        // Criar a descrição detalhada
+        const acaoTexto = alteracoes.length > 0 
+            ? `Editou: ${alteracoes.join(', ')}` 
+            : 'Editou (sem alterações)';
+
+        let final_imagem_url = req.file ? req.file.filename : req.body.imagem_url;
+
+        await pool.execute(
+            `UPDATE Material SET 
+                nome=?, quantidade_total=?, categoria=?, especificacoes=?, 
+                descricao_tecnica=?, local_armazenamento=?, imagem_url=?, 
+                quantidade_disp=? 
+             WHERE id_material=?`, 
+            [nome, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, final_imagem_url, quantidade_total, id]
+        );
+        
+        await pool.execute(
+            `INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, ?, ?)`, 
+            [id_user || 1, nome, acaoTexto, quantidade_total]
+        );
+
+        res.send("Atualizado com sucesso");
+    } catch (e) {
+        console.error(e);
+        res.status(500).send(e.message);
+    }
 });
 
 app.put('/api/materiais/:id/visibilidade', async (req, res) => {

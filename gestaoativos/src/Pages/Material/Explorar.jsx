@@ -150,7 +150,15 @@ const Explorar = () => {
                                 onClick={() => eventoAtivo && m.quantidade_disp > 0 && navigate(`/requisitar/${m.id_material}`)}
                             >
                                 <div className="img-box">
-                                    <img src={logo} alt="Logo" className="logo-watermark" />
+                                    <img 
+                                        src={m.imagem_url 
+                                            ? `http://localhost:3001/uploads/${m.imagem_url}` 
+                                            : logo 
+                                        } 
+                                        alt={m.nome} 
+                                        className={m.imagem_url ? "img-material-catalogo" : "logo-watermark"}
+                                        onError={(e) => { e.target.src = logo; }}
+                                    />
                                     {m.quantidade_disp <= 0 && <div className="badge-esgotado">ESGOTADO</div>}
                                 </div>
                                 <h3>{(m.nome || "").toUpperCase()}</h3>
