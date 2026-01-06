@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, ShoppingCart, User, LogOut } from 'lucide-react'; 
-import { Link, useNavigate } from 'react-router-dom'; 
+import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import './Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
 
@@ -157,13 +157,22 @@ const Perfil = ({ onLogout }) => {
                         {isGestor ? (
                             <><Link to="/gestao" className="nav-item-esp">VOLTAR À DASHBOARD</Link><Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link></>
                         ) : (
-                            <><Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link><Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link><Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link><Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link></>
+                            <>
+                            <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
+                            <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
+                            <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
+                            <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
+                            </>
                         )}
                     </nav>
-                    <div className="header-icons-esp">
+                   <div className="header-icons-esp">
                         <ShoppingCart size={24} className="icon-esp" />
-                        <Link to="/perfil" className="icon-link-active"><User size={24} className="icon-esp active-icon-indicator" /></Link>
-                        <button onClick={handleLogout} className="logout-btn"><LogOut size={24} className="icon-esp" /></button>
+                        <Link to="/perfil" className="icon-link-active">
+                            <User size={24} className="icon-esp active-icon-indicator" />
+                        </Link>
+                        <button onClick={handleLogout} className="logout-btn">
+                            <CornerDownLeft size={24} className="icon-esp" /> {/* MUDADO AQUI */}
+                        </button>
                     </div>
                 </div>
             </header>

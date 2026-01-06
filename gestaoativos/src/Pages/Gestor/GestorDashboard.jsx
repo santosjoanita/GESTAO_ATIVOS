@@ -139,8 +139,16 @@ const GestorDashboard = () => {
                                 
                                 <div className="info-grid-esp">
                                     <p><User size={16}/> <strong>Criado por:</strong> {selectedItem.requerente || selectedItem.nome_utilizador || 'N/A'}</p>
-                                    <p><Calendar size={16}/> <strong>Data:</strong> {selectedItem.data_pedido || selectedItem.data_movimento ? new Date(selectedItem.data_pedido || selectedItem.data_movimento).toLocaleDateString('pt-PT') : 'N/A'}</p>
-                                    <p><MapPin size={16}/> <strong>Local:</strong> {selectedItem.localizacao || 'Município de Esposende'}</p>
+                                    
+                                    <p><Calendar size={16}/> <strong>Data:</strong> {
+                                        tab === 'eventos' && selectedItem.data_inicio
+                                        ? `${new Date(selectedItem.data_inicio).toLocaleDateString('pt-PT')} ${selectedItem.data_fim ? ' até ' + new Date(selectedItem.data_fim).toLocaleDateString('pt-PT') : ''}`
+                                        : selectedItem.data_pedido || selectedItem.data_movimento
+                                        ? new Date(selectedItem.data_pedido || selectedItem.data_movimento).toLocaleDateString('pt-PT')
+                                        : 'N/A'
+                                    }</p>
+
+                                    <p><MapPin size={16}/> <strong>Local:</strong> {selectedItem.localizacao || 'Esposende'}</p>
                                 </div>
 
                                 <div className="specs-container-esp">
