@@ -155,7 +155,8 @@ const Perfil = ({ onLogout }) => {
                     <div className="logo-esp"><img src={logo} alt="Logo" className="logo-img" /></div>
                     <nav className="header-nav-esp">
                         {isGestor ? (
-                            <><Link to="/gestao" className="nav-item-esp">VOLTAR À DASHBOARD</Link><Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link></>
+                            <><Link to="/gestao" className="nav-item-esp">PAINEL DE GESTÃO</Link>
+                            <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link></>
                         ) : (
                             <>
                             <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>

@@ -6,6 +6,7 @@ import logo from '../../assets/img/esposende.png';
 
 const Explorar = () => {
     const navigate = useNavigate();
+    const user = JSON.parse(localStorage.getItem('user'));
     const [materiais, setMateriais] = useState([]);
     const [categorias, setCategorias] = useState([]);
     const [filtroTexto, setFiltroTexto] = useState('');
@@ -76,7 +77,11 @@ const Explorar = () => {
                 <div className="header-content-esp centered-content">
                     <img src={logo} alt="Logo" className="logo-img-large" />
                     <nav className="header-nav-esp">
-                        <Link to="/home" className="nav-item-esp">Página Inicial</Link>
+                        {user?.id_perfil === 2 ? (
+                            <Link to="/gestao" className="nav-item-esp">PAINEL DE GESTÃO</Link>
+                        ) : (
+                            <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
+                        )}
                     </nav>
                 </div>
             </header>
