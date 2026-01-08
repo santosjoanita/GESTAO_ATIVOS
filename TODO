@@ -13,20 +13,4 @@ O gestor tem o mesmo que o funcionario (ACL)
 Tirar o "escrever" no espaço de localização, procurar no leaflet o mapa que inclui pesquisa
 
 
-
 FEITO:
-Encriptar a password-hash na db 
-Mudar o botão de stock no DASHBOARD para o header
-Adicionar movimentos de STOCK
-Ao clicar em editar, abrir um editor
-Acertar a linguaguem do sistema (pt-PT)
-Botão de adicionar novo material no STOCK
-AUTENTICAÇÃO quadrado corrigido.
-No perfil do gestor, tirar o botão de atualizar stock.
-No eventos do gestor, ao clicar o evento aparecer as espeficicações dele, quem criou, os anexos que puseram. 
-Ordernar os eventos por data no perfil.
-Página inicial à esquerda.
-Explorar material (mudar para catálogo) encima
-Botão de ocultar produtos/materiais
-Validação de datas nas Requisições
-Adicionar os filtros no perfil (aprovado rejeitado pendente)
