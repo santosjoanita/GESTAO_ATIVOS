@@ -15,6 +15,7 @@ const upload = multer({ storage });
 
 router.post('/', upload.array('anexos'), eventosController.criar);
 router.get('/user/:id', eventosController.listarPorUser);
+router.get('/todos', eventosController.listarTodos);
 router.get('/summary/:id', eventosController.obterDetalhes); 
 router.get('/:id/anexos', eventosController.listarAnexos);
 

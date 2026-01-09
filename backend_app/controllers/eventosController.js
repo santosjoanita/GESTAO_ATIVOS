@@ -1,7 +1,24 @@
 const db = require('../config/db');
 const path = require('path');
 
-// Criar Evento com Anexos
+// 1. LISTAR TODOS (Para o Gestor)
+exports.listarTodos = async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT e.*, es.nome as estado_nome, u.nome as requerente 
+            FROM Evento e 
+            JOIN Estado es ON e.id_estado = es.id_estado 
+            JOIN Utilizador u ON e.id_user = u.id_user 
+            ORDER BY e.data_inicio DESC
+        `);
+        res.json(rows);
+    } catch (e) {
+        console.error("Erro SQL em listarTodos:", e.message);
+        res.status(500).json({ error: "Erro na BD", detalhes: e.message });
+    }
+};
+
+// 2. CRIAR EVENTO COM ANEXOS
 exports.criar = async (req, res) => {
     const { nome_evento, descricao, localizacao, data_inicio, data_fim, id_user } = req.body;
     try {
@@ -24,7 +41,7 @@ exports.criar = async (req, res) => {
     }
 };
 
-// Listar eventos de um utilizador específico
+// 3. LISTAR POR USER (Para o Funcionário)
 exports.listarPorUser = async (req, res) => {
     try {
         const [rows] = await db.execute(
@@ -35,9 +52,7 @@ exports.listarPorUser = async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 };
 
-
-
-// Obter detalhes de um evento (o summary)
+// 4. OBTER DETALHES (Summary)
 exports.obterDetalhes = async (req, res) => {
     try {
         const [rows] = await db.execute('SELECT * FROM Evento WHERE id_evento = ?', [req.params.id]);
@@ -48,7 +63,7 @@ exports.obterDetalhes = async (req, res) => {
     }
 };
 
-// Listar anexos de um evento
+// 5. LISTAR ANEXOS
 exports.listarAnexos = async (req, res) => {
     try {
         const [rows] = await db.execute(
@@ -58,20 +73,5 @@ exports.listarAnexos = async (req, res) => {
         res.json(rows);
     } catch (e) { 
         res.status(500).json([]); 
-    }
-};
-exports.listarTodos = async (req, res) => {
-    try {
-        const [rows] = await db.execute(`
-            SELECT e.*, es.nome as estado_nome, u.nome as requerente 
-            FROM Evento e 
-            JOIN Estado es ON e.id_estado = es.id_estado 
-            JOIN Utilizador u ON e.id_user = u.id_user 
-            ORDER BY e.data_inicio DESC
-        `);
-        res.json(rows);
-    } catch (e) {
-        console.error("Erro SQL:", e.message);
-        res.status(500).json({ error: "Erro na BD", detalhes: e.message });
     }
 };

@@ -1,74 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Login from '../Pages/Login'; 
-import Perfil from '../Pages/Perfil';
-import Home from '../Pages/Home/Home';
-import EventoForm from '../forms/EventoForm'; 
-import Requisicao from '../forms/requisicao/Requisicao';
-import GestorDashboard from '../Pages/Gestor/GestorDashboard';
-import Stock from '../Pages/Gestor/Stock';
-import Explorar from '../Pages/Material/Explorar';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ProtectedRoute from "../routes/ProtectedRoute.jsx"; 
+import { appRoutes } from "../routes/appRoutes.jsx";
 import '../assets/css/global.css';
 
 const App = () => {
-    const [currentUser, setCurrentUser] = useState(() => {
-        const savedUser = localStorage.getItem('user');
-        return savedUser ? JSON.parse(savedUser) : null;
-    }); 
-
-    const handleLoginSuccess = (userData) => {
-        setCurrentUser(userData); 
-        localStorage.setItem('user', JSON.stringify(userData));
-    };
-    
-    const handleLogout = () => {
-        setCurrentUser(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('projeto_ativo');
-    };
-
-    const isAuthenticated = !!currentUser; 
-    
-    const ProtectedRoute = ({ element }) => {
-        return isAuthenticated ? element : <Navigate to="/" replace />;
-    };
-
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+                {appRoutes.map((r) => (
+                    <Route
+                        key={r.path}
+                        path={r.path}
+                        element={
+                            <ProtectedRoute auth={r.auth} permission={r.permission}>
+                                {r.element}
+                            </ProtectedRoute>
+                        }
+                    />
+                ))}
                 
-                <Route
-                    path="/home"
-                    element={<ProtectedRoute element={<Home onLogout={handleLogout} />} />}
-                />
-
-                <Route 
-                    path="/perfil" 
-                    element={<ProtectedRoute element={<Perfil onLogout={handleLogout} />} />} 
-                />  
-
-                <Route 
-                    path="/novo-evento" 
-                    element={<ProtectedRoute element={<EventoForm onLogout={handleLogout} />} />} 
-                /> 
-
-                <Route 
-                    path="/nova-requisicao" 
-                    element={<ProtectedRoute element={<Requisicao onLogout={handleLogout} />} />} 
-                />
-                <Route 
-                path="/gestao" 
-                element={<ProtectedRoute element={<GestorDashboard onLogout={handleLogout} />} />} 
-                />
-               <Route 
-               path="/stock" 
-                element={<ProtectedRoute allowedPerfil={2} element={<Stock onLogout={handleLogout} />} />} 
-                />
-                <Route 
-                path="/explorar" 
-                element={<ProtectedRoute element={<Explorar onLogout={handleLogout} />} />} 
-                />
+                <Route path="*" element={
+                    <div style={{ padding: '100px', textAlign: 'center' }}>
+                        <h1>404</h1>
+                        <p>Página não encontrada.</p>
+                        <a href="/home">Voltar ao início</a>
+                    </div>
+                } />
             </Routes>
         </BrowserRouter>
     );

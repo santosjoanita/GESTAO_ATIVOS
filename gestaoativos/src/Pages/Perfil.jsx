@@ -67,12 +67,19 @@ const Perfil = ({ onLogout }) => {
     const [expandedCardId, setExpandedCardId] = useState(null); 
     const [filtroEstado, setFiltroEstado] = useState('todos');
 
+    // MUDANÇA: Função de Headers para validação na API
+    const getAuthHeaders = () => ({
+        'x-user-profile': user?.id_perfil?.toString(),
+        'x-user-name': user?.nome
+    });
+
     const fetchPerfilData = async () => {
         if (!user) return;
         try {
+            // MUDANÇA: Inclusão dos headers nos fetches
             const [resReq, resEv] = await Promise.all([
-                fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user}`),
-                fetch(`http://localhost:3002/api/eventos/user/${user.id_user}`)
+                fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user}`, { headers: getAuthHeaders() }),
+                fetch(`http://localhost:3002/api/eventos/user/${user.id_user}`, { headers: getAuthHeaders() })
             ]);
             
             const dataReq = await resReq.json();
@@ -172,7 +179,7 @@ const Perfil = ({ onLogout }) => {
                             <User size={24} className="icon-esp active-icon-indicator" />
                         </Link>
                         <button onClick={handleLogout} className="logout-btn">
-                            <CornerDownLeft size={24} className="icon-esp" /> {/* MUDADO AQUI */}
+                            <CornerDownLeft size={24} className="icon-esp" />
                         </button>
                     </div>
                 </div>

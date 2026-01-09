@@ -5,6 +5,7 @@ services:
     container_name: gestaoativos_mysql
     restart: always
     environment:
+      # Variáveis usadas pelo container MySQL para criar a BD
       MYSQL_ROOT_PASSWORD: root_password_segura 
       MYSQL_DATABASE: gestao_ativos_db        
       MYSQL_USER: user_gestao                  
@@ -13,6 +14,11 @@ services:
       - "3306:3306" 
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uuser_gestao", "-puser_password_segura"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   # 2. Backend Auth (Login)
   auth-service:
@@ -26,8 +32,10 @@ services:
     volumes:
       - ./backend_auth:/usr/src/app
       - /usr/src/app/node_modules
+      - ./.env:/usr/src/app/.env  # MAPEIA O .ENV DA RAIZ PARA O CÓDIGO LER
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy 
 
   # 3. Backend App 
   app-service:
@@ -42,8 +50,10 @@ services:
       - ./backend_app:/usr/src/app
       - /usr/src/app/node_modules
       - ./backend_app/uploads:/usr/src/app/uploads
+      - ./.env:/usr/src/app/.env  # MAPEIA O .ENV DA RAIZ PARA O CÓDIGO LER
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy 
 
   # 4. Frontend (React/Vite)
   frontend:
@@ -56,8 +66,10 @@ services:
       - ./gestaoativos:/usr/src/app
       - /usr/src/app/node_modules
     depends_on:
-      - auth-service
-      - app-service
+      auth-service:
+        condition: service_started
+      app-service:
+        condition: service_started
 
 volumes:
   mysql_data:

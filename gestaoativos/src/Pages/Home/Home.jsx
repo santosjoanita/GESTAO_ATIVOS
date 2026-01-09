@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, CornerDownLeft, Bell, Calendar, Repeat, Search } from 'lucide-react';
+import { ShoppingCart, User, CornerDownLeft, Bell, Calendar, Repeat } from 'lucide-react';
 import './Home.css'; 
 import logo from '../../assets/img/esposende.png';
 
@@ -19,38 +19,42 @@ const Home = ({ onLogout }) => {
     const userId = user ? user.id_user : null;
 
     const fetchDashboardData = async () => {
-            if (!userId) return;
-            try {
-                const [resEv, resReq, resNotif] = await Promise.all([
-                   fetch(`http://localhost:3002/api/eventos/user/${userId}`),
-                   fetch(`http://localhost:3002/api/requisicoes/user/${userId}`),
-                    fetch(`http://localhost:3002/api/gestao/notificacoes/prazos/${userId}`)
-                ]);
-
-                const dataEv = await resEv.json();
-                const dataReq = await resReq.json();
-                const dataNotif = await resNotif.json();
-
-                setActivityCounts({
-                    eventosCount: Array.isArray(dataEv) ? dataEv.length : 0,
-                    requisicoesCount: Array.isArray(dataReq) ? dataReq.length : 0
-                });
-
-                setNotifications(Array.isArray(dataNotif) ? dataNotif : []);
-                
-                setProjetoAtual(localStorage.getItem('projeto_ativo') || "Sem requisição ativa");
-
-            } catch (error) {
-                console.error("Erro ao carregar dados do dashboard:", error);
-            }
+        if (!userId) return;
+        
+        const headers = {
+            'x-user-profile': user?.id_perfil?.toString(),
+            'x-user-name': user?.nome
         };
 
-        useEffect(() => {
-            fetchDashboardData();
-            const interval = setInterval(fetchDashboardData, 30000); 
-            return () => clearInterval(interval);
-        }, [userId]);
+        try {
+            const [resEv, resReq, resNotif] = await Promise.all([
+               fetch(`http://localhost:3002/api/eventos/user/${userId}`, { headers }),
+               fetch(`http://localhost:3002/api/requisicoes/user/${userId}`, { headers }),
+               fetch(`http://localhost:3002/api/gestao/notificacoes/prazos/${userId}`, { headers })
+            ]);
 
+            const dataEv = await resEv.json();
+            const dataReq = await resReq.json();
+            const dataNotif = await resNotif.json();
+
+            setActivityCounts({
+                eventosCount: Array.isArray(dataEv) ? dataEv.length : 0,
+                requisicoesCount: Array.isArray(dataReq) ? dataReq.length : 0
+            });
+
+            setNotifications(Array.isArray(dataNotif) ? dataNotif : []);
+            setProjetoAtual(localStorage.getItem('projeto_ativo') || "Sem requisição ativa");
+
+        } catch (error) {
+            console.error("Erro ao carregar dados do dashboard:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchDashboardData();
+        const interval = setInterval(fetchDashboardData, 30000); 
+        return () => clearInterval(interval);
+    }, [userId]);
 
     const handleLogout = () => {
         localStorage.clear();
@@ -60,8 +64,6 @@ const Home = ({ onLogout }) => {
 
     return (
         <div className="home-page-layout">
-            
-            {/* --- CABEÇALHO --- */}
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <div className="logo-esp">
@@ -89,7 +91,7 @@ const Home = ({ onLogout }) => {
 
             <main className="main-home-content">
                 
-             {/* 1. NOTIFICAÇÕES*/}
+                {/* 1. NOTIFICAÇÕES (3 DIAS PARA CADA LADO) */}
                 <section className="home-section">
                     <h3 className="section-title"><Bell size={24} /> NOTIFICAÇÕES:</h3>
                     <div className="notifications-container">

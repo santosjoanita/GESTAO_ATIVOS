@@ -25,13 +25,17 @@ const Explorar = () => {
         "Armazém Municipal Central", "Estaleiro Municipal"
     ];
 
+    const getAuthHeaders = () => ({
+        'x-user-profile': user?.id_perfil?.toString(),
+        'x-user-name': user?.nome
+    });
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // MUDANÇA: Porta 3002 para Materiais e Categorias
                 const [resMat, resCat] = await Promise.all([
-                    fetch('http://localhost:3002/api/materiais'),
-                    fetch('http://localhost:3002/api/materiais/categorias')
+                    fetch('http://localhost:3002/api/materiais', { headers: getAuthHeaders() }),
+                    fetch('http://localhost:3002/api/materiais/categorias', { headers: getAuthHeaders() })
                 ]);
                 const dataMat = await resMat.json();
                 const dataCat = await resCat.json();

@@ -18,13 +18,19 @@ const Stock = () => {
         descricao_tecnica: '', local_armazenamento: '', imagem_url: '' 
     });
 
+    const getAuthHeaders = () => ({
+        'x-user-profile': user?.id_perfil?.toString(),
+        'x-user-name': user?.nome
+    });
+
     const fetchMateriais = async () => {
-        const res = await fetch('http://localhost:3002/api/materiais?admin=true');
+        const res = await fetch('http://localhost:3002/api/materiais?admin=true', { headers: getAuthHeaders() });
         const data = await res.json();
         setMateriais(data); 
     };
+
     const fetchCategorias = async () => {
-        const res = await fetch('http://localhost:3002/api/materiais/categorias');
+        const res = await fetch('http://localhost:3002/api/materiais/categorias', { headers: getAuthHeaders() });
         setCategoriasBD(await res.json());
     };
 
@@ -32,13 +38,11 @@ const Stock = () => {
 
     const handleToggleVisibilidade = async (material) => {
         const novaVisibilidade = material.visivel ? 0 : 1;
-        const acaoTexto = novaVisibilidade ? "mostrar" : "ocultar";
-
-        if (window.confirm(`Tem a certeza que quer ${acaoTexto} o material "${material.nome}"?`)) {
+        if (window.confirm(`Deseja alterar a visibilidade de "${material.nome}"?`)) {
             try {
                 await fetch(`http://localhost:3002/api/materiais/${material.id_material}/visibilidade`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
                     body: JSON.stringify({ visivel: novaVisibilidade, id_user: user?.id_user })
                 });
                 fetchMateriais();
@@ -48,51 +52,22 @@ const Stock = () => {
 
     const handleSave = async (e) => {
         e.preventDefault();
-
         const data = new FormData();
-        data.append('nome', formData.nome);
-        data.append('quantidade_total', formData.quantidade_total);
-        data.append('categoria', formData.categoria);
-        data.append('especificacoes', formData.especificacoes);
-        data.append('descricao_tecnica', formData.descricao_tecnica);
-        data.append('local_armazenamento', formData.local_armazenamento);
+        Object.keys(formData).forEach(key => data.append(key, formData[key]));
         data.append('id_user', user?.id_user);
-
-        if (selectedMaterial) {
-            data.append('imagem_url', formData.imagem_url);
-        }
-
-        if (imageFile) {
-            data.append('imagem', imageFile); 
-        }
+        if (imageFile) data.append('imagem', imageFile);
 
         const isEditing = !!selectedMaterial?.id_material;
+        const url = isEditing ? `http://localhost:3002/api/materiais/${selectedMaterial.id_material}` : 'http://localhost:3002/api/materiais';
         
-        // MUDANÇA: Porta 3002 em ambos os casos
-        const url = isEditing 
-            ? `http://localhost:3002/api/materiais/${selectedMaterial.id_material}` 
-            : 'http://localhost:3002/api/materiais';
-        
-        const method = isEditing ? 'PUT' : 'POST';
-
         try {
             const res = await fetch(url, {
-                method: method,
+                method: isEditing ? 'PUT' : 'POST',
+                headers: getAuthHeaders(),
                 body: data 
             });
-
-            if (res.ok) { 
-                await fetchMateriais(); 
-                setShowModal(false); 
-                resetForm(); 
-            } else {
-                const errorMsg = await res.text();
-                alert("Erro ao guardar material: " + errorMsg);
-            }
-        } catch (err) {
-            console.error("Erro na ligação:", err);
-            alert("Erro ao ligar ao servidor. Verifique se o backend está a correr na porta 3002.");
-        }
+            if (res.ok) { fetchMateriais(); setShowModal(false); resetForm(); }
+        } catch (err) { console.error(err); }
     };
 
     const resetForm = () => {
