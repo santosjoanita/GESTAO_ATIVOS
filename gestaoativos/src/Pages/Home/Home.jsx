@@ -22,9 +22,9 @@ const Home = ({ onLogout }) => {
             if (!userId) return;
             try {
                 const [resEv, resReq, resNotif] = await Promise.all([
-                    fetch(`http://localhost:3001/api/eventos/user/${userId}`),
-                    fetch(`http://localhost:3001/api/requisicoes/user/${userId}`),
-                    fetch(`http://localhost:3001/api/notificacoes/prazos/${userId}`)
+                   fetch(`http://localhost:3002/api/eventos/user/${userId}`),
+                   fetch(`http://localhost:3002/api/requisicoes/user/${userId}`),
+                    fetch(`http://localhost:3002/api/gestao/notificacoes/prazos/${userId}`)
                 ]);
 
                 const dataEv = await resEv.json();
@@ -89,27 +89,37 @@ const Home = ({ onLogout }) => {
 
             <main className="main-home-content">
                 
-                {/* 1. NOTIFICAÇÕES */}
+             {/* 1. NOTIFICAÇÕES*/}
                 <section className="home-section">
                     <h3 className="section-title"><Bell size={24} /> NOTIFICAÇÕES:</h3>
                     <div className="notifications-container">
                         {notifications.length > 0 ? (
-                            notifications.map(n => (
-                                <div key={n.id} className="notification-item-home warning">
-                                    <div className="notification-content">
-                                        <p>
-                                            <strong>URGENTE:</strong> O evento "{n.nome_evento}" 
-                                            {n.dias_restantes < 0 
-                                                ? ` terminou há ${Math.abs(n.dias_restantes)} dias` 
-                                                : ` termina em ${n.dias_restantes} dias`}
-                                            .
-                                        </p>                                        
-                                        <span>Por favor, verifique a recolha dos materiais.</span>
+                            notifications.map(n => {
+                                const dias = n.dias_para_fim; 
+                                const isExcedido = dias < 0;
+                                const isHoje = dias === 0;
+
+                                return (
+                                    <div key={n.id_req} className={`notification-item-home ${isExcedido ? 'danger' : 'warning'}`}>
+                                        <div className="notification-content">
+                                            <p>
+                                                <strong>{isExcedido ? 'PRAZO EXCEDIDO:' : 'ATENÇÃO:'}</strong> O evento "{n.nome_evento}" 
+                                                {isHoje && " termina hoje!"}
+                                                {isExcedido && ` terminou há ${Math.abs(dias)} ${Math.abs(dias) === 1 ? 'dia' : 'dias'}`}
+                                                {!isExcedido && !isHoje && ` termina em ${dias} ${dias === 1 ? 'dia' : 'dias'}`}
+                                                .
+                                            </p>                                        
+                                            <span>
+                                                {isExcedido 
+                                                    ? "A recolha dos materiais está atrasada. Por favor, verifique o estado." 
+                                                    : "Por favor, verifique a recolha dos materiais em breve."}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
-                            <p className="no-notifications">Não existem prazos críticos nos próximos 3 dias.</p>
+                            <p className="no-notifications">Não existem prazos críticos (3 dias de margem).</p>
                         )}
                     </div>
                 </section>

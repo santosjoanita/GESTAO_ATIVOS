@@ -19,12 +19,12 @@ const Stock = () => {
     });
 
     const fetchMateriais = async () => {
-        const res = await fetch('http://localhost:3001/api/materiais?admin=true');
-        setMateriais(await res.json());
+        const res = await fetch('http://localhost:3002/api/materiais?admin=true');
+        const data = await res.json();
+        setMateriais(data); 
     };
-
     const fetchCategorias = async () => {
-        const res = await fetch('http://localhost:3001/api/categorias');
+        const res = await fetch('http://localhost:3002/api/materiais/categorias');
         setCategoriasBD(await res.json());
     };
 
@@ -36,7 +36,7 @@ const Stock = () => {
 
         if (window.confirm(`Tem a certeza que quer ${acaoTexto} o material "${material.nome}"?`)) {
             try {
-                await fetch(`http://localhost:3001/api/materiais/${material.id_material}/visibilidade`, {
+                await fetch(`http://localhost:3002/api/materiais/${material.id_material}/visibilidade`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ visivel: novaVisibilidade, id_user: user?.id_user })
@@ -47,55 +47,53 @@ const Stock = () => {
     };
 
     const handleSave = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    // 1. Preparar o FormData 
-    const data = new FormData();
-    data.append('nome', formData.nome);
-    data.append('quantidade_total', formData.quantidade_total);
-    data.append('categoria', formData.categoria);
-    data.append('especificacoes', formData.especificacoes);
-    data.append('descricao_tecnica', formData.descricao_tecnica);
-    data.append('local_armazenamento', formData.local_armazenamento);
-    data.append('id_user', user?.id_user);
+        const data = new FormData();
+        data.append('nome', formData.nome);
+        data.append('quantidade_total', formData.quantidade_total);
+        data.append('categoria', formData.categoria);
+        data.append('especificacoes', formData.especificacoes);
+        data.append('descricao_tecnica', formData.descricao_tecnica);
+        data.append('local_armazenamento', formData.local_armazenamento);
+        data.append('id_user', user?.id_user);
 
-    if (selectedMaterial) {
-        data.append('imagem_url', formData.imagem_url);
-    }
-
-    if (imageFile) {
-        data.append('imagem', imageFile); 
-    }
-
-    // 2. Lógica de Rota REST
-    const isEditing = !!selectedMaterial?.id_material;
-    
-
-    const url = isEditing 
-        ? `http://localhost:3001/api/materiais/${selectedMaterial.id_material}` 
-        : 'http://localhost:3001/api/materiais';
-    
-    const method = isEditing ? 'PUT' : 'POST';
-
-    try {
-        const res = await fetch(url, {
-            method: method,
-            body: data 
-        });
-
-        if (res.ok) { 
-            await fetchMateriais(); 
-            setShowModal(false); 
-            resetForm(); 
-        } else {
-            const errorMsg = await res.text();
-            alert("Erro ao guardar material: " + errorMsg);
+        if (selectedMaterial) {
+            data.append('imagem_url', formData.imagem_url);
         }
-    } catch (err) {
-        console.error("Erro na ligação:", err);
-        alert("Erro ao ligar ao servidor. Verifique se o backend está a correr.");
-    }
-};
+
+        if (imageFile) {
+            data.append('imagem', imageFile); 
+        }
+
+        const isEditing = !!selectedMaterial?.id_material;
+        
+        // MUDANÇA: Porta 3002 em ambos os casos
+        const url = isEditing 
+            ? `http://localhost:3002/api/materiais/${selectedMaterial.id_material}` 
+            : 'http://localhost:3002/api/materiais';
+        
+        const method = isEditing ? 'PUT' : 'POST';
+
+        try {
+            const res = await fetch(url, {
+                method: method,
+                body: data 
+            });
+
+            if (res.ok) { 
+                await fetchMateriais(); 
+                setShowModal(false); 
+                resetForm(); 
+            } else {
+                const errorMsg = await res.text();
+                alert("Erro ao guardar material: " + errorMsg);
+            }
+        } catch (err) {
+            console.error("Erro na ligação:", err);
+            alert("Erro ao ligar ao servidor. Verifique se o backend está a correr na porta 3002.");
+        }
+    };
 
     const resetForm = () => {
         setSelectedMaterial(null);
@@ -149,7 +147,8 @@ const Stock = () => {
                                 <tr key={m.id_material}>
                                     <td>
                                         <img 
-                                            src={m.imagem_url ? `http://localhost:3001/uploads/${m.imagem_url}` : 'https://via.placeholder.com/50'} 
+                                            // MUDANÇA: Porta 3002
+                                            src={m.imagem_url ? `http://localhost:3002/uploads/${m.imagem_url}` : 'https://via.placeholder.com/50'} 
                                             alt="Material" 
                                             style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
                                         />
@@ -231,14 +230,14 @@ const Stock = () => {
                                         const file = e.target.files[0];
                                         if(file) {
                                             setImageFile(file);
-                                            // Apenas para ver o preview no modal antes de guardar
                                             setFormData({...formData, imagem_url: URL.createObjectURL(file)});
                                         }
                                     }} style={{display: 'none'}} />
                                 </label>
                                 {formData.imagem_url && (
                                     <img 
-                                        src={formData.imagem_url.startsWith('blob') ? formData.imagem_url : `http://localhost:3001/uploads/${formData.imagem_url}`} 
+                                        // MUDANÇA: Porta 3002 para imagens guardadas
+                                        src={formData.imagem_url.startsWith('blob') ? formData.imagem_url : `http://localhost:3002/uploads/${formData.imagem_url}`} 
                                         className="preview-img-small" 
                                         alt="Preview" 
                                         style={{ width: '80px', height: '80px', marginTop: '10px', objectFit: 'cover' }}
@@ -247,21 +246,21 @@ const Stock = () => {
 
                                 <label>Localização</label>
                                 <select 
-                        value={formData.local_armazenamento} 
-                        onChange={e => setFormData({...formData, local_armazenamento: e.target.value})} 
-                        required
-                    >
-                        <option value="">Selecionar armazém...</option>
-                        <option value="Bouro">Bouro</option>
-                        <option value="Armazém Municipal Central">Armazém Municipal Central</option>
-                        <option value="Instalações SGE">Instalações SGE</option>
-                        <option value="Instalações DSSA">Instalações DSSA</option>
-                        <option value="Fórum Rodrigues Sampaio">Fórum Rodrigues Sampaio</option>
-                        <option value="Biblioteca Municipal">Biblioteca Municipal</option>
-                        <option value="Auditório Municipal">Auditório Municipal</option>
-                        <option value="Instalações SMPC">Instalações SMPC</option>
-                        <option value="Estaleiro Municipal">Estaleiro Municipal</option>
-                    </select>
+                                    value={formData.local_armazenamento} 
+                                    onChange={e => setFormData({...formData, local_armazenamento: e.target.value})} 
+                                    required
+                                >
+                                    <option value="">Selecionar armazém...</option>
+                                    <option value="Bouro">Bouro</option>
+                                    <option value="Armazém Municipal Central">Armazém Municipal Central</option>
+                                    <option value="Instalações SGE">Instalações SGE</option>
+                                    <option value="Instalações DSSA">Instalações DSSA</option>
+                                    <option value="Fórum Rodrigues Sampaio">Fórum Rodrigues Sampaio</option>
+                                    <option value="Biblioteca Municipal">Biblioteca Municipal</option>
+                                    <option value="Auditório Municipal">Auditório Municipal</option>
+                                    <option value="Instalações SMPC">Instalações SMPC</option>
+                                    <option value="Estaleiro Municipal">Estaleiro Municipal</option>
+                                </select>
 
                                 <button type="submit" className="btn-submeter"><Save size={18}/> GUARDAR NO SISTEMA</button>
                             </form>

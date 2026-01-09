@@ -3,15 +3,23 @@ const db = require('../config/db');
 exports.notificacoesPrazos = async (req, res) => {
     try {
         const [rows] = await db.execute(`
-            SELECT r.id_req as id, e.nome_evento, e.data_fim, DATEDIFF(e.data_fim, CURDATE()) as dias_restantes
+            SELECT r.*, e.nome_evento, u.nome as requerente,
+                   DATEDIFF(r.data_fim, CURDATE()) as dias_para_fim
             FROM Requisicao r
             JOIN Evento e ON r.id_evento = e.id_evento
-            WHERE r.id_user = ? AND e.data_fim IS NOT NULL AND r.id_estado = 2 
-            ORDER BY dias_restantes ASC`, [req.params.id]);
+            JOIN Utilizador u ON r.id_user = u.id_user
+            WHERE r.id_estado = 2 -- Apenas as que foram Aprovadas
+            AND r.data_fim BETWEEN DATE_SUB(CURDATE(), INTERVAL 3 DAY) 
+                               AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
+            ORDER BY r.data_fim ASC
+        `);
+        
         res.json(rows);
-    } catch (e) { res.status(500).json([]); }
+    } catch (e) {
+        console.error("Erro nas notificações:", e.message);
+        res.status(500).json({ error: e.message });
+    }
 };
-
 // Histórico de Stock
 exports.historicoStock = async (req, res) => {
     try {

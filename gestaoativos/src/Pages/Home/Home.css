@@ -48,27 +48,66 @@
     padding-bottom: 10px;
 }
 
-.notification-item-home.warning {
-    border-left: 6px solid #f39c12;
-    background-color: #fff;
-    padding: 18px;
+
+.notification-item-home {
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 18px;
+    transition: transform 0.2s ease;
+    background-color: #fff; 
+}
+
+.notification-item-home:hover {
+    transform: translateX(5px);
+}
+
+.notification-item-home.warning {
+    border-left: 6px solid #f39c12; 
+}
+
+.notification-item-home.danger {
+    border-left: 6px solid #e74c3c; 
+    background-color: #fffafa; 
 }
 
 .notification-content p {
     margin: 0;
     font-size: 14px;
     color: #333;
+    line-height: 1.5;
 }
 
-.notification-content strong {
-    color: #d35400;
+.notification-item-home.warning strong {
+    color: #d35400; 
 }
+
+.notification-item-home.danger strong {
+    color: #c0392b; 
+}
+
+.notification-content span {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Mensagem de vazio */
+.no-notifications {
+    text-align: center;
+    padding: 30px;
+    background: white;
+    border-radius: 12px;
+    color: #888;
+    border: 2px dashed #eee;
+    font-size: 0.9em;
+}
+
 
 .btn-ver-detalhes {
     background: var(--form-primary-color);

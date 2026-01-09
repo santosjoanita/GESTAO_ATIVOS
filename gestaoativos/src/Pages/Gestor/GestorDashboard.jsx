@@ -23,13 +23,15 @@ const GestorDashboard = () => {
 
     const loadData = async () => {
         setItems([]);
-        let url = '';
-        if (tab === 'requisicoes') url = '/api/gestao/requisicoes/todas';
-        else if (tab === 'eventos') url = '/api/gestao/eventos/todos';
-        else if (tab === 'stock') url = '/api/stock/historico';
+        let endpoint = '';
+        
+        if (tab === 'requisicoes') endpoint = '/requisicoes/todas';
+        else if (tab === 'eventos') endpoint = '/eventos/todos';
+        else if (tab === 'stock') endpoint = '/stock/historico';
         
         try {
-            const res = await fetch(`http://localhost:3001${url}`);
+            const res = await fetch(`http://localhost:3002/api/gestao${endpoint}`);
+            if (!res.ok) throw new Error("Erro na rota");
             const data = await res.json();
             setItems(Array.isArray(data) ? data : []);
         } catch (error) { 
@@ -45,7 +47,7 @@ const GestorDashboard = () => {
         setAnexos([]);
         if (tab === 'eventos') {
             try {
-                const res = await fetch(`http://localhost:3001/api/eventos/${item.id_evento}/anexos`);
+                const res = await fetch(`http://localhost:3002/api/eventos/${item.id_evento}/anexos`);
                 const data = await res.json();
                 setAnexos(data);
             } catch (err) { console.error(err); }
@@ -54,7 +56,7 @@ const GestorDashboard = () => {
 
     const handleAcao = async (id, id_estado) => {
         try {
-            await fetch(`http://localhost:3001/api/gestao/${tab}/${id}/estado`, {
+            await fetch(`http://localhost:3002/api/gestao/${tab}/${id}/estado`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_estado }) 
@@ -89,110 +91,98 @@ const GestorDashboard = () => {
                 
                 <div className="gestao-grid">
                     {items.map(item => {
-                const isStock = tab === 'stock';
-                const tituloExibicao = isStock ? item.item_nome : item.nome_evento;
+                        const isStock = tab === 'stock';
+                        const tituloExibicao = isStock ? item.item_nome : item.nome_evento;
 
-                return (
-                    <div key={item.id_req || item.id_evento || item.id_historico || Math.random()} 
-                        className="gestao-card"
-                        onClick={() => !isStock && handleVerDetalhes(item)}
-                        style={{ cursor: isStock ? 'default' : 'pointer' }}>
-                        
-                        <div className="card-info">
-                            <strong>{tituloExibicao || "Sem Identificação"}</strong>
-                            
-                            {isStock ? (
-                                <div className="stock-direct-info">
-                                    <p><strong>Utilizador:</strong> {item.nome_utilizador}</p>
-                                    <p><strong>Ação:</strong> {item.tipo_movimento} ({item.quantidade_alt})</p>
-                                    <p><strong>Data:</strong> {new Date(item.data_movimento).toLocaleDateString('pt-PT')}</p>
+                        return (
+                            <div key={item.id_req || item.id_evento || item.id_historico || Math.random()} 
+                                className="gestao-card"
+                                onClick={() => !isStock && handleVerDetalhes(item)}
+                                style={{ cursor: isStock ? 'default' : 'pointer' }}>
+                                
+                                <div className="card-info">
+                                    <strong>{tituloExibicao || "Sem Identificação"}</strong>
+                                    
+                                    {isStock ? (
+                                        <div className="stock-direct-info">
+                                            <p><strong>Utilizador:</strong> {item.nome_utilizador}</p>
+                                            <p><strong>Ação:</strong> {item.tipo_movimento} ({item.quantidade_alt})</p>
+                                            <p><strong>Data:</strong> {new Date(item.data_movimento).toLocaleDateString('pt-PT')}</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p>{item.requerente || "Utilizador"}</p>
+                                            <span className={`status-badge ${item.estado_nome?.toLowerCase()}`}>
+                                                {item.estado_nome}
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
-                            ) : (
-                                <>
-                                    <p>{item.requerente}</p>
-                                    <span className={`status-badge ${item.estado_nome?.toLowerCase()}`}>
-                                        {item.estado_nome}
-                                    </span>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                );
-            })}
+                            </div>
+                        );
+                    })}
                 </div>
             </main>
 
             {selectedItem && (
-                    <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
-                        <div className="modal-content details-modal" onClick={(e) => e.stopPropagation()}>
-                            <div className="modal-header">
-                                <h3>Detalhes do {tab === 'eventos' ? 'Evento' : 'Pedido'}</h3>
-                                <button onClick={() => setSelectedItem(null)} className="close-btn">
-                                    <X size={24} />
-                                </button>
+                <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
+                    <div className="modal-content details-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Detalhes do {tab === 'eventos' ? 'Evento' : 'Pedido'}</h3>
+                            <button onClick={() => setSelectedItem(null)} className="close-btn">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        
+                        <div className="modal-body">
+                            <h4 className="modal-main-title">
+                                {selectedItem.nome_evento || selectedItem.nome_exibicao || selectedItem.item_nome}
+                            </h4>
+                            
+                            <div className="info-grid-esp">
+                                <p><User size={16}/> <strong>Criado por:</strong> {selectedItem.requerente || selectedItem.nome_utilizador || 'N/A'}</p>
+                                <p><Calendar size={16}/> <strong>Data:</strong> {
+                                    tab === 'eventos' && selectedItem.data_inicio
+                                    ? `${new Date(selectedItem.data_inicio).toLocaleDateString('pt-PT')} ${selectedItem.data_fim ? ' até ' + new Date(selectedItem.data_fim).toLocaleDateString('pt-PT') : ''}`
+                                    : new Date(selectedItem.data_pedido || selectedItem.data_movimento).toLocaleDateString('pt-PT')
+                                }</p>
+                                <p><MapPin size={16}/> <strong>Local:</strong> {selectedItem.localizacao || 'Esposende'}</p>
+                            </div>
+
+                            <div className="specs-container-esp">
+                                <h5><FileText size={16}/> Especificações / Finalidade:</h5>
+                                <div className="specs-box">
+                                    {selectedItem.descricao || selectedItem.especificacoes || "Sem especificações fornecidas."}
+                                </div>
                             </div>
                             
-                            <div className="modal-body">
-                                <h4 className="modal-main-title">
-                                    {selectedItem.nome_evento || selectedItem.nome_exibicao || selectedItem.item_nome}
-                                </h4>
-                                
-                                <div className="info-grid-esp">
-                                    <p><User size={16}/> <strong>Criado por:</strong> {selectedItem.requerente || selectedItem.nome_utilizador || 'N/A'}</p>
-                                    
-                                    <p><Calendar size={16}/> <strong>Data:</strong> {
-                                        tab === 'eventos' && selectedItem.data_inicio
-                                        ? `${new Date(selectedItem.data_inicio).toLocaleDateString('pt-PT')} ${selectedItem.data_fim ? ' até ' + new Date(selectedItem.data_fim).toLocaleDateString('pt-PT') : ''}`
-                                        : selectedItem.data_pedido || selectedItem.data_movimento
-                                        ? new Date(selectedItem.data_pedido || selectedItem.data_movimento).toLocaleDateString('pt-PT')
-                                        : 'N/A'
-                                    }</p>
-
-                                    <p><MapPin size={16}/> <strong>Local:</strong> {selectedItem.localizacao || 'Esposende'}</p>
+                            {tab === 'eventos' && (
+                                <div className="anexos-section" style={{marginTop: '20px'}}>
+                                    <h5><Download size={16}/> Documentos Anexados:</h5>
+                                    {anexos.length > 0 ? (
+                                        <div className="anexos-list">
+                                            {anexos.map(file => (
+                                                <a key={file.id_anexo} 
+                                                href={`http://localhost:3002/uploads/${file.nome_oculto}`} 
+                                                target="_blank" rel="noreferrer" className="anexo-item">
+                                                    <Download size={14}/> {file.nome}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    ) : <p className="no-anexos-msg">Nenhum anexo encontrado.</p>}
                                 </div>
+                            )}
 
-                                <div className="specs-container-esp">
-                                    <h5><FileText size={16}/> Especificações / Finalidade:</h5>
-                                    <div className="specs-box">
-                                        {selectedItem.descricao || selectedItem.especificacoes || "Sem especificações fornecidas."}
-                                    </div>
+                            {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
+                                <div className="modal-actions" style={{display: 'flex', gap: '15px', marginTop: '25px'}}>
+                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-approve" style={{flex: 1, padding: '12px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'}}>APROVAR</button>
+                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-reject" style={{flex: 1, padding: '12px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'}}>REJEITAR</button>
                                 </div>
-                                
-                                {tab === 'eventos' && (
-                                    <div className="anexos-section" style={{marginTop: '20px'}}>
-                                        <h5><Download size={16}/> Documentos Anexados:</h5>
-                                        {anexos.length > 0 ? (
-                                            <div className="anexos-list">
-                                                {anexos.map(file => (
-                                                    <a key={file.id_anexo} 
-                                                    href={`http://localhost:3001/uploads/${file.nome_oculto}`} 
-                                                    target="_blank" rel="noreferrer" className="anexo-item">
-                                                        <Download size={14}/> {file.nome}
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        ) : <p className="no-anexos-msg">Nenhum anexo encontrado.</p>}
-                                    </div>
-                                )}
-
-                                {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
-                                    <div className="modal-actions" style={{display: 'flex', gap: '15px', marginTop: '25px'}}>
-                                        <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-approve" style={{flex: 1, padding: '12px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'}}>APROVAR</button>
-                                        <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-reject" style={{flex: 1, padding: '12px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer'}}>REJEITAR</button>
-                                    </div>
-                                )}
-                            </div>
+                            )}
                         </div>
                     </div>
-                )}
-
-            <footer className="fixed-footer-esp">
-                <div className="footer-content-esp centered-content">
-                    <div className="footer-items-wrapper"> 
-                        <span className="footer-project-esp">SISTEMA DE GESTÃO - MUNICÍPIO DE ESPOSENDE</span>
-                    </div>
                 </div>
-            </footer>
+            )}
         </div>
     );
 };

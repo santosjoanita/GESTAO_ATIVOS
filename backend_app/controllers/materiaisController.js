@@ -14,6 +14,14 @@ exports.listarTodos = async (req, res) => {
         res.status(500).json({ erro: e.message });
     }
 };
+exports.listarCategorias = async (req, res) => {
+    try {
+        const [rows] = await db.execute("SELECT * FROM Categoria ORDER BY nome ASC");
+        res.json(rows);
+    } catch (e) {
+        res.status(500).json([]);
+    }
+};
 
 // 2. CRIAR MATERIAL 
 exports.criar = async (req, res) => {

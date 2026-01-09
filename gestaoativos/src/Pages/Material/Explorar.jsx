@@ -28,9 +28,10 @@ const Explorar = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                // MUDANÇA: Porta 3002 para Materiais e Categorias
                 const [resMat, resCat] = await Promise.all([
-                    fetch('http://localhost:3001/api/materiais'),
-                    fetch('http://localhost:3001/api/categorias')
+                    fetch('http://localhost:3002/api/materiais'),
+                    fetch('http://localhost:3002/api/materiais/categorias')
                 ]);
                 const dataMat = await resMat.json();
                 const dataCat = await resCat.json();
@@ -38,7 +39,7 @@ const Explorar = () => {
                 setMateriais(Array.isArray(dataMat) ? dataMat : []);
                 setCategorias(Array.isArray(dataCat) ? dataCat : []);
             } catch (err) {
-                console.error("Erro ao carregar dados", err);
+                console.error("Erro ao carregar dados do catálogo", err);
             }
         };
         fetchData();
@@ -59,7 +60,6 @@ const Explorar = () => {
     };
     
     const materiaisFiltrados = materiais.filter(m => {
-        // Garantindo que m.nome existe para evitar erro de undefined
         const nomeMaterial = m.nome || ""; 
         const matchTexto = nomeMaterial.toLowerCase().includes(filtroTexto.toLowerCase());
         const matchCat = categoriasSelecionadas.length === 0 || categoriasSelecionadas.includes(m.categoria);
@@ -72,7 +72,6 @@ const Explorar = () => {
 
     return (
         <div className="explorar-container">
-            {/* NOVO HEADER */}
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <img src={logo} alt="Logo" className="logo-img-large" />
@@ -157,7 +156,7 @@ const Explorar = () => {
                                 <div className="img-box">
                                     <img 
                                         src={m.imagem_url 
-                                            ? `http://localhost:3001/uploads/${m.imagem_url}` 
+                                            ? `http://localhost:3002/uploads/${m.imagem_url}` 
                                             : logo 
                                         } 
                                         alt={m.nome} 

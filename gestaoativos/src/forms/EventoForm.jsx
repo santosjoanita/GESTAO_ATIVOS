@@ -70,7 +70,7 @@ const EventoForm = ({ onLogout }) => {
     }
 
     try {
-        const response = await fetch('http://localhost:3001/api/eventos', { 
+        const response = await fetch('http://localhost:3002/api/eventos', { 
             method: 'POST',
             body: formDataToSend, 
         });

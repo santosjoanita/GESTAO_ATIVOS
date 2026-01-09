@@ -58,3 +58,44 @@ exports.atualizarEstado = async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 };
+exports.listarPorUser = async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT 
+                r.*, 
+                e.nome_evento, 
+                es.nome as estado_nome,
+                (SELECT COUNT(*) FROM Requisicao r2 
+                 WHERE r2.id_evento = r.id_evento AND r2.id_req <= r.id_req) as ordem
+            FROM Requisicao r 
+            JOIN Evento e ON r.id_evento = e.id_evento 
+            JOIN Estado es ON r.id_estado = es.id_estado 
+            WHERE r.id_user = ? 
+            ORDER BY r.id_req DESC`, [req.params.id]);
+
+        const formatadas = rows.map(r => ({
+            ...r,
+            nome_exibicao: `${r.nome_evento || 'Evento'} - Requisição ${r.ordem}`
+        }));
+
+        res.json(formatadas);
+    } catch (e) {
+        res.status(500).json([]);
+    }
+};
+
+// 4. LISTAR REQUISIÇÕES POR UTILIZADOR
+exports.listarPorUser = async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT r.*, e.nome_evento, es.nome as estado_nome 
+            FROM Requisicao r 
+            JOIN Evento e ON r.id_evento = e.id_evento 
+            JOIN Estado es ON r.id_estado = es.id_estado 
+            WHERE r.id_user = ? 
+            ORDER BY r.id_req DESC`, [req.params.id]);
+        res.json(rows);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+};

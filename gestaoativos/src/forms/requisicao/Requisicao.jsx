@@ -13,7 +13,7 @@ const Requisicao = () => {
     const userId = user?.id_user || user?.id;
 
     useEffect(() => {
-        fetch('http://localhost:3001/api/eventos/lista-simples')
+        fetch('http://localhost:3002/api/eventos/lista-simples')
             .then(res => res.json())
             .then(data => setEventos(data))
             .catch(err => console.error("Erro ao carregar eventos"));
@@ -33,7 +33,7 @@ const Requisicao = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:3001/api/requisicoes', {
+            const response = await fetch('http://localhost:3002/api/requisicoes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

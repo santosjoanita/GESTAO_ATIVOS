@@ -14,9 +14,12 @@ const Login = ({ onLoginSuccess }) => {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:3001/api/login', {
+            // MUDANÇAS AQUI: Método POST e URL com /api/auth
+            const response = await fetch('http://localhost:3001/api/auth/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json' 
+                },
                 body: JSON.stringify({ username, password })
             });
 
@@ -30,17 +33,20 @@ const Login = ({ onLoginSuccess }) => {
                 if (onLoginSuccess) onLoginSuccess(user);
                 setShowAuthModal(false);
 
-                // Redirecionamento dinâmico
+                // Redirecionamento dinâmico baseado no perfil
                 if (user.id_perfil === 2) {
                     navigate('/gestao'); 
                 } else {
                     navigate('/home');   
                 }
             } else {
-                setError('Utilizador ou palavra-passe incorretos.');
+                // Tenta ler a mensagem de erro vinda do backend se existir
+                const errorData = await response.json().catch(() => ({}));
+                setError(errorData.erro || 'Utilizador ou palavra-passe incorretos.');
             }
         } catch (err) {
-            setError('Erro ao ligar ao servidor.');
+            console.error("Erro no login:", err);
+            setError('Erro ao ligar ao servidor de autenticação.');
         } finally {
             setIsLoading(false);
         }

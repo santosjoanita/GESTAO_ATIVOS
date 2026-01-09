@@ -13,4 +13,4 @@ RUN npm install --unsafe-perm
 COPY . .
 
 EXPOSE 3001
-CMD ["node", "server.js"]
+CMD ["node", "index.js"]

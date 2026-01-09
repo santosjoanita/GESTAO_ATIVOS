@@ -71,8 +71,8 @@ const Perfil = ({ onLogout }) => {
         if (!user) return;
         try {
             const [resReq, resEv] = await Promise.all([
-                fetch(`http://localhost:3001/api/requisicoes/user/${user.id_user}`),
-                fetch(`http://localhost:3001/api/eventos/user/${user.id_user}`)
+                fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user}`),
+                fetch(`http://localhost:3002/api/eventos/user/${user.id_user}`)
             ]);
             
             const dataReq = await resReq.json();
