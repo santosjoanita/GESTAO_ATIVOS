@@ -16,7 +16,14 @@ const upload = multer({ storage });
 
 router.get('/', materiaisController.listarTodos);
 router.get('/categorias', materiaisController.listarCategorias);
+router.get('/:id', materiaisController.verDetalhe);
+router.get('/:id/ocupacao', materiaisController.verOcupacaoMaterial);
+router.get('/limites-evento/:id_req', materiaisController.getDatasLimiteEvento);
+
+
 router.post('/', upload.single('imagem'), materiaisController.criar);
+
+
 router.put('/:id', upload.single('imagem'), materiaisController.editar);
 
 module.exports = router;

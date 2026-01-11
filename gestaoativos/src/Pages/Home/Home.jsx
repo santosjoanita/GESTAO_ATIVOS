@@ -12,11 +12,14 @@ const activityMap = [
 const Home = ({ onLogout }) => {
     const [notifications, setNotifications] = useState([]);
     const [activityCounts, setActivityCounts] = useState({ eventosCount: 0, requisicoesCount: 0 });
-    const [projetoAtual, setProjetoAtual] = useState("A carregar...");
+    const [carrinhoCount, setCarrinhoCount] = useState(0);
     const navigate = useNavigate();
     
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user ? user.id_user : null;
+
+    const eventoRaw = localStorage.getItem('evento_trabalho');
+    const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
 
     const fetchDashboardData = async () => {
         if (!userId) return;
@@ -27,6 +30,7 @@ const Home = ({ onLogout }) => {
         };
 
         try {
+            // Chamadas paralelas para otimizar o carregamento
             const [resEv, resReq, resNotif] = await Promise.all([
                fetch(`http://localhost:3002/api/eventos/user/${userId}`, { headers }),
                fetch(`http://localhost:3002/api/requisicoes/user/${userId}`, { headers }),
@@ -43,15 +47,19 @@ const Home = ({ onLogout }) => {
             });
 
             setNotifications(Array.isArray(dataNotif) ? dataNotif : []);
-            setProjetoAtual(localStorage.getItem('projeto_ativo') || "Sem requisição ativa");
+            
+            // Atualiza o número de itens no carrinho
+            const itensCarrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+            setCarrinhoCount(itensCarrinho.length);
 
         } catch (error) {
-            console.error("Erro ao carregar dados do dashboard:", error);
+            console.error("Erro ao carregar dados da Home:", error);
         }
     };
 
     useEffect(() => {
         fetchDashboardData();
+        // Atualiza a cada 30 segundos para manter as notificações frescas
         const interval = setInterval(fetchDashboardData, 30000); 
         return () => clearInterval(interval);
     }, [userId]);
@@ -67,7 +75,7 @@ const Home = ({ onLogout }) => {
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <div className="logo-esp">
-                        <img src={logo} alt="Logo Esposende" className="logo-img" />
+                        <img src={logo} alt="Logo Esposende" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}} />
                     </div>
                     
                     <nav className="header-nav-esp">
@@ -78,7 +86,10 @@ const Home = ({ onLogout }) => {
                     </nav>
 
                     <div className="header-icons-esp">
-                        <ShoppingCart size={24} className="icon-esp" />
+                        <div style={{position: 'relative', cursor: 'pointer'}} onClick={() => navigate('/carrinho')}>
+                            <ShoppingCart size={24} className="icon-esp" />
+                            {carrinhoCount > 0 && <span className="cart-badge-count">{carrinhoCount}</span>}
+                        </div>
                         <Link to="/perfil"> 
                             <User size={24} className="icon-esp" /> 
                         </Link>
@@ -91,7 +102,7 @@ const Home = ({ onLogout }) => {
 
             <main className="main-home-content">
                 
-                {/* 1. NOTIFICAÇÕES (3 DIAS PARA CADA LADO) */}
+                {/* 1. NOTIFICAÇÕES DE PRAZOS */}
                 <section className="home-section">
                     <h3 className="section-title"><Bell size={24} /> NOTIFICAÇÕES:</h3>
                     <div className="notifications-container">
@@ -113,22 +124,22 @@ const Home = ({ onLogout }) => {
                                             </p>                                        
                                             <span>
                                                 {isExcedido 
-                                                    ? "A recolha dos materiais está atrasada. Por favor, verifique o estado." 
-                                                    : "Por favor, verifique a recolha dos materiais em breve."}
+                                                    ? "A recolha dos materiais está atrasada. Por favor, verifique com o gestor." 
+                                                    : "Por favor, prepare a recolha dos materiais para breve."}
                                             </span>
                                         </div>
                                     </div>
                                 );
                             })
                         ) : (
-                            <p className="no-notifications">Não existem prazos críticos (3 dias de margem).</p>
+                            <p className="no-notifications">Não existem prazos críticos para os teus materiais.</p>
                         )}
                     </div>
                 </section>
                 
                 {/* 2. PAINEL DE ATIVIDADE */}
                 <section className="home-section">
-                    <h3 className="section-title">O SEU PAINEL DE ATIVIDADE:</h3>
+                    <h3 className="section-title">O TEU PAINEL DE ATIVIDADE:</h3>
                     <div className="activity-panel-container">
                         {activityMap.map(item => (
                             <button 
@@ -138,23 +149,20 @@ const Home = ({ onLogout }) => {
                             >
                                 <item.icone size={28} />
                                 <h4>{activityCounts[item.key]} {item.titulo}</h4>
-                                <span className="activity-link">VER DETALHES</span>
+                                <span className="activity-link">VER NO PERFIL</span>
                             </button>
                         ))}
                     </div>
                 </section>
 
                 <section className="home-section">
-                    <h3 className="section-title">GUIA RÁPIDO DE UTILIZAÇÃO</h3>
+                    <h3 className="section-title">DICAS RÁPIDAS</h3>
                     <div className="quick-guide-container">
                         <p className="guide-instruction">
-                            Para solicitar material, use o menu <strong>NOVA REQUISIÇÃO</strong>.
+                            Usa o <strong>CATÁLOGO</strong> para reservar materiais em requisições aprovadas.
                         </p>
                         <p className="guide-instruction">
-                            Para criar um Evento, use o menu <strong>NOVO EVENTO</strong>.
-                        </p>
-                        <p className="guide-instruction">
-                            Para acompanhar aprovações e o estado dos pedidos (Verde/Vermelho), consulte o seu <strong>PERFIL</strong>.
+                            Podes ver o estado (Pendente/Aprovado) de todos os teus pedidos no <strong>PERFIL</strong>.
                         </p>
                     </div>
                 </section>
@@ -165,7 +173,7 @@ const Home = ({ onLogout }) => {
                 <div className="footer-content-esp centered-content">
                     <div className="footer-items-wrapper"> 
                         <span className="footer-project-esp">
-                            {projetoAtual === 'Sem requisição ativa' ? 'SEM REQUISIÇÃO ATIVA' : `REQUISIÇÃO ${projetoAtual}`}
+                            {eventoAtivo ? `REQUISIÇÃO ATIVA: ${eventoAtivo.nome.toUpperCase()}` : "SISTEMA DE GESTÃO - MUNICÍPIO DE ESPOSENDE"}
                         </span>
                     </div>
                 </div>

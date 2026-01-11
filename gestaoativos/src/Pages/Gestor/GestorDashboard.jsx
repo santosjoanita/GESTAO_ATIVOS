@@ -9,6 +9,7 @@ const GestorDashboard = () => {
     const [tab, setTab] = useState('requisicoes');
     const [selectedItem, setSelectedItem] = useState(null);
     const [anexos, setAnexos] = useState([]);
+    const [materiais, setMateriais] = useState([]); 
     const navigate = useNavigate();
     
     const user = JSON.parse(localStorage.getItem('user'));
@@ -42,9 +43,12 @@ const GestorDashboard = () => {
     };
 
     const handleVerDetalhes = async (item) => {
-        if (tab === 'stock') return; // Stock não precisa de modal de aprovação
+        if (tab === 'stock') return;
         setSelectedItem(item);
         setAnexos([]);
+        setMateriais([]); 
+
+        // Se for Evento, carrega Anexos
         if (tab === 'eventos') {
             try {
                 const res = await fetch(`http://localhost:3002/api/eventos/${item.id_evento}/anexos`, {
@@ -54,22 +58,42 @@ const GestorDashboard = () => {
                 setAnexos(data);
             } catch (err) { console.error("Erro nos anexos:", err); }
         }
+
+        // Se for Requisição, carrega os Materiais associados
+        if (tab === 'requisicoes') {
+            try {
+                const res = await fetch(`http://localhost:3002/api/requisicoes/${item.id_req}/materiais`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                setMateriais(data);
+            } catch (err) { console.error("Erro nos materiais:", err); }
+        }
     };
 
     const handleAcao = async (id, id_estado) => {
-        const endpoint = tab === 'requisicoes' ? 'requisicoes' : 'eventos';
-        try {
-            const res = await fetch(`http://localhost:3002/api/${endpoint}/${id}/estado`, {
-                method: 'PUT',
-                headers: getAuthHeaders(), 
-                body: JSON.stringify({ id_estado }) 
-            });
-            if (res.ok) {
-                setSelectedItem(null);
-                loadData();
-            }
-        } catch (err) { console.error(err); }
-    };
+    const tipo = tab === 'requisicoes' ? 'requisicoes' : 'eventos';
+    
+    try {
+        const res = await fetch(`http://localhost:3002/api/gestao/${tipo}/${id}/estado`, {
+            method: 'PUT',
+            headers: getAuthHeaders(), 
+            body: JSON.stringify({ id_estado }) 
+        });
+
+        if (res.ok) {
+            setSelectedItem(null);
+            loadData();
+        } else {
+            const erroTexto = await res.text();
+            console.error("Erro do servidor:", erroTexto);
+            alert("Não foi possível atualizar o estado.");
+        }
+    } catch (err) { 
+        console.error("Erro na ligação ao servidor:", err);
+        alert("Erro de rede ao tentar atualizar.");
+    }
+};
 
     if (!user || user.id_perfil !== 2) { 
         return (
@@ -84,7 +108,7 @@ const GestorDashboard = () => {
         <div className="gestao-layout">
             <header className="fixed-header-esp">
                 <div className="header-content-esp">
-                    <img src={logo} alt="Logo" className="logo-img" />
+                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor: 'pointer'}} />
                     <nav className="header-nav-esp">
                         <button onClick={() => setTab('requisicoes')} className={`nav-item-esp ${tab === 'requisicoes' ? 'active-tab-indicator' : ''}`}>REQUISIÇÕES</button>
                         <button onClick={() => setTab('eventos')} className={`nav-item-esp ${tab === 'eventos' ? 'active-tab-indicator' : ''}`}>EVENTOS</button>
@@ -112,7 +136,7 @@ const GestorDashboard = () => {
                             <div className="card-info">
                                 {tab === 'stock' ? (
                                     <>
-                                        <strong><Package size={16} inline /> {item.item_nome}</strong>
+                                        <strong><Package size={16} /> {item.item_nome}</strong>
                                         <p><User size={14} /> <b>Utilizador:</b> {item.nome_utilizador}</p>
                                         <p><Activity size={14} /> <b>Ação:</b> {item.tipo_movimento} ({item.quantidade_alt} unidades)</p>
                                         <p><Calendar size={14} /> <b>Data:</b> {new Date(item.data_movimento).toLocaleString('pt-PT')}</p>
@@ -161,12 +185,43 @@ const GestorDashboard = () => {
                                 </div>
                             </div>
 
+                            {/* SECÇÃO DE MATERIAIS (Só para Requisições) */}
+                            {materiais.length > 0 && (
+                                <div style={{ marginTop: '25px' }}>
+                                    <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Package size={18} /> MATERIAIS REQUISITADOS:
+                                    </label>
+                                    <div style={{ marginTop: '10px', overflowX: 'auto' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', background: '#f8f9fa', borderRadius: '12px' }}>
+                                            <thead>
+                                                <tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
+                                                    <th style={{ padding: '12px' }}>Item</th>
+                                                    <th style={{ padding: '12px' }}>Qtd</th>
+                                                    <th style={{ padding: '12px' }}>Datas Reserva</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {materiais.map((m, idx) => (
+                                                    <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
+                                                        <td style={{ padding: '12px', fontWeight: '600' }}>{m.nome}</td>
+                                                        <td style={{ padding: '12px' }}>{m.quantidade} un.</td>
+                                                        <td style={{ padding: '12px', fontSize: '12px' }}>
+                                                            {new Date(m.data_levantamento).toLocaleDateString()} - {new Date(m.data_devolucao).toLocaleDateString()}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+
                             {anexos.length > 0 && (
                                 <div style={{ marginTop: '20px' }}>
                                     <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px' }}>ANEXOS:</label>
-                                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
                                         {anexos.map(anexo => (
-                                            <a key={anexo.id_anexo} href={`http://localhost:3002/uploads/${anexo.nome_oculto}`} target="_blank" rel="noreferrer" className="anexo-link-estilo">
+                                            <a key={anexo.id_anexo} href={`http://localhost:3002/uploads/${anexo.nome_oculto}`} target="_blank" rel="noreferrer" className="anexo-link-estilo" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', background: '#f0f2f5', padding: '8px 12px', borderRadius: '8px', color: '#1f3a52', fontWeight: 'bold', fontSize: '13px' }}>
                                                 <Download size={14} /> {anexo.nome}
                                             </a>
                                         ))}
@@ -176,8 +231,8 @@ const GestorDashboard = () => {
 
                             {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
                                 <div style={{ display: 'flex', gap: '15px', marginTop: '30px' }}>
-                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-approve-custom">APROVAR</button>
-                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-reject-custom">REJEITAR</button>
+                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-approve-custom" style={{ flex: 1, padding: '15px', border: 'none', borderRadius: '12px', background: 'var(--success-green)', color: 'white', fontWeight: '800', cursor: 'pointer' }}>APROVAR</button>
+                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-reject-custom" style={{ flex: 1, padding: '15px', border: 'none', borderRadius: '12px', background: 'var(--danger-red)', color: 'white', fontWeight: '800', cursor: 'pointer' }}>REJEITAR</button>
                                 </div>
                             )}
                         </div>

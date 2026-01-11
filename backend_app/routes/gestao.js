@@ -27,7 +27,6 @@ router.put('/:tipo/:id/estado',
 
 // Dashboard / Notificações
 router.get('/notificacoes/prazos/:id', 
-    checkPermission(Permissions.VIEW_DASHBOARD), 
     dashboardController.notificacoesPrazos
 );
 

@@ -70,12 +70,51 @@ exports.editar = async (req, res) => {
     }
 };
 
-// 4. LISTAR CATEGORIAS (Para os filtros do catálogo)
+// 4. LISTAR CATEGORIAS 
 exports.listarCategorias = async (req, res) => {
     try {
         const [rows] = await db.execute("SELECT * FROM Categoria ORDER BY nome ASC");
         res.json(rows);
     } catch (e) {
         res.status(500).json([]);
+    }
+};
+
+exports.verDetalhe = async (req, res) => {
+    try {
+        const [rows] = await db.execute('SELECT * FROM Material WHERE id_material = ?', [req.params.id]);
+        if (rows.length === 0) return res.status(404).json({ erro: "Material não encontrado" });
+        res.json(rows[0]);
+    } catch (e) {
+        res.status(500).json({ erro: e.message });
+    }
+};
+
+// 5. VER OCUPAÇÃO DO MATERIAL
+exports.verOcupacaoMaterial = async (req, res) => {
+    try {
+        const [rows] = await db.execute(
+            `SELECT data_saida, data_devolucao, quantidade 
+             FROM RequisicaoItem ri
+             JOIN Requisicao r ON ri.id_req = r.id_req
+             WHERE ri.id_material = ? AND r.id_estado IN (1, 2)`, 
+            [req.params.id]
+        );
+        res.json(rows);
+    } catch (e) {
+        res.status(500).json([]);
+    }
+};
+
+exports.getDatasLimiteEvento = async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT e.data_inicio, e.data_fim 
+            FROM Requisicao r
+            JOIN Evento e ON r.id_evento = e.id_evento
+            WHERE r.id_req = ?`, [req.params.id_req]);
+        res.json(rows[0]);
+    } catch (e) {
+        res.status(500).json(null);
     }
 };

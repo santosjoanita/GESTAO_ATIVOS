@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft } from 'lucide-react';
+import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft, Package } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
@@ -13,7 +13,7 @@ const formatDate = (dateString) => {
     return `${day}/${month}/${year}`;
 };
 
-const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao }) => (
+const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao, materiais }) => (
     <div className={`event-card ${event.colorClass} ${isExpanded ? 'expanded' : ''}`}>
         <div className="event-header-row" onClick={onToggle}>
             <div>
@@ -26,7 +26,7 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao }) =
             </div>
             <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
                 {isRequisicao && (event.status.toLowerCase().includes('aprovad')) && (
-                    <button className="edit-button-esp" onClick={() => onTrabalhar(event.title)}>
+                    <button className="edit-button-esp" onClick={onTrabalhar}>
                         TRABALHAR
                     </button>
                 )}
@@ -40,6 +40,27 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao }) =
                 <h4 className="details-title">Detalhes:</h4>
                 <div className="details-info-grid">
                     <p><strong>Localização:</strong> {event.localizacao || 'Esposende (Centro)'}</p>
+                    
+                    {/* Listagem de Materiais exclusiva para Requisições */}
+                    {isRequisicao && (
+                        <div className="materiais-container-perfil" style={{marginTop: '15px'}}>
+                            <p style={{fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', display: 'flex', alignItems: 'center', gap: '5px'}}>
+                                <Package size={16} /> MATERIAIS NO PEDIDO:
+                            </p>
+                            {materiais && materiais.length > 0 ? (
+                                <ul style={{listStyle: 'none', padding: '10px 0'}}>
+                                    {materiais.map((m, idx) => (
+                                        <li key={idx} style={{fontSize: '12px', padding: '5px 0', borderBottom: '1px solid #eee'}}>
+                                            • {m.nome} — <strong>{m.quantidade} un.</strong>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p style={{fontSize: '12px', color: '#777', padding: '5px 0'}}>Nenhum material adicionado a esta requisição.</p>
+                            )}
+                        </div>
+                    )}
+
                     {!isRequisicao && (
                         <p style={{marginTop: '10px', color: '#1f4e79', fontWeight: 'bold'}}>
                             Existem {event.num_requisicoes || 0} requisições neste evento.
@@ -53,21 +74,20 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao }) =
 
 const Perfil = ({ onLogout }) => {
     const user = JSON.parse(localStorage.getItem('user'));
-    const isGestor = user?.id_perfil == 2;
+    const isGestor = user?.id_perfil === 2;
     const navigate = useNavigate();
 
-    const [userData, setUserData] = useState({ 
-        nome: user?.nome || '...', 
-        email: user?.email || '', 
-        projetoAtual: localStorage.getItem('projeto_ativo') || 'Sem requisição' 
-    });
     const [eventsList, setEventsList] = useState([]);
     const [requisicoesList, setRequisicoesList] = useState([]);
     const [activeTab, setActiveTab] = useState('todos'); 
     const [expandedCardId, setExpandedCardId] = useState(null); 
     const [filtroEstado, setFiltroEstado] = useState('todos');
+    const [materiaisCard, setMateriaisCard] = useState([]);
 
-    // MUDANÇA: Função de Headers para validação na API
+    // Uniformização da Requisicão Ativa
+    const eventoRaw = localStorage.getItem('evento_trabalho');
+    const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
+
     const getAuthHeaders = () => ({
         'x-user-profile': user?.id_perfil?.toString(),
         'x-user-name': user?.nome
@@ -76,7 +96,6 @@ const Perfil = ({ onLogout }) => {
     const fetchPerfilData = async () => {
         if (!user) return;
         try {
-            // MUDANÇA: Inclusão dos headers nos fetches
             const [resReq, resEv] = await Promise.all([
                 fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user}`, { headers: getAuthHeaders() }),
                 fetch(`http://localhost:3002/api/eventos/user/${user.id_user}`, { headers: getAuthHeaders() })
@@ -95,39 +114,41 @@ const Perfil = ({ onLogout }) => {
             const reqComNumeracao = Array.isArray(dataReq) ? dataReq.map((r, index, array) => {
                 const doMesmoEvento = array.filter(item => item.id_evento === r.id_evento);
                 const ordem = doMesmoEvento.sort((a,b) => a.id_req - b.id_req).findIndex(item => item.id_req === r.id_req) + 1;
-                
                 return {
                     id: `req-${r.id_req}`, 
                     id_orig: r.id_req,
                     isRequisicao: true,
                     title: `${r.nome_evento} - Requisição ${ordem}`,
-                    status: r.estado_nome || r.estado || 'Pendente',
+                    status: r.estado_nome || 'Pendente',
                     localizacao: r.localizacao,
-                    colorClass: getStatusColor(r.estado_nome || r.estado)
+                    colorClass: getStatusColor(r.estado_nome)
                 };
             }) : [];
 
             setRequisicoesList(reqComNumeracao);
 
-            const eventosComContagem = Array.isArray(dataEv) ? dataEv.map(e => {
-                const totalReqs = Array.isArray(dataReq) ? dataReq.filter(r => r.id_evento === e.id_evento).length : 0;
-                
-                return {
-                    id: `ev-${e.id_evento}`,
-                    isRequisicao: false,
-                    title: e.nome_evento,
-                    date: formatDate(e.data_inicio),
-                    data_fim: e.data_fim,
-                    status: e.estado_nome,
-                    localizacao: e.localizacao, 
-                    num_requisicoes: totalReqs,
-                    colorClass: getStatusColor(e.estado_nome)
-                };
-            }) : [];
+            const eventosComContagem = Array.isArray(dataEv) ? dataEv.map(e => ({
+                id: `ev-${e.id_evento}`,
+                isRequisicao: false,
+                title: e.nome_evento,
+                date: formatDate(e.data_inicio),
+                data_fim: e.data_fim,
+                status: e.estado_nome,
+                localizacao: e.localizacao, 
+                num_requisicoes: Array.isArray(dataReq) ? dataReq.filter(r => r.id_evento === e.id_evento).length : 0,
+                colorClass: getStatusColor(e.estado_nome)
+            })) : [];
 
             setEventsList(eventosComContagem);
-
         } catch (error) { console.error(error); }
+    };
+
+    const fetchMateriaisReq = async (idReq) => {
+        try {
+            const res = await fetch(`http://localhost:3002/api/requisicoes/${idReq}/materiais`, { headers: getAuthHeaders() });
+            const data = await res.json();
+            setMateriaisCard(data);
+        } catch (err) { console.error(err); }
     };
 
     useEffect(() => { 
@@ -135,10 +156,14 @@ const Perfil = ({ onLogout }) => {
         else fetchPerfilData(); 
     }, []);
 
-    const handleLogout = () => {
-        localStorage.clear();
-        if (onLogout) onLogout();
-        navigate('/');
+    const handleToggle = (item) => {
+        if (expandedCardId === item.id) {
+            setExpandedCardId(null);
+            setMateriaisCard([]);
+        } else {
+            setExpandedCardId(item.id);
+            if (item.isRequisicao) fetchMateriaisReq(item.id_orig);
+        }
     };
 
     const displayItems = (() => {
@@ -147,10 +172,7 @@ const Perfil = ({ onLogout }) => {
                    [...eventsList, ...requisicoesList];
 
         if (filtroEstado !== 'todos') {
-            list = list.filter(item => {
-                const status = (item.status || '').toLowerCase();
-                return status.includes(filtroEstado.substring(0, 5));
-            });
+            list = list.filter(item => (item.status || '').toLowerCase().includes(filtroEstado.substring(0, 5)));
         }
         return list;
     })();
@@ -159,26 +181,21 @@ const Perfil = ({ onLogout }) => {
         <div className="perfil-page-app">
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
-                    <div className="logo-esp"><img src={logo} alt="Logo" className="logo-img" /></div>
+                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}}/>
                     <nav className="header-nav-esp">
                         {isGestor ? (
                             <><Link to="/gestao" className="nav-item-esp">PAINEL DE GESTÃO</Link>
                             <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link></>
                         ) : (
-                            <>
-                            <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
+                            <><Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                             <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
-                            <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
-                            <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
-                            </>
+                            <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link></>
                         )}
                     </nav>
                    <div className="header-icons-esp">
-                        <ShoppingCart size={24} className="icon-esp" />
-                        <Link to="/perfil" className="icon-link-active">
-                            <User size={24} className="icon-esp active-icon-indicator" />
-                        </Link>
-                        <button onClick={handleLogout} className="logout-btn">
+                        <Link to="/carrinho"><ShoppingCart size={24} className="icon-esp" /></Link>
+                        <User size={24} className="icon-esp active-icon-indicator" />
+                        <button onClick={() => {localStorage.clear(); navigate('/')}} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>
                     </div>
@@ -189,20 +206,24 @@ const Perfil = ({ onLogout }) => {
                 <div className="user-panel-esp">
                     <div className="user-avatar-esp"></div>
                     <div>
-                        <h2 className="user-title-esp">Olá, {user?.nome || 'Utilizador'}.</h2>
+                        <h2 className="user-title-esp">Olá, {user?.nome}.</h2>
                         <p className="user-email-esp">{user?.email}</p>
                     </div>
                 </div>
 
                 <div className="tabs-container-esp">
-                    <button className={`tab-button-esp ${activeTab === 'todos' ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab('todos')}>TODOS</button>
-                    <button className={`tab-button-esp ${activeTab === 'eventos' ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab('eventos')}>EVENTOS</button>
-                    <button className={`tab-button-esp ${activeTab === 'requisicoes' ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab('requisicoes')}>REQUISIÇÕES</button>
+                    {['todos', 'eventos', 'requisicoes'].map(t => (
+                        <button key={t} className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab(t)}>
+                            {t.toUpperCase()}
+                        </button>
+                    ))}
                 </div>
 
                 <div className="status-filter-bar-esp">
-                    {['todos', 'pendente', 'aprovado', 'rejeitado'].map((estado) => (
-                        <button key={estado} className={`status-filter-btn ${filtroEstado === estado ? 'active-status' : ''}`} onClick={() => setFiltroEstado(estado)}>{estado.toUpperCase()}</button>
+                    {['todos', 'pendente', 'aprovado', 'rejeitado'].map(estado => (
+                        <button key={estado} className={`status-filter-btn ${filtroEstado === estado ? 'active-status' : ''}`} onClick={() => setFiltroEstado(estado)}>
+                            {estado.toUpperCase()}
+                        </button>
                     ))}
                 </div>
 
@@ -214,27 +235,24 @@ const Perfil = ({ onLogout }) => {
                                 event={item} 
                                 isRequisicao={item.isRequisicao}
                                 isExpanded={expandedCardId === item.id} 
-                                onToggle={() => setExpandedCardId(expandedCardId === item.id ? null : item.id)}
-                                onTrabalhar={(name) => { 
-                                    setUserData({...userData, projetoAtual: name}); 
-                                    localStorage.setItem('projeto_ativo', name); 
+                                materiais={materiaisCard}
+                                onToggle={() => handleToggle(item)}
+                                onTrabalhar={() => { 
+                                    localStorage.setItem('evento_trabalho', JSON.stringify({ id_req: item.id_orig, nome: item.title })); 
                                     navigate('/explorar'); 
                                 }} 
                             />
                         ))
-                    ) : (
-                        <p className="no-items-msg">Nenhum item encontrado.</p>
-                    )}
+                    ) : <p className="no-items-msg">Nenhum item encontrado.</p>}
                 </div>
             </main>
 
             <footer className="fixed-footer-esp">
                 <div className="footer-content-esp centered-content">
-                    <div className="footer-items-wrapper"> 
-                        <span className="footer-project-esp">
-                            {isGestor ? "PAINEL ADMINISTRATIVO" : `ATUALMENTE A TRABALHAR EM: ${userData.projetoAtual}`}
-                        </span>
-                    </div>
+                    <span className="footer-project-esp">
+                        {isGestor ? "PAINEL ADMINISTRATIVO" : 
+                         eventoAtivo ? `A TRABALHAR NA REQUISIÇÃO: ${eventoAtivo.nome.toUpperCase()}` : "SEM REQUISIÇÃO ATIVA"}
+                    </span>
                 </div>
             </footer>
         </div>
