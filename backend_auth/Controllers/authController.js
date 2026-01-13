@@ -2,6 +2,7 @@ const db = require('../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+
 exports.login = async (req, res) => {
     const { username, password } = req.body;
     
@@ -32,14 +33,15 @@ exports.login = async (req, res) => {
         );
 
 
-        res.json({ 
+        res.status(200).json({ 
             auth: true,
             token: token,
             user: {
                 id: user.id_user,
                 nome: user.nome,
                 id_perfil: user.id_perfil,
-                email: user.email
+                email: user.email,
+                token: token
             }
         });
 

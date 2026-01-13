@@ -39,7 +39,11 @@ exports.listarTodas = async (req, res) => {
         res.json(rows);
     } catch (e) {
         console.error("Erro ao listar todas:", e.message);
-        res.status(500).json({ error: e.message });
+        res.status(500).json({
+            code: "500",
+            message: "error",
+             error: e.message
+             });
     }
 };
 
@@ -59,17 +63,22 @@ exports.listarMateriais = async (req, res) => {
 // 3. LISTAR POR USER 
 exports.listarPorUser = async (req, res) => {
     try {
+        const { id } = req.params;
         const [rows] = await db.execute(`
-            SELECT r.*, e.nome_evento, es.nome as estado_nome 
+            SELECT r.*, e.nome_evento, e.data_fim, es.nome as estado_nome 
             FROM Requisicao r 
             JOIN Evento e ON r.id_evento = e.id_evento 
             JOIN Estado es ON r.id_estado = es.id_estado 
             WHERE r.id_user = ? 
-            ORDER BY r.id_req DESC`, [req.params.id]);
+            ORDER BY r.data_pedido DESC
+        `, [id]);
         res.json(rows);
     } catch (e) {
-        console.error("Erro ao listar por utilizador:", e.message);
-        res.status(500).json({ error: e.message });
+        res.status(500).json({ 
+            code: "500",
+            message: "error",
+            error: e.message
+        });
     }
 };
 
@@ -85,7 +94,11 @@ exports.atualizarEstado = async (req, res) => {
         );
         res.json({ msg: "Estado da requisição atualizado com sucesso." });
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.status(500).json({
+            code: "500",    
+            message: "error",
+            error: e.message
+             });
     }
 };
 
@@ -131,16 +144,45 @@ exports.submeterMateriais = async (req, res) => {
 
             await connection.execute('UPDATE Requisicao SET id_estado = 1 WHERE id_req = ?', [id]);
             await connection.commit();
-            res.status(200).json({ message: "Sucesso!" });
+            res.status(200).json({
+                code: "200",
+                message: "Sucesso!"
+                 });
 
         } catch (error) {
             await connection.rollback();
-            res.status(400).json({ error: error.message });
+            res.status(400).json({
+                code: "400",
+                message: "error",
+                error: error.message 
+                });
         } finally {
             connection.release();
         }
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        res.status(500).json({
+            code: "500",    
+            message: "error",
+            error: e.message
+             });
+    }
+};
+
+
+// 5. LISTAR EVENTOS DISPONÍVEIS PARA O FOMRULÁRIO DE REQUISIÇÃO
+exports.listarEventosDisponiveis = async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT id_evento, nome_evento 
+            FROM Evento 
+            WHERE id_estado = 2 
+            AND data_fim >= CURDATE()
+            ORDER BY id_evento DESC
+        `);
+        res.json(rows);
+    } catch (e) {
+        console.error("Erro ao listar eventos disponíveis:", e.message);
+        res.status(500).json([]);
     }
 };
 

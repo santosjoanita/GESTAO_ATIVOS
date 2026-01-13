@@ -59,7 +59,11 @@ exports.obterDetalhes = async (req, res) => {
         if (rows.length === 0) return res.status(404).json({ erro: "Não encontrado" });
         res.json(rows[0]);
     } catch (e) { 
-        res.status(500).json({ erro: e.message }); 
+        res.status(500).json({ 
+            code: 500,
+            message: "erro",
+            erro: e.message
+         }); 
     }
 };
 
@@ -75,3 +79,13 @@ exports.listarAnexos = async (req, res) => {
         res.status(500).json([]); 
     }
 };
+exports.listarSimples = async (req, res) => {
+    try {
+        const [rows] = await db.execute("SELECT id_evento, nome_evento FROM Evento ORDER BY id_evento DESC");
+        res.json(rows);
+    } catch (e) {
+        res.status(500).json([]);
+    }
+};
+
+

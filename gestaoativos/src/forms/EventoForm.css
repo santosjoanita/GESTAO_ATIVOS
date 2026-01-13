@@ -159,3 +159,9 @@ textarea {
 .btn-submeter-layout:hover {
     filter: brightness(0.9);
 }
+input[name="localizacao"] {
+    background-color: #e9ecef;
+    cursor: default;          
+    font-weight: 600;
+    color: #1f4e79;
+}

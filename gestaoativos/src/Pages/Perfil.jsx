@@ -13,64 +13,79 @@ const formatDate = (dateString) => {
     return `${day}/${month}/${year}`;
 };
 
-const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao, materiais }) => (
-    <div className={`event-card ${event.colorClass} ${isExpanded ? 'expanded' : ''}`}>
-        <div className="event-header-row" onClick={onToggle}>
-            <div>
-                <p className="event-title">{event.title} <span className="status-tag">({event.status})</span></p>
-                {!isRequisicao && (
-                    <p className="event-date">
-                        Data: {event.date} {event.data_fim ? ` até ${formatDate(event.data_fim)}` : ''}
-                    </p>
-                )}
-            </div>
-            <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
-                {isRequisicao && (event.status.toLowerCase().includes('aprovad')) && (
-                    <button className="edit-button-esp" onClick={onTrabalhar}>
-                        TRABALHAR
-                    </button>
-                )}
-                <div className="event-arrow-container">
-                    {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
-                </div>
-            </div>
-        </div>
-        {isExpanded && (
-            <div className="event-details">
-                <h4 className="details-title">Detalhes:</h4>
-                <div className="details-info-grid">
-                    <p><strong>Localização:</strong> {event.localizacao || 'Esposende (Centro)'}</p>
-                    
-                    {/* Listagem de Materiais exclusiva para Requisições */}
-                    {isRequisicao && (
-                        <div className="materiais-container-perfil" style={{marginTop: '15px'}}>
-                            <p style={{fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', display: 'flex', alignItems: 'center', gap: '5px'}}>
-                                <Package size={16} /> MATERIAIS NO PEDIDO:
-                            </p>
-                            {materiais && materiais.length > 0 ? (
-                                <ul style={{listStyle: 'none', padding: '10px 0'}}>
-                                    {materiais.map((m, idx) => (
-                                        <li key={idx} style={{fontSize: '12px', padding: '5px 0', borderBottom: '1px solid #eee'}}>
-                                            • {m.nome} — <strong>{m.quantidade} un.</strong>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p style={{fontSize: '12px', color: '#777', padding: '5px 0'}}>Nenhum material adicionado a esta requisição.</p>
-                            )}
-                        </div>
-                    )}
+const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao, materiais }) => {
+    
+    const isEventoValido = event.data_fim 
+        ? new Date(event.data_fim) >= new Date(new Date().setHours(0,0,0,0)) 
+        : true;
 
+    return (
+        <div className={`event-card ${event.colorClass} ${isExpanded ? 'expanded' : ''}`}>
+            <div className="event-header-row" onClick={onToggle}>
+                <div>
+                    <p className="event-title">{event.title} <span className="status-tag">({event.status})</span></p>
                     {!isRequisicao && (
-                        <p style={{marginTop: '10px', color: '#1f4e79', fontWeight: 'bold'}}>
-                            Existem {event.num_requisicoes || 0} requisições neste evento.
+                        <p className="event-date">
+                            Data: {event.date} {event.data_fim ? ` até ${formatDate(event.data_fim)}` : ''}
                         </p>
                     )}
+                    {isRequisicao && event.data_fim && (
+                         <p className="event-date" style={{fontSize: '0.8em', color: '#666'}}>
+                            Válido até: {formatDate(event.data_fim)}
+                            {!isEventoValido && <span style={{color: 'red', marginLeft: '5px'}}>(Expirado)</span>}
+                         </p>
+                    )}
+                </div>
+                <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
+                    
+                    {/* --- ALTERAÇÃO 2: Só mostra o botão se estiver Aprovado E for Válido --- */}
+                    {isRequisicao && (event.status.toLowerCase().includes('aprovad')) && isEventoValido && (
+                        <button className="edit-button-esp" onClick={onTrabalhar}>
+                            TRABALHAR
+                        </button>
+                    )}
+                    
+                    <div className="event-arrow-container">
+                        {isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                    </div>
                 </div>
             </div>
-        )}
-    </div>
-);
+            {isExpanded && (
+                <div className="event-details">
+                    <h4 className="details-title">Detalhes:</h4>
+                    <div className="details-info-grid">
+                        <p><strong>Localização:</strong> {event.localizacao || 'Esposende (Centro)'}</p>
+                        
+                        {isRequisicao && (
+                            <div className="materiais-container-perfil" style={{marginTop: '15px'}}>
+                                <p style={{fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', display: 'flex', alignItems: 'center', gap: '5px'}}>
+                                    <Package size={16} /> MATERIAIS NO PEDIDO:
+                                </p>
+                                {materiais && materiais.length > 0 ? (
+                                    <ul style={{listStyle: 'none', padding: '10px 0'}}>
+                                        {materiais.map((m, idx) => (
+                                            <li key={idx} style={{fontSize: '12px', padding: '5px 0', borderBottom: '1px solid #eee'}}>
+                                                • {m.nome} — <strong>{m.quantidade} un.</strong>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p style={{fontSize: '12px', color: '#777', padding: '5px 0'}}>Nenhum material adicionado a esta requisição.</p>
+                                )}
+                            </div>
+                        )}
+
+                        {!isRequisicao && (
+                            <p style={{marginTop: '10px', color: '#1f4e79', fontWeight: 'bold'}}>
+                                Existem {event.num_requisicoes || 0} requisições neste evento.
+                            </p>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 const Perfil = ({ onLogout }) => {
     const user = JSON.parse(localStorage.getItem('user'));
@@ -84,21 +99,25 @@ const Perfil = ({ onLogout }) => {
     const [filtroEstado, setFiltroEstado] = useState('todos');
     const [materiaisCard, setMateriaisCard] = useState([]);
 
-    // Uniformização da Requisicão Ativa
     const eventoRaw = localStorage.getItem('evento_trabalho');
     const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
 
-    const getAuthHeaders = () => ({
-        'x-user-profile': user?.id_perfil?.toString(),
-        'x-user-name': user?.nome
-    });
+
+    const getAuthHeaders = () => {
+        const storedData = localStorage.getItem('user');
+        const userData = storedData ? JSON.parse(storedData) : null;
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': userData && userData.token ? `Bearer ${userData.token}` : ''
+        };
+    };
 
     const fetchPerfilData = async () => {
         if (!user) return;
         try {
             const [resReq, resEv] = await Promise.all([
-                fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user}`, { headers: getAuthHeaders() }),
-                fetch(`http://localhost:3002/api/eventos/user/${user.id_user}`, { headers: getAuthHeaders() })
+                fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user || user.id}`, { headers: getAuthHeaders() }),
+                fetch(`http://localhost:3002/api/eventos/user/${user.id_user || user.id}`, { headers: getAuthHeaders() })
             ]);
             
             const dataReq = await resReq.json();
@@ -121,6 +140,8 @@ const Perfil = ({ onLogout }) => {
                     title: `${r.nome_evento} - Requisição ${ordem}`,
                     status: r.estado_nome || 'Pendente',
                     localizacao: r.localizacao,
+                    data_fim: r.data_fim, 
+                    
                     colorClass: getStatusColor(r.estado_nome)
                 };
             }) : [];
@@ -140,7 +161,7 @@ const Perfil = ({ onLogout }) => {
             })) : [];
 
             setEventsList(eventosComContagem);
-        } catch (error) { console.error(error); }
+        } catch (error) { console.error("Erro ao carregar perfil:", error); }
     };
 
     const fetchMateriaisReq = async (idReq) => {
@@ -192,7 +213,7 @@ const Perfil = ({ onLogout }) => {
                             <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link></>
                         )}
                     </nav>
-                   <div className="header-icons-esp">
+                    <div className="header-icons-esp">
                         <Link to="/carrinho"><ShoppingCart size={24} className="icon-esp" /></Link>
                         <User size={24} className="icon-esp active-icon-indicator" />
                         <button onClick={() => {localStorage.clear(); navigate('/')}} className="logout-btn">

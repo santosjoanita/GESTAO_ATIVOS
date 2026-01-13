@@ -11,7 +11,11 @@ exports.listarTodos = async (req, res) => {
         const [rows] = await db.execute(sql);
         res.json(rows);
     } catch (e) {
-        res.status(500).json({ erro: e.message });
+        res.status(500).json({
+            code: "500",
+            message: "erro",
+            erro: e.message
+             });
     }
 };
 exports.listarCategorias = async (req, res) => {
@@ -44,7 +48,11 @@ exports.criar = async (req, res) => {
 
         res.status(201).json({ mensagem: "Criado com sucesso", id: resMat.insertId });
     } catch (e) {
-        res.status(500).json({ erro: e.message });
+        res.status(500).json({
+            code: "500",
+            message: "erro",
+            erro: e.message
+             });
     }
 };
 
@@ -66,7 +74,11 @@ exports.editar = async (req, res) => {
         
         res.json({ mensagem: "Atualizado com sucesso" });
     } catch (e) {
-        res.status(500).json({ erro: e.message });
+        res.status(500).json({
+            code: "500",
+            message: "erro",
+            erro: e.message 
+            });
     }
 };
 
@@ -86,7 +98,11 @@ exports.verDetalhe = async (req, res) => {
         if (rows.length === 0) return res.status(404).json({ erro: "Material não encontrado" });
         res.json(rows[0]);
     } catch (e) {
-        res.status(500).json({ erro: e.message });
+        res.status(500).json({
+            code: "500",
+            message: "erro",
+            erro: e.message 
+            });
     }
 };
 

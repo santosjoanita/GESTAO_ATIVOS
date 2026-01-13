@@ -10,7 +10,11 @@ exports.listarTodos = async (req, res) => {
         `);
         res.json(rows);
     } catch (e) {
-        res.status(500).json({ erro: e.message });
+        res.status(500).json({
+            code: "500",
+            message: "erro",
+             erro: e.message
+             });
     }
 };
 

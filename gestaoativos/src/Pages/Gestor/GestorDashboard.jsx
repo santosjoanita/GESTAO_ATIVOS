@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, User, X, Calendar, Download, FileText, Package, Activity } from 'lucide-react';
+import { LogOut, User, X, Calendar, Download, Package, Activity, Search, Filter } from 'lucide-react';
 import './GestorDashboard.css';
 import logo from '../../assets/img/esposende.png';
 
@@ -10,21 +10,29 @@ const GestorDashboard = () => {
     const [selectedItem, setSelectedItem] = useState(null);
     const [anexos, setAnexos] = useState([]);
     const [materiais, setMateriais] = useState([]); 
-    const navigate = useNavigate();
     
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('todos');
+
+    const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
 
     useEffect(() => {
         if (user && user.id_perfil === 2) {
             loadData();
         }
+        setSearchTerm('');
+        setStatusFilter('todos');
     }, [tab]);
 
-    const getAuthHeaders = () => ({
-        'Content-Type': 'application/json',
-        'x-user-profile': user?.id_perfil?.toString(),
-        'x-user-name': user?.nome
-    });
+    const getAuthHeaders = () => {
+        const storedData = localStorage.getItem('user');
+        const userData = storedData ? JSON.parse(storedData) : null;
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': userData && userData.token ? `Bearer ${userData.token}` : ''
+        };
+    };
 
     const loadData = async () => {
         let url = '';
@@ -48,61 +56,64 @@ const GestorDashboard = () => {
         setAnexos([]);
         setMateriais([]); 
 
-        // Se for Evento, carrega Anexos
         if (tab === 'eventos') {
             try {
-                const res = await fetch(`http://localhost:3002/api/eventos/${item.id_evento}/anexos`, {
-                    headers: getAuthHeaders()
-                });
+                const res = await fetch(`http://localhost:3002/api/eventos/${item.id_evento}/anexos`, { headers: getAuthHeaders() });
                 const data = await res.json();
                 setAnexos(data);
-            } catch (err) { console.error("Erro nos anexos:", err); }
+            } catch (err) { console.error(err); }
         }
 
-        // Se for Requisição, carrega os Materiais associados
         if (tab === 'requisicoes') {
             try {
-                const res = await fetch(`http://localhost:3002/api/requisicoes/${item.id_req}/materiais`, {
-                    headers: getAuthHeaders()
-                });
+                const res = await fetch(`http://localhost:3002/api/requisicoes/${item.id_req}/materiais`, { headers: getAuthHeaders() });
                 const data = await res.json();
                 setMateriais(data);
-            } catch (err) { console.error("Erro nos materiais:", err); }
+            } catch (err) { console.error(err); }
         }
     };
 
     const handleAcao = async (id, id_estado) => {
-    const tipo = tab === 'requisicoes' ? 'requisicoes' : 'eventos';
-    
-    try {
-        const res = await fetch(`http://localhost:3002/api/gestao/${tipo}/${id}/estado`, {
-            method: 'PUT',
-            headers: getAuthHeaders(), 
-            body: JSON.stringify({ id_estado }) 
-        });
+        const tipo = tab === 'requisicoes' ? 'requisicoes' : 'eventos';
+        try {
+            const res = await fetch(`http://localhost:3002/api/gestao/${tipo}/${id}/estado`, {
+                method: 'PUT',
+                headers: getAuthHeaders(), 
+                body: JSON.stringify({ id_estado }) 
+            });
 
-        if (res.ok) {
-            setSelectedItem(null);
-            loadData();
+            if (res.ok) {
+                setSelectedItem(null);
+                loadData();
+            } else {
+                alert("Não foi possível atualizar o estado.");
+            }
+        } catch (err) { console.error(err); }
+    };
+
+    // --- LÓGICA DE FILTRAGEM ---
+    const filteredItems = items.filter(item => {
+        const searchLower = searchTerm.toLowerCase();
+        let matchesSearch = false;
+        
+        if (tab === 'stock') {
+             matchesSearch = (item.item_nome || '').toLowerCase().includes(searchLower) ||
+                             (item.nome_utilizador || '').toLowerCase().includes(searchLower);
         } else {
-            const erroTexto = await res.text();
-            console.error("Erro do servidor:", erroTexto);
-            alert("Não foi possível atualizar o estado.");
+             matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) ||
+                             (item.requerente || '').toLowerCase().includes(searchLower) ||
+                             (item.id_req && item.id_req.toString().includes(searchLower));
         }
-    } catch (err) { 
-        console.error("Erro na ligação ao servidor:", err);
-        alert("Erro de rede ao tentar atualizar.");
-    }
-};
 
-    if (!user || user.id_perfil !== 2) { 
-        return (
-            <div style={{textAlign: 'center', padding: '100px'}}>
-                <h2>Acesso Negado</h2>
-                <button onClick={() => navigate('/')}>Voltar ao Login</button>
-            </div>
-        );
-    }
+        let matchesStatus = true;
+        if (tab !== 'stock' && statusFilter !== 'todos') {
+            matchesStatus = (item.estado_nome || '').toLowerCase() === statusFilter;
+        }
+
+        return matchesSearch && matchesStatus;
+    });
+
+    if (!user || user.id_perfil !== 2) return null;
 
     return (
         <div className="gestao-layout">
@@ -125,34 +136,72 @@ const GestorDashboard = () => {
             </header>
 
             <main className="gestao-main">
-                <h2 className="gestao-title">PAINEL DE CONTROLO: {tab === 'stock' ? 'HISTÓRICO DE MOVIMENTOS' : tab.toUpperCase()}</h2>
-                <div className="gestao-grid">
-                    {items.map(item => (
-                        <div key={item.id_req || item.id_evento || item.id_historico || Math.random()} 
-                             className="gestao-card"
-                             onClick={() => handleVerDetalhes(item)}
-                             style={{ cursor: tab === 'stock' ? 'default' : 'pointer' }}>
-                            
-                            <div className="card-info">
-                                {tab === 'stock' ? (
-                                    <>
-                                        <strong><Package size={16} /> {item.item_nome}</strong>
-                                        <p><User size={14} /> <b>Utilizador:</b> {item.nome_utilizador}</p>
-                                        <p><Activity size={14} /> <b>Ação:</b> {item.tipo_movimento} ({item.quantidade_alt} unidades)</p>
-                                        <p><Calendar size={14} /> <b>Data:</b> {new Date(item.data_movimento).toLocaleString('pt-PT')}</p>
-                                    </>
-                                ) : (
-                                    <>
-                                        <strong>{item.nome_evento || `Requisição #${item.id_req}`}</strong>
-                                        <p>{item.requerente}</p>
-                                        <span className={`status-badge ${item.estado_nome?.toLowerCase()}`}>
-                                            {item.estado_nome}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
+                <div className="page-header-container">
+                    <h2 className="gestao-title">
+                        PAINEL DE CONTROLO: {tab === 'stock' ? 'HISTÓRICO' : tab.toUpperCase().replace('REQUISICOES', 'REQUISIÇÕES')}
+                    </h2>
+                    
+                    <div className="filters-container">
+                        <div className="search-input-wrapper">
+                            <Search size={18} className="search-icon"/>
+                            <input 
+                                type="text" 
+                                placeholder="Pesquisar nome, ID..." 
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
-                    ))}
+                        
+                        {tab !== 'stock' && (
+                            <div className="filter-select-wrapper">
+                                <Filter size={18} className="filter-icon"/>
+                                <select 
+                                    value={statusFilter} 
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                >
+                                    <option value="todos">Todos os Estados</option>
+                                    <option value="pendente">Pendente</option>
+                                    <option value="aprovado">Aprovado</option>
+                                    <option value="rejeitado">Rejeitado</option>
+                                </select>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="gestao-grid">
+                    {filteredItems.length > 0 ? (
+                        filteredItems.map(item => (
+                            <div key={item.id_req || item.id_evento || item.id_historico || Math.random()} 
+                                 className="gestao-card"
+                                 onClick={() => handleVerDetalhes(item)}
+                                 style={{ cursor: tab === 'stock' ? 'default' : 'pointer' }}>
+                                
+                                <div className="card-info">
+                                    {tab === 'stock' ? (
+                                        <>
+                                            <strong><Package size={16} /> {item.item_nome}</strong>
+                                            <p><User size={14} /> <b>Quem:</b> {item.nome_utilizador}</p>
+                                            <p><Activity size={14} /> {item.tipo_movimento} ({item.quantidade_alt})</p>
+                                            <p><Calendar size={14} /> {new Date(item.data_movimento).toLocaleString('pt-PT')}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <strong>{item.nome_evento || `Requisição #${item.id_req}`}</strong>
+                                            <p>{item.requerente}</p>
+                                            <span className={`status-badge ${item.estado_nome?.toLowerCase()}`}>
+                                                {item.estado_nome}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p style={{gridColumn: '1/-1', textAlign:'center', color:'#888', padding:'20px'}}>
+                            Nenhum resultado encontrado.
+                        </p>
+                    )}
                 </div>
             </main>
 
@@ -166,7 +215,7 @@ const GestorDashboard = () => {
                 <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>DETALHES DO REGISTO</h3>
+                            <h3>DETALHES</h3>
                             <button onClick={() => setSelectedItem(null)} className="close-btn"><X size={24} /></button>
                         </div>
                         <div className="modal-body">
@@ -179,40 +228,22 @@ const GestorDashboard = () => {
                             </div>
 
                             <div style={{ marginTop: '20px' }}>
-                                <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px' }}>ESPECIFICAÇÕES:</label>
+                                <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px' }}>DESCRIÇÃO:</label>
                                 <div className="specs-box">
                                     {selectedItem.descricao || "Sem detalhes adicionais."}
                                 </div>
                             </div>
 
-                            {/* SECÇÃO DE MATERIAIS (Só para Requisições) */}
                             {materiais.length > 0 && (
                                 <div style={{ marginTop: '25px' }}>
-                                    <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Package size={18} /> MATERIAIS REQUISITADOS:
-                                    </label>
-                                    <div style={{ marginTop: '10px', overflowX: 'auto' }}>
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', background: '#f8f9fa', borderRadius: '12px' }}>
-                                            <thead>
-                                                <tr style={{ textAlign: 'left', borderBottom: '2px solid #eee' }}>
-                                                    <th style={{ padding: '12px' }}>Item</th>
-                                                    <th style={{ padding: '12px' }}>Qtd</th>
-                                                    <th style={{ padding: '12px' }}>Datas Reserva</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {materiais.map((m, idx) => (
-                                                    <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
-                                                        <td style={{ padding: '12px', fontWeight: '600' }}>{m.nome}</td>
-                                                        <td style={{ padding: '12px' }}>{m.quantidade} un.</td>
-                                                        <td style={{ padding: '12px', fontSize: '12px' }}>
-                                                            {new Date(m.data_levantamento).toLocaleDateString()} - {new Date(m.data_devolucao).toLocaleDateString()}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                    <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px' }}>MATERIAIS:</label>
+                                    <ul style={{background:'#f8f9fa', padding:'10px', borderRadius:'8px', listStyle:'none'}}>
+                                        {materiais.map((m, idx) => (
+                                            <li key={idx} style={{padding:'5px 0', borderBottom:'1px solid #eee'}}>
+                                                {m.nome} — <strong>{m.quantidade} un.</strong>
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
                             )}
 
@@ -221,7 +252,7 @@ const GestorDashboard = () => {
                                     <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px' }}>ANEXOS:</label>
                                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
                                         {anexos.map(anexo => (
-                                            <a key={anexo.id_anexo} href={`http://localhost:3002/uploads/${anexo.nome_oculto}`} target="_blank" rel="noreferrer" className="anexo-link-estilo" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', background: '#f0f2f5', padding: '8px 12px', borderRadius: '8px', color: '#1f3a52', fontWeight: 'bold', fontSize: '13px' }}>
+                                            <a key={anexo.id_anexo} href={`http://localhost:3002/uploads/${anexo.nome_oculto}`} target="_blank" rel="noreferrer" className="anexo-link-estilo">
                                                 <Download size={14} /> {anexo.nome}
                                             </a>
                                         ))}
@@ -231,8 +262,8 @@ const GestorDashboard = () => {
 
                             {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
                                 <div style={{ display: 'flex', gap: '15px', marginTop: '30px' }}>
-                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-approve-custom" style={{ flex: 1, padding: '15px', border: 'none', borderRadius: '12px', background: 'var(--success-green)', color: 'white', fontWeight: '800', cursor: 'pointer' }}>APROVAR</button>
-                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-reject-custom" style={{ flex: 1, padding: '15px', border: 'none', borderRadius: '12px', background: 'var(--danger-red)', color: 'white', fontWeight: '800', cursor: 'pointer' }}>REJEITAR</button>
+                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-approve-custom" style={{flex:1, padding:'15px', border:'none', borderRadius:'12px', background:'var(--success-green)', color:'white', fontWeight:'bold', cursor:'pointer'}}>APROVAR</button>
+                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-reject-custom" style={{flex:1, padding:'15px', border:'none', borderRadius:'12px', background:'var(--danger-red)', color:'white', fontWeight:'bold', cursor:'pointer'}}>REJEITAR</button>
                                 </div>
                             )}
                         </div>

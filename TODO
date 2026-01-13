@@ -1,16 +1,14 @@
 PRIORIDADE ALTA:
-Criar outro backend para gerir a lógica dos produtos/materiais (CRUD)
+Tirar os POP UP do javascript {forms de requisição,forms de evento}
+Botão de trabalhar só pode aparecer com a mesma lógica do evento no forms de requisição. 
 
 
-
-RIORIDADE MÉDIA:
-
+PRIORIDADE MÉDIA:
+Verificar se está responsivo
 
 
 PRIORIDADE BAIXA:
-
-O gestor tem o mesmo que o funcionario (ACL)
-Tirar o "escrever" no espaço de localização, procurar no leaflet o mapa que inclui pesquisa
+Mudar as mensagens de erro do json
 
 
 FEITO:

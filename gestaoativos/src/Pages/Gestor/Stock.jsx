@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, User, Package, Plus, Save, Upload, X, Eye, EyeOff } from 'lucide-react';
+// ADICIONADO: Search e Filter aos imports
+import { LogOut, User, Plus, Save, Upload, X, Search, Filter } from 'lucide-react';
 import './Stock.css';
 import logo from '../../assets/img/esposende.png';
 
@@ -13,15 +14,23 @@ const Stock = () => {
     const [imageFile, setImageFile] = useState(null); 
     const user = JSON.parse(localStorage.getItem('user'));
 
+    // --- NOVOS ESTADOS PARA PESQUISA E FILTRO ---
+    const [searchTerm, setSearchTerm] = useState('');
+    const [categoriaFilter, setCategoriaFilter] = useState('todas');
+
     const [formData, setFormData] = useState({ 
         nome: '', quantidade_total: 0, categoria: '', especificacoes: '', 
         descricao_tecnica: '', local_armazenamento: '', imagem_url: '' 
     });
 
-    const getAuthHeaders = () => ({
-        'x-user-profile': user?.id_perfil?.toString(),
-        'x-user-name': user?.nome
-    });
+   const getAuthHeaders = () => {
+    const storedData = localStorage.getItem('user');
+    const user = storedData ? JSON.parse(storedData) : null;
+    
+        return {
+            'Authorization': user && user.token ? `Bearer ${user.token}` : ''
+        };
+    };
 
     const fetchMateriais = async () => {
         const res = await fetch('http://localhost:3002/api/materiais?admin=true', { headers: getAuthHeaders() });
@@ -82,6 +91,15 @@ const Stock = () => {
         setShowModal(true);
     };
 
+    // --- LÓGICA DE FILTRAGEM ---
+    const filteredMateriais = materiais.filter(m => {
+        const matchesSearch = m.nome.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesCategory = categoriaFilter === 'todas' || m.categoria === categoriaFilter;
+        
+        return matchesSearch && matchesCategory;
+    });
+
     return (
         <div className="gestao-layout">
             <header className="fixed-header-esp">
@@ -106,47 +124,96 @@ const Stock = () => {
                     </button>
                 </div>
 
+                <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'center' }}>
+                    
+                    <div style={{ position: 'relative', flex: 1 }}>
+                        <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+                        <input 
+                            type="text" 
+                            placeholder="Pesquisar material por nome..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '10px 10px 10px 40px',
+                                borderRadius: '8px',
+                                border: '1px solid #ddd'
+                            }}
+                        />
+                    </div>
+
+                    <div style={{ position: 'relative', minWidth: '250px' }}>
+                        <Filter size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+                        <select 
+                            value={categoriaFilter}
+                            onChange={(e) => setCategoriaFilter(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '10px 10px 10px 40px',
+                                borderRadius: '8px',
+                                border: '1px solid #ddd',
+                                cursor: 'pointer',
+                                backgroundColor: 'white'
+                            }}
+                        >
+                            <option value="todas">Todas as Categorias</option>
+                            {categoriasBD.map(cat => (
+                                <option key={cat.id_categoria} value={cat.nome}>{cat.nome}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
                 <div className="stock-table-section full-width">
                     <table>
                         <thead>
                             <tr>
                                 <th>Foto</th>
                                 <th>Material</th>
+                                <th>Categoria</th>
                                 <th>Stock</th>
                                 <th>Estado</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {materiais.map(m => (
-                                <tr key={m.id_material}>
-                                    <td>
-                                        <img 
-                                            // MUDANÇA: Porta 3002
-                                            src={m.imagem_url ? `http://localhost:3002/uploads/${m.imagem_url}` : 'https://via.placeholder.com/50'} 
-                                            alt="Material" 
-                                            style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
-                                        />
-                                    </td>
-                                    <td><strong>{m.nome}</strong></td>
-                                    <td>{m.quantidade_total}</td>
-                                    <td>
-                                        <span className={`status-badge ${m.visivel ? 'aprovado' : 'rejeitado'}`}>
-                                            {m.visivel ? 'Visível' : 'Oculto'}
-                                        </span>
-                                    </td>
-                                    <td className="table-actions-cell">
-                                        <button className="btn-edit" onClick={() => abrirEdicao(m)}>EDITAR</button>
-                                        <button 
-                                            className={m.visivel ? "btn-reject" : "btn-approve"} 
-                                            onClick={() => handleToggleVisibilidade(m)}
-                                            style={{ marginLeft: '10px', padding: '5px 10px', fontSize: '11px' }}
-                                        >
-                                            {m.visivel ? "OCULTAR" : "MOSTRAR"}
-                                        </button>
+                            {filteredMateriais.length > 0 ? (
+                                filteredMateriais.map(m => (
+                                    <tr key={m.id_material}>
+                                        <td>
+                                            <img 
+                                                src={m.imagem_url ? `http://localhost:3002/uploads/${m.imagem_url}` : 'https://via.placeholder.com/50'} 
+                                                alt="Material" 
+                                                style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
+                                            />
+                                        </td>
+                                        <td><strong>{m.nome}</strong></td>
+                                        <td>{m.categoria}</td>
+                                        <td>{m.quantidade_total}</td>
+                                        <td>
+                                            <span className={`status-badge ${m.visivel ? 'aprovado' : 'rejeitado'}`}>
+                                                {m.visivel ? 'Visível' : 'Oculto'}
+                                            </span>
+                                        </td>
+                                        <td className="table-actions-cell">
+                                            <button className="btn-edit" onClick={() => abrirEdicao(m)}>EDITAR</button>
+                                            <button 
+                                                className={m.visivel ? "btn-reject" : "btn-approve"} 
+                                                onClick={() => handleToggleVisibilidade(m)}
+                                                style={{ marginLeft: '10px', padding: '5px 10px', fontSize: '11px' }}
+                                            >
+                                                {m.visivel ? "OCULTAR" : "MOSTRAR"}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                                        Nenhum material encontrado com esses filtros.
                                     </td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -211,7 +278,6 @@ const Stock = () => {
                                 </label>
                                 {formData.imagem_url && (
                                     <img 
-                                        // MUDANÇA: Porta 3002 para imagens guardadas
                                         src={formData.imagem_url.startsWith('blob') ? formData.imagem_url : `http://localhost:3002/uploads/${formData.imagem_url}`} 
                                         className="preview-img-small" 
                                         alt="Preview" 

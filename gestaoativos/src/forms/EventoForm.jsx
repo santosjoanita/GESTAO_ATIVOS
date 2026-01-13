@@ -140,6 +140,7 @@ const EventoForm = ({ onLogout }) => {
                                         type="text" 
                                         name="localizacao" 
                                         value={formData.localizacao} 
+                                        readOnly
                                         onChange={handleChange} 
                                         placeholder="Selecione no mapa ao lado..."
                                         required 

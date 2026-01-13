@@ -14,7 +14,6 @@ const Login = ({ onLoginSuccess }) => {
         setError('');
 
         try {
-            // MUDANÇAS AQUI: Método POST e URL com /api/auth
             const response = await fetch('http://localhost:3001/api/auth/login', {
                 method: 'POST',
                 headers: { 
@@ -24,23 +23,26 @@ const Login = ({ onLoginSuccess }) => {
             });
 
             if (response.ok) {
-                const user = await response.json();
+                const serverResponse = await response.json();
+                
+                const userToSave = {
+                    ...serverResponse.user,   
+                    token: serverResponse.token 
+                };
                 
                 // Limpa sessões antigas e guarda a nova
                 localStorage.clear();
-                localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('user', JSON.stringify(userToSave));
                 
-                if (onLoginSuccess) onLoginSuccess(user);
+                if (onLoginSuccess) onLoginSuccess(userToSave);
                 setShowAuthModal(false);
 
-                // Redirecionamento dinâmico baseado no perfil
-                if (user.id_perfil === 2) {
+                if (userToSave.id_perfil === 2) { 
                     navigate('/gestao'); 
                 } else {
                     navigate('/home');   
                 }
             } else {
-                // Tenta ler a mensagem de erro vinda do backend se existir
                 const errorData = await response.json().catch(() => ({}));
                 setError(errorData.erro || 'Utilizador ou palavra-passe incorretos.');
             }

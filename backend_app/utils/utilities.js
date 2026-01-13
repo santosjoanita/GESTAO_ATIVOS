@@ -5,6 +5,7 @@ const utilities = {
         return crypto.randomBytes(16).toString('hex').slice(0, 16);
     },
 
+    // Função para obter a data e hora atual formatada
     getDate() {
         let date = new Date();
         return date.getUTCFullYear() + '-' +

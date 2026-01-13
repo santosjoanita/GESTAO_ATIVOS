@@ -5,7 +5,6 @@ services:
     container_name: gestaoativos_mysql
     restart: always
     environment:
-      # Variáveis usadas pelo container MySQL para criar a BD
       MYSQL_ROOT_PASSWORD: root_password_segura 
       MYSQL_DATABASE: gestao_ativos_db        
       MYSQL_USER: user_gestao                  
@@ -30,9 +29,9 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - ./backend_auth:/usr/src/app
+      # - ./backend_auth:/usr/src/app
       - /usr/src/app/node_modules
-      - ./.env:/usr/src/app/.env  # MAPEIA O .ENV DA RAIZ PARA O CÓDIGO LER
+      - ./.env:/usr/src/app/.env  
     depends_on:
       mysql-db:
         condition: service_healthy 
@@ -50,7 +49,7 @@ services:
       - ./backend_app:/usr/src/app
       - /usr/src/app/node_modules
       - ./backend_app/uploads:/usr/src/app/uploads
-      - ./.env:/usr/src/app/.env  # MAPEIA O .ENV DA RAIZ PARA O CÓDIGO LER
+      - ./.env:/usr/src/app/.env 
     depends_on:
       mysql-db:
         condition: service_healthy 
