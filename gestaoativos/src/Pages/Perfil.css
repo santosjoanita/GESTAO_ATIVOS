@@ -108,9 +108,10 @@ a {
 }
 
 .nav-item-esp.active-tab-indicator {
-    background-color: transparent; 
-    color: white; 
-    border-color: var(--color-secondary-light);
+    background-color: transparent;
+    color: white;
+    border: none !important;
+    outline: none;
 }
 .nav-item-esp:hover {
     background-color: transparent; 

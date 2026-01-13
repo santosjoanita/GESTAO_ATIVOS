@@ -210,7 +210,7 @@ const Perfil = ({ onLogout }) => {
                         ) : (
                             <><Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                             <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
-                            <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link></>
+                        </>
                         )}
                     </nav>
                     <div className="header-icons-esp">

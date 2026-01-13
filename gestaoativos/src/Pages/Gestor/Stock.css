@@ -1,3 +1,6 @@
+/* Stock.css */
+
+/* 1. Layout Base */
 .gestao-layout {
     background-color: #f0f2f5;
     min-height: 100vh;
@@ -12,6 +15,7 @@
     padding-bottom: 80px;
 }
 
+/* 2. Cabeçalho e Botão Novo */
 .stock-header-actions {
     display: flex;
     justify-content: space-between;
@@ -48,6 +52,7 @@
     background-color: #219150;
 }
 
+/* 3. Filtros e Pesquisa */
 .filters-container {
     display: flex;
     gap: 15px;
@@ -82,7 +87,8 @@
     background-color: white;
 }
 
-.stock-table-wrapper {
+/* 4. Tabela de Stock */
+.stock-table-section {
     background: white;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
@@ -91,13 +97,13 @@
     -webkit-overflow-scrolling: touch;
 }
 
-.stock-table-wrapper table {
+.stock-table-section table {
     width: 100%;
     border-collapse: collapse;
     min-width: 800px;
 }
 
-.stock-table-wrapper th {
+.stock-table-section th {
     background-color: #f8fafc;
     color: #1f3a52;
     padding: 15px;
@@ -108,13 +114,14 @@
     white-space: nowrap;
 }
 
-.stock-table-wrapper td {
+.stock-table-section td {
     padding: 15px;
     border-bottom: 1px solid #e2e8f0;
     color: #4a5568;
     vertical-align: middle;
 }
 
+/* 5. Badges de Visibilidade */
 .status-badge {
     padding: 4px 10px;
     border-radius: 20px;
@@ -127,6 +134,7 @@
 .status-badge.aprovado { background: #dcfce7; color: #166534; }
 .status-badge.rejeitado { background: #fee2e2; color: #991b1b; }
 
+/* 6. Botões de Ação na Tabela */
 .table-actions-cell {
     white-space: nowrap;
 }
@@ -157,6 +165,7 @@
     background: #e2e8f0;
 }
 
+/* 7. Modal de Adicionar/Editar */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -207,11 +216,35 @@
     margin-bottom: -5px;
 }
 
+/* --- AQUI ESTÁ A CORREÇÃO QUE PEDISTE --- */
+/* Forçar altura igual para inputs e selects */
+.modal-body input, 
+.modal-body select {
+    width: 100%;
+    height: 45px; /* Altura fixa igual para ambos */
+    padding: 0 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #f8fafc;
+    box-sizing: border-box;
+}
+
+.modal-body textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #f8fafc;
+    box-sizing: border-box;
+}
+/* ---------------------------------------- */
+
 .form-row {
     display: flex;
     gap: 15px;
 }
 
+/* Botão Guardar do Modal */
 .btn-submeter {
     background-color: #1f4e79;
     color: white;
@@ -237,6 +270,7 @@
     padding: 5px;
 }
 
+/* 7. Input de Ficheiro Customizado */
 .file-input-label {
     background: #f8fafc;
     border: 2px dashed #cbd5e0;
@@ -259,6 +293,7 @@
     background: #f1f5f9;
 }
 
+/* Responsividade */
 @media (max-width: 768px) {
     .stock-container {
         padding-top: 100px;
@@ -291,14 +326,9 @@
         gap: 15px;
     }
 
-    .stock-table-wrapper th, 
-    .stock-table-wrapper td {
+    .stock-table-section th, 
+    .stock-table-section td {
         padding: 10px;
         font-size: 13px;
-    }
-
-    .table-img {
-        width: 35px;
-        height: 35px;
     }
 }

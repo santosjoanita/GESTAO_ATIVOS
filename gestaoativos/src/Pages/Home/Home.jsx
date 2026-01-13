@@ -173,7 +173,7 @@ const Home = ({ onLogout }) => {
                 <div className="footer-content-esp centered-content">
                     <div className="footer-items-wrapper"> 
                         <span className="footer-project-esp">
-                            {eventoAtivo ? `REQUISIÇÃO ATIVA: ${eventoAtivo.nome.toUpperCase()}` : "SISTEMA DE GESTÃO - MUNICÍPIO DE ESPOSENDE"}
+                            {eventoAtivo ? `REQUISIÇÃO ATIVA: ${eventoAtivo.nome.toUpperCase()}` : "MUNICÍPIO DE ESPOSENDE"}
                         </span>
                     </div>
                 </div>

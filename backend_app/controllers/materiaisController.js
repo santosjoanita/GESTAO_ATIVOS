@@ -105,6 +105,31 @@ exports.verDetalhe = async (req, res) => {
             });
     }
 };
+exports.alterarVisibilidade = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { visivel } = req.body;
+
+        if (visivel === undefined) {
+            return res.status(400).json({ message: "O estado de visibilidade é obrigatório." });
+        }
+
+        const [result] = await db.execute(
+            'UPDATE Material SET visivel = ? WHERE id_material = ?',
+            [visivel, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Material não encontrado." });
+        }
+
+        res.json({ message: "Visibilidade alterada com sucesso" });
+
+    } catch (error) {
+        console.error("Erro ao alterar visibilidade:", error);
+        res.status(500).json({ message: "Erro interno", erro: error.message });
+    }
+};
 
 // 5. VER OCUPAÇÃO DO MATERIAL
 exports.verOcupacaoMaterial = async (req, res) => {

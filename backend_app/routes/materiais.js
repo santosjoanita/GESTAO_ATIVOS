@@ -25,5 +25,6 @@ router.post('/', upload.single('imagem'), materiaisController.criar);
 
 
 router.put('/:id', upload.single('imagem'), materiaisController.editar);
+router.put('/:id/visibilidade', materiaisController.alterarVisibilidade);
 
 module.exports = router;

@@ -5,6 +5,10 @@
     --color-bg-light: #f4f7f6;
 }
 
+.fixed-header-esp {
+    z-index: 2000 !important;
+}
+
 .form-page-layout {
     padding-top: 100px; 
     padding-bottom: 60px; 
@@ -69,6 +73,10 @@
     border: 1px solid #ddd; 
     border-radius: 8px;
     overflow: hidden; 
+    
+    /* FIX: Mantém o mapa controlado no eixo Z */
+    position: relative;
+    z-index: 1;
 }
 
 .map-image-content {
@@ -131,7 +139,6 @@ textarea {
     padding-top: 20px;
 }
 
-/* CORREÇÃO DO TAMANHO DOS BOTÕES */
 .btn-cancelar-layout, 
 .btn-submeter-layout {
     padding: 10px 20px; 
@@ -159,6 +166,8 @@ textarea {
 .btn-submeter-layout:hover {
     filter: brightness(0.9);
 }
+
+
 input[name="localizacao"] {
     background-color: #e9ecef;
     cursor: default;          
