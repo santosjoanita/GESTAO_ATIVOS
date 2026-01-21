@@ -3,8 +3,8 @@ const router = express.Router();
 const materiaisController = require('../controllers/materiaisController');
 const multer = require('multer');
 const path = require('path');
+const verifyToken = require('../middleware/authMiddleware');
 
-// Configuração do Multer para Materiais
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => {
@@ -20,10 +20,7 @@ router.get('/:id', materiaisController.verDetalhe);
 router.get('/:id/ocupacao', materiaisController.verOcupacaoMaterial);
 router.get('/limites-evento/:id_req', materiaisController.getDatasLimiteEvento);
 
-
-router.post('/', upload.single('imagem'), materiaisController.criar);
-
-
+router.post('/',  upload.single('imagem'), materiaisController.criar);
 router.put('/:id', upload.single('imagem'), materiaisController.editar);
 router.put('/:id/visibilidade', materiaisController.alterarVisibilidade);
 

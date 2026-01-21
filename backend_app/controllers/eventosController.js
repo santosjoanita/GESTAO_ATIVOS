@@ -1,13 +1,12 @@
 const db = require('../config/db');
 const path = require('path');
 
-// 1. LISTAR TODOS (Para o Gestor)
 exports.listarTodos = async (req, res) => {
     try {
         const [rows] = await db.execute(`
-            SELECT e.*, es.nome as estado_nome, u.nome as requerente 
+            SELECT e.*, ee.nome_estado as estado_nome, u.nome as requerente 
             FROM Evento e 
-            JOIN Estado es ON e.id_estado = es.id_estado 
+            JOIN Estado_Evento ee ON e.id_estado = ee.id_estado 
             JOIN Utilizador u ON e.id_user = u.id_user 
             ORDER BY e.data_inicio DESC
         `);
@@ -18,13 +17,13 @@ exports.listarTodos = async (req, res) => {
     }
 };
 
-// 2. CRIAR EVENTO COM ANEXOS
 exports.criar = async (req, res) => {
-    const { nome_evento, descricao, localizacao, data_inicio, data_fim, id_user } = req.body;
+    const { nome_evento, descricao, localizacao, data_inicio, data_fim, id_user, latitude, longitude } = req.body;
     try {
         const [resEv] = await db.execute(
-            `INSERT INTO Evento (nome_evento, descricao, data_inicio, data_fim, localizacao, id_user, id_estado) VALUES (?, ?, ?, ?, ?, ?, 1)`, 
-            [nome_evento, descricao, data_inicio, data_fim || data_inicio, localizacao, id_user]
+            `INSERT INTO Evento (nome_evento, descricao, data_inicio, data_fim, localizacao, id_user, id_estado, latitude, longitude) 
+             VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`, 
+            [nome_evento, descricao, data_inicio, data_fim || data_inicio, localizacao, id_user, latitude || null, longitude || null]
         );
 
         if (req.files) {
@@ -41,33 +40,26 @@ exports.criar = async (req, res) => {
     }
 };
 
-// 3. LISTAR POR USER (Para o Funcionário)
 exports.listarPorUser = async (req, res) => {
     try {
         const [rows] = await db.execute(
-            `SELECT e.*, es.nome as estado_nome FROM Evento e 
-             JOIN Estado es ON e.id_estado = es.id_estado 
+            `SELECT e.*, ee.nome_estado as estado_nome FROM Evento e 
+             JOIN Estado_Evento ee ON e.id_estado = ee.id_estado 
              WHERE e.id_user = ? ORDER BY e.id_evento DESC`, [req.params.id]);
         res.json(rows);
     } catch (e) { res.status(500).json([]); }
 };
 
-// 4. OBTER DETALHES (Summary)
 exports.obterDetalhes = async (req, res) => {
     try {
         const [rows] = await db.execute('SELECT * FROM Evento WHERE id_evento = ?', [req.params.id]);
         if (rows.length === 0) return res.status(404).json({ erro: "Não encontrado" });
         res.json(rows[0]);
     } catch (e) { 
-        res.status(500).json({ 
-            code: 500,
-            message: "erro",
-            erro: e.message
-         }); 
+        res.status(500).json({ code: 500, message: "erro", erro: e.message }); 
     }
 };
 
-// 5. LISTAR ANEXOS
 exports.listarAnexos = async (req, res) => {
     try {
         const [rows] = await db.execute(
@@ -79,6 +71,7 @@ exports.listarAnexos = async (req, res) => {
         res.status(500).json([]); 
     }
 };
+
 exports.listarSimples = async (req, res) => {
     try {
         const [rows] = await db.execute("SELECT id_evento, nome_evento FROM Evento ORDER BY id_evento DESC");
@@ -87,5 +80,3 @@ exports.listarSimples = async (req, res) => {
         res.status(500).json([]);
     }
 };
-
-

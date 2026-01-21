@@ -24,6 +24,9 @@ exports.checkPermission = (permission) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = decoded; 
 
+
+    
+
             // --- 2. VERIFICAR PERMISSÕES ---
             const userProfile = decoded.perfil; 
             const perms = permissionsByProfile[parseInt(userProfile)];

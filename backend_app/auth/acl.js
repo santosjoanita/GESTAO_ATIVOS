@@ -2,7 +2,7 @@
 const Profiles = {
   ADMIN: 1,
   GESTOR: 2,
-  OPERADOR: 3,
+  FUNCIONARIO: 3,
 };
 
 const Permissions = {
@@ -24,7 +24,7 @@ const permissionsByProfile = {
     Permissions.CREATE_REQUISICAO,
     Permissions.MANAGE_SISTEMA,
   ]),
-  [Profiles.OPERADOR]: new Set([
+  [Profiles.FUNCIONARIO]: new Set([
     Permissions.VIEW_EXPLORAR,
     Permissions.CREATE_EVENTO,
     Permissions.CREATE_REQUISICAO,

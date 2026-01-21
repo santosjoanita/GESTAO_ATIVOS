@@ -1,14 +1,49 @@
-PRIORIDADE ALTA:
-Tirar os POP UP do javascript {forms de requisição,forms de evento}
-Botão de trabalhar só pode aparecer com a mesma lógica do evento no forms de requisição. 
+🔴 PRIORIDADE MÁXIMA 
+Atualizar requisicoesController.js:
 
+Alterar todas as queries de SELECT e INSERT:
+Onde diz id_estado, mudar para id_estado_req.
+Nos JOIN, trocar a tabela Estado por Estado_Requisicao.
+Garantir que, ao criar uma requisição, ela recebe o estado 1 (Pendente).
 
-PRIORIDADE MÉDIA:
-Verificar se está responsivo
+Atualizar eventosController.js:
+Nos JOIN, trocar a tabela Estado por Estado_Evento.
 
+Atualizar Filtros (Frontend e Backend):
+O filtro de estados no Frontend tem de enviar os nomes/IDs corretos dos novos estados (Pendente, Aprovada, Em Curso, etc.).
 
-PRIORIDADE BAIXA:
-Mudar as mensagens de erro do json
+🟠 PRIORIDADE ALTA (Funcionalidades Pedidas na Reunião)
 
+Botões Condicionais (Frontend - Perfil/Listas):
+Renomear botão "Trabalhar" para "Editar" (só aparece se Estado = Pendente)
+Criar novo botão "Devolver" (só aparece se Estado = Em Curso).
 
-FEITO:
+Lógica de "Devolver" (Backend):
+
+Criar rota PUT /requisicoes/:id/devolver.
+Esta rota deve mudar o estado para "Finalizada" (id 5) e registar no Histórico.
+
+Estado "Cancelado":
+Adicionar "Cancelado" ao dropdown de filtros no Frontend.
+Permitir que o Admin/Gestor cancele uma requisição (rota PUT para mudar estado para 6).
+
+🟡 PRIORIDADE MÉDIA (Melhorias e Novos Dados)
+Histórico de Requisições:
+No Backend, sempre que alguém cria, edita, aprova ou devolve, fazer um INSERT na tabela Historico_Requisicao com a ação e o ID do utilizador.
+
+Coordenadas (Base de Dados + Backend):
+Correr o SQL para adicionar latitude e longitude à tabela Evento (que deixámos para depois).
+Atualizar o eventosController.js (criar e editar) para aceitar e gravar estes campos.
+
+Coordenadas (Frontend):
+No formulário de Evento, capturar o clique no mapa e enviar as coordenadas.
+Na página de detalhes (Gestor), mostrar o mapa com o pino na localização gravada.
+
+🔵 PRIORIDADE BAIXA / COMPLEXA (O "Monstro")
+Deixar para o fim porque é difícil e pode atrasar o resto.
+
+Validações Robustas (Backend):
+Impedir eventos no passado, impedir editar requisições já fechadas, etc.
+
+Gestão de Calendário de Produtos:
+Implementar a lógica que verifica se o material está disponível naquelas datas específicas (cruzamento de datas de eventos).
