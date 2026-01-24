@@ -1,49 +1,46 @@
-🔴 PRIORIDADE MÁXIMA 
-Atualizar requisicoesController.js:
+✅ CONCLUÍDO (FEITO)
+1. Lógica de "Devolver" / Finalizar (Backend & Frontend)
 
-Alterar todas as queries de SELECT e INSERT:
-Onde diz id_estado, mudar para id_estado_req.
-Nos JOIN, trocar a tabela Estado por Estado_Requisicao.
-Garantir que, ao criar uma requisição, ela recebe o estado 1 (Pendente).
+[x] Rota Backend: PUT /requisicoes/:id/devolver.
 
-Atualizar eventosController.js:
-Nos JOIN, trocar a tabela Estado por Estado_Evento.
+[x] Reposição de Stock: O sistema agora repõe automaticamente a quantidade na tabela Material ao devolver.
 
-Atualizar Filtros (Frontend e Backend):
-O filtro de estados no Frontend tem de enviar os nomes/IDs corretos dos novos estados (Pendente, Aprovada, Em Curso, etc.).
+[x] Históricos: Regista a entrada no Historico_Stock (sem erros de colunas) e cria registo na tabela Historico_Requisicao.
 
-🟠 PRIORIDADE ALTA (Funcionalidades Pedidas na Reunião)
+[x] Frontend: Botão "FINALIZAR (DEVOLVIDO)" no Gestor e botão "DEVOLVER" no Perfil do utilizador, ambos a comunicar com a nova rota.
 
-Botões Condicionais (Frontend - Perfil/Listas):
-Renomear botão "Trabalhar" para "Editar" (só aparece se Estado = Pendente)
-Criar novo botão "Devolver" (só aparece se Estado = Em Curso).
+2. Lógica de "Cancelar" Inteligente (Backend & Frontend)
 
-Lógica de "Devolver" (Backend):
+[x] Rota Backend: PUT /requisicoes/:id/cancelar.
 
-Criar rota PUT /requisicoes/:id/devolver.
-Esta rota deve mudar o estado para "Finalizada" (id 5) e registar no Histórico.
+[x] Segurança de Stock: Se a requisição já estava aprovada (stock cativo), o sistema repõe o stock antes de cancelar. Se estava pendente, apenas cancela.
 
-Estado "Cancelado":
-Adicionar "Cancelado" ao dropdown de filtros no Frontend.
-Permitir que o Admin/Gestor cancele uma requisição (rota PUT para mudar estado para 6).
+[x] Frontend: Botões de "Cancelar" no Gestor e no Perfil atualizados para usar esta rota segura.
 
-🟡 PRIORIDADE MÉDIA (Melhorias e Novos Dados)
-Histórico de Requisições:
-No Backend, sempre que alguém cria, edita, aprova ou devolve, fazer um INSERT na tabela Historico_Requisicao com a ação e o ID do utilizador.
+3. Histórico de Requisições (Auditoria)
 
-Coordenadas (Base de Dados + Backend):
-Correr o SQL para adicionar latitude e longitude à tabela Evento (que deixámos para depois).
-Atualizar o eventosController.js (criar e editar) para aceitar e gravar estes campos.
+[x] Backend: Endpoint GET /requisicoes/historico criado.
 
-Coordenadas (Frontend):
-No formulário de Evento, capturar o clique no mapa e enviar as coordenadas.
-Na página de detalhes (Gestor), mostrar o mapa com o pino na localização gravada.
+[x] Frontend (Gestor): Nova aba "HISTÓRICO REQ." no Dashboard.
 
-🔵 PRIORIDADE BAIXA / COMPLEXA (O "Monstro")
-Deixar para o fim porque é difícil e pode atrasar o resto.
+[x] Funcionalidade: Mostra quem fez a ação (Responsável), qual a ação (Devolver/Cancelar) e detalhes.
 
-Validações Robustas (Backend):
-Impedir eventos no passado, impedir editar requisições já fechadas, etc.
+[x] Pesquisa: Filtros de pesquisa a funcionar na nova aba.
 
-Gestão de Calendário de Produtos:
-Implementar a lógica que verifica se o material está disponível naquelas datas específicas (cruzamento de datas de eventos).
+4. Validações de Segurança
+
+[x] Datas: Validar datas no passado / data fim anterior ao início (O utilizador confirmou que o Frontend já bloqueia isto via popup).
+
+5. Estrutura Base (Do "FEITO" anterior)
+
+[x] Atualização de todos os Controllers (id_estado_req, Estado_Requisicao, etc.).
+
+[x] Filtros de estado no Frontend (incluindo "Cancelado").
+
+[x] Coordenadas e Mapas (Google Maps link no detalhe).
+
+🔵 NÃO FEITO / FUTURO (Prioridade Baixa ou Complexa)
+1. Gestão de Calendário de Produtos (Conflitos de Stock)
+
+[ ] Lógica: O sistema atual valida o stock no momento (quantidade_disp atual). Não verifica se o material estará ocupado numa data futura específica (cruzamento de datas de eventos).
+

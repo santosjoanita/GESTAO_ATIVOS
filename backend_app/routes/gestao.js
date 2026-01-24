@@ -1,38 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const gestaoController = require('../controllers/gestaoController');
-const dashboardController = require('../controllers/dashboardController');
-const requisicoesController = require('../controllers/requisicoesController');
-const eventosController = require('../controllers/eventosController');
+const { verifyToken, checkPermission } = require('../middleware/authMiddleware'); 
 
-const { checkPermission } = require('../middleware/authMiddleware.js');
-const { Permissions } = require('../auth/acl');
+// Dashboard Stats
+router.get('/dashboard', verifyToken, checkPermission('ver_dashboard'), gestaoController.getDashboardStats);
 
-// Listagens para o Dashboard 
-router.get('/requisicoes/todas', 
-    checkPermission(Permissions.VIEW_DASHBOARD), 
-    requisicoesController.listarTodas
-);
+// Histórico Stock -
+router.get('/stock/historico', verifyToken, gestaoController.getHistoricoStock);
 
-router.get('/eventos/todos', 
-    checkPermission(Permissions.VIEW_DASHBOARD), 
-    eventosController.listarTodos
-);
+// Notificações de Prazos
+router.get('/notificacoes/prazos', verifyToken, gestaoController.getNotificacoesPrazos);
+router.get('/notificacoes/prazos/:id', verifyToken, gestaoController.getNotificacoesPrazos);
 
-// Estados (Aprovar/Rejeitar)
-router.put('/:tipo/:id/estado', 
-    checkPermission(Permissions.MANAGE_SISTEMA), 
-    gestaoController.atualizarEstado
-);
-
-// Dashboard / Notificações
-router.get('/notificacoes/prazos/:id', 
-    dashboardController.notificacoesPrazos
-);
-
-// Histórico de Stock
-router.get('/stock/historico', 
-    checkPermission(Permissions.VIEW_STOCK), 
-    dashboardController.historicoStock);
+// Atualizar Estados
+router.put('/:tipo/:id/estado', verifyToken, checkPermission('aprovar_requisicoes'), gestaoController.atualizarEstado);
 
 module.exports = router;

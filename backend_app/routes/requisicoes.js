@@ -1,24 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const eventosController = require('../controllers/eventosController');
-const multer = require('multer');
-const path = require('path');
-const verifyToken = require('../middleware/authMiddleware');
+const requisicoesController = require('../controllers/requisicoesController');
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage });
+// --- CORREÇÃO 1 ---
+const { verifyToken } = require('../middleware/authMiddleware'); 
 
-router.post('/', verifyToken, upload.array('anexos'), eventosController.criar);
-router.get('/user/:id', verifyToken, eventosController.listarPorUser);
-router.get('/todos', verifyToken, eventosController.listarTodos);
-router.get('/lista-simples', verifyToken, eventosController.listarSimples);
-router.get('/summary/:id', verifyToken, eventosController.obterDetalhes); 
-router.get('/:id/anexos', verifyToken, eventosController.listarAnexos);
+// Rotas de Leitura
+router.get('/eventos-disponiveis', verifyToken, requisicoesController.listarEventosDisponiveis);
+router.get('/:id/materiais', verifyToken, requisicoesController.listarMateriais);
+router.get('/user/:id', verifyToken, requisicoesController.listarPorUser);
+router.get('/todas', verifyToken, requisicoesController.listarTodas); 
+router.get('/historico', verifyToken, requisicoesController.getHistoricoGeral); 
+
+// Rotas de Escrita
+router.post('/', verifyToken, requisicoesController.criar); 
+router.post('/:id/submeter', verifyToken, requisicoesController.submeterMateriais); 
+
+// Rota para mudar estado (Devolver / Cancelar / Aprovar)
+router.put('/:id/estado', verifyToken, requisicoesController.atualizarEstado);
+router.put('/:id/devolver', verifyToken, requisicoesController.devolverRequisicao);
+router.put('/:id/cancelar', verifyToken, requisicoesController.cancelarRequisicao);
 
 module.exports = router;

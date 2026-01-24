@@ -17,29 +17,43 @@ const Home = ({ onLogout }) => {
     
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user ? user.id_user : null;
+    const token = user ? user.token : null;
 
     const eventoRaw = localStorage.getItem('evento_trabalho');
     const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
 
     const fetchDashboardData = async () => {
-        if (!userId) return;
+        if (!userId || !token) return;
         
+        // CORREÇÃO CRÍTICA: Adicionar o Token de Autorização
         const headers = {
-            'x-user-profile': user?.id_perfil?.toString(),
-            'x-user-name': user?.nome
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
         };
 
         try {
-            // Chamadas paralelas para otimizar o carregamento
             const [resEv, resReq, resNotif] = await Promise.all([
                fetch(`http://localhost:3002/api/eventos/user/${userId}`, { headers }),
                fetch(`http://localhost:3002/api/requisicoes/user/${userId}`, { headers }),
+               // Esta rota pode precisar de ajuste no backend se não estiver a aceitar o ID assim
                fetch(`http://localhost:3002/api/gestao/notificacoes/prazos/${userId}`, { headers })
             ]);
 
-            const dataEv = await resEv.json();
-            const dataReq = await resReq.json();
-            const dataNotif = await resNotif.json();
+            // Se der erro 401, faz logout
+            if (resEv.status === 401 || resReq.status === 401) {
+                localStorage.clear();
+                navigate('/');
+                return;
+            }
+
+            const dataEv = resEv.ok ? await resEv.json() : [];
+            const dataReq = resReq.ok ? await resReq.json() : [];
+            
+            // As notificações podem vir vazias se o backend não tiver a rota exata, tratamos isso
+            let dataNotif = [];
+            if (resNotif.ok) {
+                try { dataNotif = await resNotif.json(); } catch(e){}
+            }
 
             setActivityCounts({
                 eventosCount: Array.isArray(dataEv) ? dataEv.length : 0,
@@ -48,7 +62,6 @@ const Home = ({ onLogout }) => {
 
             setNotifications(Array.isArray(dataNotif) ? dataNotif : []);
             
-            // Atualiza o número de itens no carrinho
             const itensCarrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
             setCarrinhoCount(itensCarrinho.length);
 
@@ -59,7 +72,6 @@ const Home = ({ onLogout }) => {
 
     useEffect(() => {
         fetchDashboardData();
-        // Atualiza a cada 30 segundos para manter as notificações frescas
         const interval = setInterval(fetchDashboardData, 30000); 
         return () => clearInterval(interval);
     }, [userId]);
@@ -101,52 +113,26 @@ const Home = ({ onLogout }) => {
             </header>
 
             <main className="main-home-content">
-                
-                {/* 1. NOTIFICAÇÕES DE PRAZOS */}
                 <section className="home-section">
                     <h3 className="section-title"><Bell size={24} /> NOTIFICAÇÕES:</h3>
                     <div className="notifications-container">
                         {notifications.length > 0 ? (
-                            notifications.map(n => {
-                                const dias = n.dias_para_fim; 
-                                const isExcedido = dias < 0;
-                                const isHoje = dias === 0;
-
-                                return (
-                                    <div key={n.id_req} className={`notification-item-home ${isExcedido ? 'danger' : 'warning'}`}>
-                                        <div className="notification-content">
-                                            <p>
-                                                <strong>{isExcedido ? 'PRAZO EXCEDIDO:' : 'ATENÇÃO:'}</strong> O evento "{n.nome_evento}" 
-                                                {isHoje && " termina hoje!"}
-                                                {isExcedido && ` terminou há ${Math.abs(dias)} ${Math.abs(dias) === 1 ? 'dia' : 'dias'}`}
-                                                {!isExcedido && !isHoje && ` termina em ${dias} ${dias === 1 ? 'dia' : 'dias'}`}
-                                                .
-                                            </p>                                        
-                                            <span>
-                                                {isExcedido 
-                                                    ? "A recolha dos materiais está atrasada. Por favor, verifique com o gestor." 
-                                                    : "Por favor, prepare a recolha dos materiais para breve."}
-                                            </span>
-                                        </div>
+                            notifications.map(n => (
+                                <div key={n.id_req} className="notification-item-home warning">
+                                    <div className="notification-content">
+                                        <p><strong>ATENÇÃO:</strong> O evento "{n.nome_evento}" requer atenção.</p>                                        
                                     </div>
-                                );
-                            })
-                        ) : (
-                            <p className="no-notifications">Não existem prazos críticos para os teus materiais.</p>
-                        )}
+                                </div>
+                            ))
+                        ) : <p className="no-notifications">Não existem prazos críticos para os teus materiais.</p>}
                     </div>
                 </section>
                 
-                {/* 2. PAINEL DE ATIVIDADE */}
                 <section className="home-section">
                     <h3 className="section-title">O TEU PAINEL DE ATIVIDADE:</h3>
                     <div className="activity-panel-container">
                         {activityMap.map(item => (
-                            <button 
-                                key={item.key} 
-                                onClick={() => navigate('/perfil')} 
-                                className={`activity-card ${item.cor}`}
-                            >
+                            <button key={item.key} onClick={() => navigate('/perfil')} className={`activity-card ${item.cor}`}>
                                 <item.icone size={28} />
                                 <h4>{activityCounts[item.key]} {item.titulo}</h4>
                                 <span className="activity-link">VER NO PERFIL</span>
@@ -158,15 +144,10 @@ const Home = ({ onLogout }) => {
                 <section className="home-section">
                     <h3 className="section-title">DICAS RÁPIDAS</h3>
                     <div className="quick-guide-container">
-                        <p className="guide-instruction">
-                            Usa o <strong>CATÁLOGO</strong> para reservar materiais em requisições aprovadas.
-                        </p>
-                        <p className="guide-instruction">
-                            Podes ver o estado (Pendente/Aprovado) de todos os teus pedidos no <strong>PERFIL</strong>.
-                        </p>
+                        <p className="guide-instruction">Usa o <strong>CATÁLOGO</strong> para reservar materiais.</p>
+                        <p className="guide-instruction">Acompanha o estado dos pedidos no <strong>PERFIL</strong>.</p>
                     </div>
                 </section>
-                
             </main>
 
             <footer className="fixed-footer-esp">

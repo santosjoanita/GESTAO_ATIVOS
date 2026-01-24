@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, User, X, Calendar, Download, Package, Activity, Search, Filter, MapPin } from 'lucide-react';
+import { LogOut, User, X, Calendar, Download, Package, Activity, Search, Filter, MapPin, CheckCircle, XCircle, Truck, RotateCcw, FileClock, Ban } from 'lucide-react';
 import './GestorDashboard.css';
 import logo from '../../assets/img/esposende.png';
 
 const GestorDashboard = () => {
     const [items, setItems] = useState([]);
-    const [tab, setTab] = useState('requisicoes');
+    const [tab, setTab] = useState('requisicoes'); 
     const [selectedItem, setSelectedItem] = useState(null);
     const [anexos, setAnexos] = useState([]);
     const [materiais, setMateriais] = useState([]); 
@@ -18,9 +18,11 @@ const GestorDashboard = () => {
     const user = JSON.parse(localStorage.getItem('user'));
 
     useEffect(() => {
-        if (user && user.id_perfil === 2) {
-            loadData();
+        if (!user || user.id_perfil !== 2) {
+            navigate('/'); 
+            return;
         }
+        loadData();
         setSearchTerm('');
         setStatusFilter('todos');
     }, [tab]);
@@ -39,9 +41,17 @@ const GestorDashboard = () => {
         if (tab === 'requisicoes') url = 'http://localhost:3002/api/requisicoes/todas';
         else if (tab === 'eventos') url = 'http://localhost:3002/api/eventos/todos';
         else if (tab === 'stock') url = 'http://localhost:3002/api/gestao/stock/historico';
+        else if (tab === 'historico_req') url = 'http://localhost:3002/api/requisicoes/historico';
         
         try {
             const res = await fetch(url, { headers: getAuthHeaders() });
+            
+            if (res.status === 401) {
+                localStorage.clear();
+                navigate('/');
+                return;
+            }
+
             const data = await res.json();
             setItems(Array.isArray(data) ? data : []);
         } catch (error) { 
@@ -51,7 +61,8 @@ const GestorDashboard = () => {
     };
 
     const handleVerDetalhes = async (item) => {
-        if (tab === 'stock') return;
+        if (tab === 'stock' || tab === 'historico_req') return;
+        
         setSelectedItem(item);
         setAnexos([]);
         setMateriais([]); 
@@ -59,40 +70,56 @@ const GestorDashboard = () => {
         if (tab === 'eventos') {
             try {
                 const res = await fetch(`http://localhost:3002/api/eventos/${item.id_evento}/anexos`, { headers: getAuthHeaders() });
-                const data = await res.json();
-                setAnexos(data);
+                if(res.ok) setAnexos(await res.json());
             } catch (err) { console.error(err); }
         }
 
         if (tab === 'requisicoes') {
             try {
                 const res = await fetch(`http://localhost:3002/api/requisicoes/${item.id_req}/materiais`, { headers: getAuthHeaders() });
-                const data = await res.json();
-                setMateriais(data);
+                if(res.ok) setMateriais(await res.json());
             } catch (err) { console.error(err); }
         }
     };
 
-    // --- LÓGICA DE AÇÃO (Aprovar/Recusar) ---
+    // --- LÓGICA DE AÇÃO INTELIGENTE ---
     const handleAcao = async (id, id_estado_novo) => {
-        const url = tab === 'requisicoes' 
-            ? `http://localhost:3002/api/requisicoes/${id}/estado`
-            : `http://localhost:3002/api/eventos/${id}/estado`; 
+        let url = '';
+        let body = { id_estado: id_estado_novo };
+
+        if (tab === 'requisicoes') {
+            if (id_estado_novo === 5) {
+                if(!window.confirm("Isto irá devolver o stock ao armazém. Continuar?")) return;
+                url = `http://localhost:3002/api/requisicoes/${id}/devolver`;
+                body = { id_user: user.id_user }; 
+            } 
+            else if (id_estado_novo === 6) {
+                if(!window.confirm("Tem a certeza que quer CANCELAR? Se já houver stock cativo, será reposto.")) return;
+                url = `http://localhost:3002/api/requisicoes/${id}/cancelar`;
+                body = { id_user: user.id_user };
+            } 
+            else {
+                url = `http://localhost:3002/api/requisicoes/${id}/estado`;
+            }
+        } else {
+            // Eventos
+            url = `http://localhost:3002/api/eventos/${id}/estado`;
+        }
 
         try {
             const res = await fetch(url, {
                 method: 'PUT',
                 headers: getAuthHeaders(), 
-                body: JSON.stringify({ id_estado: id_estado_novo }) 
+                body: JSON.stringify(body) 
             });
 
             if (res.ok) {
-                alert("Estado atualizado com sucesso!");
+                alert("Ação realizada com sucesso!");
                 setSelectedItem(null);
                 loadData();
             } else {
                 const err = await res.json();
-                alert("Erro ao atualizar: " + (err.message || err.error));
+                alert("Erro: " + (err.message || err.error));
             }
         } catch (err) { console.error(err); alert("Erro de conexão."); }
     };
@@ -105,6 +132,10 @@ const GestorDashboard = () => {
         if (tab === 'stock') {
              matchesSearch = (item.item_nome || '').toLowerCase().includes(searchLower) ||
                              (item.nome_utilizador || '').toLowerCase().includes(searchLower);
+        } else if (tab === 'historico_req') {
+             matchesSearch = (item.acao || '').toLowerCase().includes(searchLower) ||
+                             (item.nome_responsavel || '').toLowerCase().includes(searchLower) ||
+                             (item.id_req && item.id_req.toString().includes(searchLower));
         } else {
              matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) ||
                              (item.requerente || '').toLowerCase().includes(searchLower) ||
@@ -112,8 +143,12 @@ const GestorDashboard = () => {
         }
 
         let matchesStatus = true;
-        if (tab !== 'stock' && statusFilter !== 'todos') {
-            matchesStatus = (item.estado_nome || '').toLowerCase() === statusFilter;
+        if (tab !== 'stock' && tab !== 'historico_req' && statusFilter !== 'todos') {
+            const st = (item.estado_nome || '').toLowerCase();
+            if (statusFilter === 'aprovada') matchesStatus = st.includes('aprov') || st.includes('agend');
+            else if (statusFilter === 'finalizada') matchesStatus = st.includes('final') || st.includes('concl');
+            else if (statusFilter === 'cancelada') matchesStatus = st.includes('cancel') || st.includes('rejeit') || st.includes('recus');
+            else matchesStatus = st.includes(statusFilter);
         }
 
         return matchesSearch && matchesStatus;
@@ -129,8 +164,9 @@ const GestorDashboard = () => {
                     <nav className="header-nav-esp">
                         <button onClick={() => setTab('requisicoes')} className={`nav-item-esp ${tab === 'requisicoes' ? 'active-tab-indicator' : ''}`}>REQUISIÇÕES</button>
                         <button onClick={() => setTab('eventos')} className={`nav-item-esp ${tab === 'eventos' ? 'active-tab-indicator' : ''}`}>EVENTOS</button>
-                        <button onClick={() => setTab('stock')} className={`nav-item-esp ${tab === 'stock' ? 'active-tab-indicator' : ''}`}>MOVIMENTOS STOCK</button>
-                        <button className="nav-item-esp" onClick={() => navigate('/stock')} >STOCK</button>
+                        <button onClick={() => setTab('historico_req')} className={`nav-item-esp ${tab === 'historico_req' ? 'active-tab-indicator' : ''}`}>HISTÓRICO REQ.</button>
+                        <button onClick={() => setTab('stock')} className={`nav-item-esp ${tab === 'stock' ? 'active-tab-indicator' : ''}`}>HISTÓRICO STOCK</button>
+                        <button className="nav-item-esp" onClick={() => navigate('/stock')} >STOCK ATUAL</button>
                     </nav>
                     <div className="header-icons-esp">
                         <Link to="/perfil"><User size={22} className="icon-esp" /></Link>
@@ -144,33 +180,28 @@ const GestorDashboard = () => {
             <main className="gestao-main">
                 <div className="page-header-container">
                     <h2 className="gestao-title">
-                        PAINEL DE CONTROLO: {tab === 'stock' ? 'HISTÓRICO' : tab.toUpperCase().replace('REQUISICOES', 'REQUISIÇÕES')}
+                        {tab === 'stock' && 'AUDITORIA DE STOCK'}
+                        {tab === 'historico_req' && 'AUDITORIA DE REQUISIÇÕES'}
+                        {tab === 'requisicoes' && 'GERIR REQUISIÇÕES'}
+                        {tab === 'eventos' && 'GERIR EVENTOS'}
                     </h2>
                     
                     <div className="filters-container">
                         <div className="search-input-wrapper">
                             <Search size={18} className="search-icon"/>
-                            <input 
-                                type="text" 
-                                placeholder="Pesquisar nome, ID..." 
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
+                            <input type="text" placeholder="Pesquisar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
                         </div>
                         
-                        {tab !== 'stock' && (
+                        {tab !== 'stock' && tab !== 'historico_req' && (
                             <div className="filter-select-wrapper">
                                 <Filter size={18} className="filter-icon"/>
-                                <select 
-                                    value={statusFilter} 
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                >
+                                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                                     <option value="todos">Todos os Estados</option>
                                     <option value="pendente">Pendente</option>
-                                    <option value="aprovada">Aprovada</option>
-                                    <option value="recusada">Recusada</option>
+                                    <option value="aprovada">Aprovada / Agendado</option>
+                                    <option value="recusada">Recusada / Rejeitado</option>
                                     <option value="em curso">Em Curso</option>
-                                    <option value="finalizada">Finalizada</option>
+                                    <option value="finalizada">Finalizada / Concluído</option>
                                     <option value="cancelada">Cancelada</option>
                                 </select>
                             </div>
@@ -181,20 +212,34 @@ const GestorDashboard = () => {
                 <div className="gestao-grid">
                     {filteredItems.length > 0 ? (
                         filteredItems.map(item => (
-                            <div key={item.id_req || item.id_evento || item.id_historico || Math.random()} 
+                            <div key={item.id_req || item.id_evento || item.id_hist || Math.random()} 
                                  className="gestao-card"
                                  onClick={() => handleVerDetalhes(item)}
-                                 style={{ cursor: tab === 'stock' ? 'default' : 'pointer' }}>
+                                 style={{ cursor: (tab === 'stock' || tab === 'historico_req') ? 'default' : 'pointer' }}>
                                 
                                 <div className="card-info">
-                                    {tab === 'stock' ? (
+                                    {/* CARD STOCK */}
+                                    {tab === 'stock' && (
                                         <>
                                             <strong><Package size={16} /> {item.item_nome}</strong>
-                                            <p><User size={14} /> <b>Quem:</b> {item.nome_utilizador}</p>
+                                            <p><User size={14} /> {item.nome_utilizador}</p>
                                             <p><Activity size={14} /> {item.tipo_movimento} ({item.quantidade_alt})</p>
-                                            <p><Calendar size={14} /> {new Date(item.data_movimento).toLocaleString('pt-PT')}</p>
+                                            <p style={{fontSize:'0.8em', color:'#888'}}>{new Date(item.data_movimento).toLocaleString('pt-PT')}</p>
                                         </>
-                                    ) : (
+                                    )}
+
+                                    {/* CARD HISTÓRICO REQUISIÇÕES */}
+                                    {tab === 'historico_req' && (
+                                        <>
+                                            <strong><FileClock size={16} /> Req #{item.id_req} - {item.acao}</strong>
+                                            <p><User size={14} /> Por: {item.nome_responsavel}</p>
+                                            <p style={{fontStyle:'italic', color:'#555', fontSize:'0.9em'}}>{item.detalhes}</p>
+                                            <p style={{fontSize:'0.8em', color:'#888'}}><Calendar size={12}/> {new Date(item.data_acao).toLocaleString('pt-PT')}</p>
+                                        </>
+                                    )}
+
+                                    {/* CARD NORMAL */}
+                                    {tab !== 'stock' && tab !== 'historico_req' && (
                                         <>
                                             <strong>{item.nome_evento || `Requisição #${item.id_req}`}</strong>
                                             <p>{item.requerente}</p>
@@ -207,24 +252,17 @@ const GestorDashboard = () => {
                             </div>
                         ))
                     ) : (
-                        <p style={{gridColumn: '1/-1', textAlign:'center', color:'#888', padding:'20px'}}>
-                            Nenhum resultado encontrado.
-                        </p>
+                        <p style={{gridColumn: '1/-1', textAlign:'center', color:'#888', padding:'20px'}}>Nenhum resultado encontrado.</p>
                     )}
                 </div>
             </main>
 
-            <footer className="fixed-footer-esp">
-                <div className="footer-items-wrapper">
-                    <span className="footer-project-esp">Gestão de Ativos & Eventos - Município de Esposende</span>
-                </div>
-            </footer>
-
-            {selectedItem && tab !== 'stock' && (
+            {/* MODAL GESTOR */}
+            {selectedItem && tab !== 'stock' && tab !== 'historico_req' && (
                 <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h3>DETALHES</h3>
+                            <h3>DETALHES REQ #{selectedItem.id_req || selectedItem.id_evento}</h3>
                             <button onClick={() => setSelectedItem(null)} className="close-btn"><X size={24} /></button>
                         </div>
                         <div className="modal-body">
@@ -236,76 +274,51 @@ const GestorDashboard = () => {
                                 <p><strong>Estado:</strong> {selectedItem.estado_nome}</p>
                             </div>
 
-                            {/* --- NOVA SECÇÃO DE LOCALIZAÇÃO --- */}
-                            {(selectedItem.localizacao || (selectedItem.latitude && selectedItem.longitude)) && (
-                                <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f0f4f8', borderRadius: '8px' }}>
-                                    {selectedItem.localizacao && (
-                                        <p style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-                                            <MapPin size={16} color="var(--primary-blue)" />
-                                            <strong>Local:</strong> {selectedItem.localizacao}
-                                        </p>
-                                    )}
-                                    
-                                    {selectedItem.latitude && selectedItem.longitude && (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9em', marginLeft: '24px', color: '#555' }}>
-                                            <span>Coords: {selectedItem.latitude}, {selectedItem.longitude}</span>
-                                            <a 
-                                                href={`https://www.google.com/maps/search/?api=1&query=${selectedItem.latitude},${selectedItem.longitude}`} 
-                                                target="_blank" 
-                                                rel="noreferrer"
-                                                style={{ color: 'var(--primary-blue)', textDecoration: 'underline', marginLeft: '5px' }}
-                                            >
-                                                (Ver no Google Maps)
-                                            </a>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            {/* ---------------------------------- */}
-
-                            <div style={{ marginTop: '20px' }}>
-                                <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px' }}>DESCRIÇÃO:</label>
-                                <div className="specs-box">
-                                    {selectedItem.descricao || selectedItem.observacoes || "Sem detalhes adicionais."}
-                                </div>
-                            </div>
-
+                            {/* Materiais e Anexos (Visualização simplificada para brevidade) */}
                             {materiais.length > 0 && (
-                                <div style={{ marginTop: '25px' }}>
-                                    <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px' }}>MATERIAIS:</label>
+                                <div style={{ marginTop: '15px' }}>
+                                    <label style={{fontWeight:'800', fontSize:'13px', color:'var(--primary-blue)'}}>MATERIAIS:</label>
                                     <ul style={{background:'#f8f9fa', padding:'10px', borderRadius:'8px', listStyle:'none'}}>
-                                        {materiais.map((m, idx) => (
-                                            <li key={idx} style={{padding:'5px 0', borderBottom:'1px solid #eee'}}>
-                                                {m.nome} — <strong>{m.quantidade} un.</strong>
-                                            </li>
-                                        ))}
+                                        {materiais.map((m, idx) => (<li key={idx} style={{padding:'3px 0', borderBottom:'1px solid #eee'}}>{m.nome} — <strong>{m.quantidade}</strong></li>))}
                                     </ul>
                                 </div>
                             )}
 
-                            {anexos.length > 0 && (
-                                <div style={{ marginTop: '20px' }}>
-                                    <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px' }}>ANEXOS:</label>
-                                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
-                                        {anexos.map(anexo => (
-                                            <a key={anexo.id_anexo} href={`http://localhost:3002/uploads/${anexo.nome_oculto}`} target="_blank" rel="noreferrer" className="anexo-link-estilo">
-                                                <Download size={14} /> {anexo.nome}
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                            {/* BOTÕES DE AÇÃO */}
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '30px', flexWrap: 'wrap' }}>
+                                {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
+                                    <>
+                                        <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-action-gestor btn-aprovar"><CheckCircle size={16} /> APROVAR</button>
+                                        <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-action-gestor btn-rejeitar"><XCircle size={16} /> REJEITAR</button>
+                                    </>
+                                )}
+                                
+                                {tab === 'requisicoes' && (selectedItem.estado_nome?.toLowerCase().includes('aprov') || selectedItem.estado_nome?.toLowerCase().includes('agend')) && (
+                                    <>
+                                        <button onClick={() => handleAcao(selectedItem.id_req, 4)} className="btn-action-gestor btn-em-curso" style={{background:'#f39c12', color:'white'}}>
+                                            <Truck size={16} /> MARCAR LEVANTAMENTO
+                                        </button>
+                                        {/* Botão Cancelar (Extra para Gestor) */}
+                                        <button onClick={() => handleAcao(selectedItem.id_req, 6)} className="btn-action-gestor btn-cancelar" style={{background:'#e74c3c', color:'white'}}>
+                                            <Ban size={16} /> CANCELAR
+                                        </button>
+                                    </>
+                                )}
 
-                            {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
-                                <div style={{ display: 'flex', gap: '15px', marginTop: '30px' }}>
-                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-approve-custom" style={{flex:1, padding:'15px', border:'none', borderRadius:'12px', background:'var(--success-green)', color:'white', fontWeight:'bold', cursor:'pointer'}}>APROVAR</button>
-                                    <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-reject-custom" style={{flex:1, padding:'15px', border:'none', borderRadius:'12px', background:'var(--danger-red)', color:'white', fontWeight:'bold', cursor:'pointer'}}>REJEITAR</button>
-                                </div>
-                            )}
+                                {tab === 'requisicoes' && selectedItem.estado_nome?.toLowerCase().includes('em curso') && (
+                                    <button onClick={() => handleAcao(selectedItem.id_req, 5)} className="btn-action-gestor btn-finalizar" style={{background:'#2ecc71', color:'white'}}>
+                                        <RotateCcw size={16} /> FINALIZAR (DEVOLVIDO)
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
+            
+            <footer className="fixed-footer-esp">
+                <div className="footer-items-wrapper"><span className="footer-project-esp">Gestão de Ativos & Eventos - Município de Esposende</span></div>
+            </footer>
         </div>
     );
 };

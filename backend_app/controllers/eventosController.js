@@ -17,9 +17,26 @@ exports.listarTodos = async (req, res) => {
     }
 };
 
+// 2. CRIAR EVENTO 
 exports.criar = async (req, res) => {
     const { nome_evento, descricao, localizacao, data_inicio, data_fim, id_user, latitude, longitude } = req.body;
+    
     try {
+        // --- VALIDAÇÃO DE DATAS ---
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        const inicio = new Date(data_inicio);
+        const fim = new Date(data_fim || data_inicio);
+
+        if (inicio < hoje) {
+            return res.status(400).json({ error: "Não é possível criar eventos no passado." });
+        }
+
+        if (fim < inicio) {
+            return res.status(400).json({ error: "A data de fim não pode ser anterior à data de início." });
+        }
+        // ---------------------------
+
         const [resEv] = await db.execute(
             `INSERT INTO Evento (nome_evento, descricao, data_inicio, data_fim, localizacao, id_user, id_estado, latitude, longitude) 
              VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)`, 
@@ -36,6 +53,7 @@ exports.criar = async (req, res) => {
         }
         res.status(201).json({ id: resEv.insertId });
     } catch (e) {
+        console.error(e);
         res.status(500).json({ erro: e.message });
     }
 };
