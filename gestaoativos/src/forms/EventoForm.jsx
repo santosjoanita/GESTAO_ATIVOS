@@ -14,6 +14,8 @@ const EventoForm = ({ onLogout }) => {
         nome: '',
         descricao: '',
         localizacao: '',
+        latitude: '',  // NOVO CAMPO
+        longitude: '', // NOVO CAMPO
         data_inicio: '',
         hora_inicio: '',
         data_fim: '',
@@ -23,11 +25,14 @@ const EventoForm = ({ onLogout }) => {
     // Estado para os ficheiros 
     const [selectedFiles, setSelectedFiles] = useState([]);
 
-    // Função para receber a morada do mapa e atualizar o campo de localização
+    // Função para receber a morada E COORDENADAS do mapa
     const handleLocationSelect = (locationData) => {
+        // locationData deve vir do MapPicker como { address: "...", lat: 123, lng: 456 }
         setFormData(prev => ({
             ...prev,
-            localizacao: locationData.address
+            localizacao: locationData.address || "Localização selecionada no mapa",
+            latitude: locationData.lat,
+            longitude: locationData.lng
         }));
     };
 
@@ -58,6 +63,11 @@ const EventoForm = ({ onLogout }) => {
     formDataToSend.append('nome_evento', formData.nome);
     formDataToSend.append('descricao', formData.descricao);
     formDataToSend.append('localizacao', formData.localizacao);
+    
+    // Enviar Coordenadas se existirem
+    if (formData.latitude) formDataToSend.append('latitude', formData.latitude);
+    if (formData.longitude) formDataToSend.append('longitude', formData.longitude);
+
     formDataToSend.append('data_inicio', formData.data_inicio);
     formDataToSend.append('data_fim', formData.data_fim || formData.data_inicio);
     formDataToSend.append('id_user', user.id || user.id_user);
@@ -73,6 +83,9 @@ const EventoForm = ({ onLogout }) => {
         const response = await fetch('http://localhost:3002/api/eventos', { 
             method: 'POST',
             body: formDataToSend, 
+            headers: {
+                'Authorization': user && user.token ? `Bearer ${user.token}` : ''
+            }
         });
 
         if (response.ok) {
@@ -145,12 +158,16 @@ const EventoForm = ({ onLogout }) => {
                                         placeholder="Selecione no mapa ao lado..."
                                         required 
                                     />
+                                    {/* Campos escondidos para debug ou verificação visual */}
+                                    <p style={{fontSize:'10px', color:'#999', marginTop:'5px'}}>
+                                        Coords: {formData.latitude}, {formData.longitude}
+                                    </p>
                                 </div>
                             </div>
 
                             <div className="map-column-layout">
                                 <div className="map-image-placeholder-layout">
-                                    {/* COMPONENTE DO MAPA LEAFLET */}
+                                    {/* COMPONENTE DO MAPA LEAFLET - Certifica-te que o MapPicker envia {lat, lng, address} */}
                                     <MapPicker onLocationSelect={handleLocationSelect} />
                                 </div>
                             </div>
@@ -165,7 +182,6 @@ const EventoForm = ({ onLogout }) => {
 
                         <div className="form-group full-width attachments-row-layout">
                             <label>Anexos / Documentos de Apoio (Plantas, Licenças)</label>
-                            {/* INPUT DE FICHEIROS ATIVADO */}
                             <input 
                                 type="file" 
                                 name="anexos" 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft, Package } from 'lucide-react';
+import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft, Package, Edit, RotateCcw } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
@@ -13,8 +13,14 @@ const formatDate = (dateString) => {
     return `${day}/${month}/${year}`;
 };
 
-const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao, materiais }) => {
+const EventCard = ({ event, isExpanded, onToggle, onEditar, onDevolver, isRequisicao, materiais }) => {
     
+    // Estados baseados na nova BD (1=Pendente, 2=Aprovada, 3=Recusada, 4=Em Curso, 5=Finalizada, 6=Cancelada)
+    const isPendente = event.id_estado_req === 1;
+    const isEmCurso = event.id_estado_req === 4;
+    const isFinalizada = event.id_estado_req === 5;
+    const isCancelada = event.id_estado_req === 6;
+
     const isEventoValido = event.data_fim 
         ? new Date(event.data_fim) >= new Date(new Date().setHours(0,0,0,0)) 
         : true;
@@ -32,16 +38,23 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao, mat
                     {isRequisicao && event.data_fim && (
                          <p className="event-date" style={{fontSize: '0.8em', color: '#666'}}>
                             Válido até: {formatDate(event.data_fim)}
-                            {!isEventoValido && <span style={{color: 'red', marginLeft: '5px'}}>(Expirado)</span>}
+                            {!isEventoValido && !isFinalizada && !isCancelada && <span style={{color: 'red', marginLeft: '5px'}}>(Expirado)</span>}
                          </p>
                     )}
                 </div>
                 <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
                     
-                    {/* --- ALTERAÇÃO 2: Só mostra o botão se estiver Aprovado E for Válido --- */}
-                    {isRequisicao && (event.status.toLowerCase().includes('aprovad')) && isEventoValido && (
-                        <button className="edit-button-esp" onClick={onTrabalhar}>
-                            TRABALHAR
+                    {/* --- BOTÃO EDITAR (Só se for Pendente) --- */}
+                    {isRequisicao && isPendente && isEventoValido && (
+                        <button className="edit-button-esp btn-pendente" onClick={onEditar}>
+                            <Edit size={14} /> EDITAR
+                        </button>
+                    )}
+
+                    {/* --- BOTÃO DEVOLVER (Só se estiver Em Curso) --- */}
+                    {isRequisicao && isEmCurso && (
+                        <button className="edit-button-esp btn-devolver" onClick={onDevolver} style={{backgroundColor: '#e67e22'}}>
+                            <RotateCcw size={14} /> DEVOLVER
                         </button>
                     )}
                     
@@ -59,7 +72,7 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, isRequisicao, mat
                         {isRequisicao && (
                             <div className="materiais-container-perfil" style={{marginTop: '15px'}}>
                                 <p style={{fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', display: 'flex', alignItems: 'center', gap: '5px'}}>
-                                    <Package size={16} /> MATERIAIS NO PEDIDO:
+                                    <Package size={16} /> MATERIAIS REQUISITADOS:
                                 </p>
                                 {materiais && materiais.length > 0 ? (
                                     <ul style={{listStyle: 'none', padding: '10px 0'}}>
@@ -102,7 +115,6 @@ const Perfil = ({ onLogout }) => {
     const eventoRaw = localStorage.getItem('evento_trabalho');
     const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
 
-
     const getAuthHeaders = () => {
         const storedData = localStorage.getItem('user');
         const userData = storedData ? JSON.parse(storedData) : null;
@@ -127,6 +139,9 @@ const Perfil = ({ onLogout }) => {
                 const s = (status || '').toString().toLowerCase(); 
                 if (s.includes('aprovad')) return 'aprovado';
                 if (s.includes('rejeitad')) return 'rejeitado'; 
+                if (s.includes('em curso')) return 'em-curso';
+                if (s.includes('finalizad')) return 'finalizado';
+                if (s.includes('cancelad')) return 'cancelado';
                 return 'pendente';
             };
 
@@ -139,9 +154,9 @@ const Perfil = ({ onLogout }) => {
                     isRequisicao: true,
                     title: `${r.nome_evento} - Requisição ${ordem}`,
                     status: r.estado_nome || 'Pendente',
+                    id_estado_req: r.id_estado_req, // IMPORTANTE: Guardar o ID do estado
                     localizacao: r.localizacao,
                     data_fim: r.data_fim, 
-                    
                     colorClass: getStatusColor(r.estado_nome)
                 };
             }) : [];
@@ -170,6 +185,28 @@ const Perfil = ({ onLogout }) => {
             const data = await res.json();
             setMateriaisCard(data);
         } catch (err) { console.error(err); }
+    };
+
+    const handleDevolver = async (idReq) => {
+        if (!window.confirm("Tem a certeza que deseja devolver os materiais e finalizar esta requisição?")) return;
+
+        try {
+            const res = await fetch(`http://localhost:3002/api/requisicoes/${idReq}/estado`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ id_estado: 5 }) // 5 = Finalizada
+            });
+
+            if (res.ok) {
+                alert("Materiais devolvidos com sucesso!");
+                fetchPerfilData(); // Recarrega a lista
+            } else {
+                alert("Erro ao devolver materiais.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Erro de conexão.");
+        }
     };
 
     useEffect(() => { 
@@ -241,7 +278,7 @@ const Perfil = ({ onLogout }) => {
                 </div>
 
                 <div className="status-filter-bar-esp">
-                    {['todos', 'pendente', 'aprovado', 'rejeitado'].map(estado => (
+                    {['todos', 'pendente', 'aprovada', 'em curso', 'finalizada'].map(estado => (
                         <button key={estado} className={`status-filter-btn ${filtroEstado === estado ? 'active-status' : ''}`} onClick={() => setFiltroEstado(estado)}>
                             {estado.toUpperCase()}
                         </button>
@@ -258,7 +295,8 @@ const Perfil = ({ onLogout }) => {
                                 isExpanded={expandedCardId === item.id} 
                                 materiais={materiaisCard}
                                 onToggle={() => handleToggle(item)}
-                                onTrabalhar={() => { 
+                                onDevolver={() => handleDevolver(item.id_orig)}
+                                onEditar={() => { 
                                     localStorage.setItem('evento_trabalho', JSON.stringify({ id_req: item.id_orig, nome: item.title })); 
                                     navigate('/explorar'); 
                                 }} 
@@ -272,7 +310,7 @@ const Perfil = ({ onLogout }) => {
                 <div className="footer-content-esp centered-content">
                     <span className="footer-project-esp">
                         {isGestor ? "PAINEL ADMINISTRATIVO" : 
-                         eventoAtivo ? `A TRABALHAR NA REQUISIÇÃO: ${eventoAtivo.nome.toUpperCase()}` : "SEM REQUISIÇÃO ATIVA"}
+                         eventoAtivo ? `A EDITAR REQUISIÇÃO: ${eventoAtivo.nome.toUpperCase()}` : "SEM REQUISIÇÃO ATIVA"}
                     </span>
                 </div>
             </footer>

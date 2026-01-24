@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, User, X, Calendar, Download, Package, Activity, Search, Filter } from 'lucide-react';
+import { LogOut, User, X, Calendar, Download, Package, Activity, Search, Filter, MapPin } from 'lucide-react';
 import './GestorDashboard.css';
 import logo from '../../assets/img/esposende.png';
 
@@ -73,22 +73,28 @@ const GestorDashboard = () => {
         }
     };
 
-    const handleAcao = async (id, id_estado) => {
-        const tipo = tab === 'requisicoes' ? 'requisicoes' : 'eventos';
+    // --- LÓGICA DE AÇÃO (Aprovar/Recusar) ---
+    const handleAcao = async (id, id_estado_novo) => {
+        const url = tab === 'requisicoes' 
+            ? `http://localhost:3002/api/requisicoes/${id}/estado`
+            : `http://localhost:3002/api/eventos/${id}/estado`; 
+
         try {
-            const res = await fetch(`http://localhost:3002/api/gestao/${tipo}/${id}/estado`, {
+            const res = await fetch(url, {
                 method: 'PUT',
                 headers: getAuthHeaders(), 
-                body: JSON.stringify({ id_estado }) 
+                body: JSON.stringify({ id_estado: id_estado_novo }) 
             });
 
             if (res.ok) {
+                alert("Estado atualizado com sucesso!");
                 setSelectedItem(null);
                 loadData();
             } else {
-                alert("Não foi possível atualizar o estado.");
+                const err = await res.json();
+                alert("Erro ao atualizar: " + (err.message || err.error));
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error(err); alert("Erro de conexão."); }
     };
 
     // --- LÓGICA DE FILTRAGEM ---
@@ -161,8 +167,11 @@ const GestorDashboard = () => {
                                 >
                                     <option value="todos">Todos os Estados</option>
                                     <option value="pendente">Pendente</option>
-                                    <option value="aprovado">Aprovado</option>
-                                    <option value="rejeitado">Rejeitado</option>
+                                    <option value="aprovada">Aprovada</option>
+                                    <option value="recusada">Recusada</option>
+                                    <option value="em curso">Em Curso</option>
+                                    <option value="finalizada">Finalizada</option>
+                                    <option value="cancelada">Cancelada</option>
                                 </select>
                             </div>
                         )}
@@ -189,7 +198,7 @@ const GestorDashboard = () => {
                                         <>
                                             <strong>{item.nome_evento || `Requisição #${item.id_req}`}</strong>
                                             <p>{item.requerente}</p>
-                                            <span className={`status-badge ${item.estado_nome?.toLowerCase()}`}>
+                                            <span className={`status-badge ${item.estado_nome?.toLowerCase().replace(' ', '-')}`}>
                                                 {item.estado_nome}
                                             </span>
                                         </>
@@ -227,10 +236,37 @@ const GestorDashboard = () => {
                                 <p><strong>Estado:</strong> {selectedItem.estado_nome}</p>
                             </div>
 
+                            {/* --- NOVA SECÇÃO DE LOCALIZAÇÃO --- */}
+                            {(selectedItem.localizacao || (selectedItem.latitude && selectedItem.longitude)) && (
+                                <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f0f4f8', borderRadius: '8px' }}>
+                                    {selectedItem.localizacao && (
+                                        <p style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                                            <MapPin size={16} color="var(--primary-blue)" />
+                                            <strong>Local:</strong> {selectedItem.localizacao}
+                                        </p>
+                                    )}
+                                    
+                                    {selectedItem.latitude && selectedItem.longitude && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.9em', marginLeft: '24px', color: '#555' }}>
+                                            <span>Coords: {selectedItem.latitude}, {selectedItem.longitude}</span>
+                                            <a 
+                                                href={`https://www.google.com/maps/search/?api=1&query=${selectedItem.latitude},${selectedItem.longitude}`} 
+                                                target="_blank" 
+                                                rel="noreferrer"
+                                                style={{ color: 'var(--primary-blue)', textDecoration: 'underline', marginLeft: '5px' }}
+                                            >
+                                                (Ver no Google Maps)
+                                            </a>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            {/* ---------------------------------- */}
+
                             <div style={{ marginTop: '20px' }}>
                                 <label style={{ fontWeight: '800', color: 'var(--primary-blue)', fontSize: '14px' }}>DESCRIÇÃO:</label>
                                 <div className="specs-box">
-                                    {selectedItem.descricao || "Sem detalhes adicionais."}
+                                    {selectedItem.descricao || selectedItem.observacoes || "Sem detalhes adicionais."}
                                 </div>
                             </div>
 
