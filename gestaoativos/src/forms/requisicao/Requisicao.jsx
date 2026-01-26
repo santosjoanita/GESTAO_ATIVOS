@@ -3,20 +3,20 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ShoppingCart, User, CornerDownLeft } from 'lucide-react';
 import './Requisicao.css';
 import logo from '../../assets/img/esposende.png'; 
+import Toast from '../../components/Toast';
 
 const Requisicao = () => {
     const [eventos, setEventos] = useState([]);
     const [formData, setFormData] = useState({ id_evento: '' });
+    const [toast, setToast] = useState(null);
     const navigate = useNavigate();
     
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user?.id_user || user?.id;
 
-    // --- 1. FUNÇÃO PARA OBTER OS HEADERS COM TOKEN ---
     const getAuthHeaders = () => {
         const storedData = localStorage.getItem('user');
         const userData = storedData ? JSON.parse(storedData) : null;
-        
         return {
             'Content-Type': 'application/json',
             'Authorization': userData && userData.token ? `Bearer ${userData.token}` : ''
@@ -24,9 +24,7 @@ const Requisicao = () => {
     };
 
     useEffect(() => {
-        fetch('http://localhost:3002/api/requisicoes/eventos-disponiveis', {
-            headers: getAuthHeaders()
-        })
+        fetch('http://localhost:3002/api/requisicoes/eventos-disponiveis', { headers: getAuthHeaders() })
             .then(res => {
                 if (!res.ok) throw new Error("Erro de permissão ou rede");
                 return res.json();
@@ -39,12 +37,12 @@ const Requisicao = () => {
         e.preventDefault();
 
         if (!userId) {
-            alert("Sessão expirada. Faça login novamente.");
+            setToast({ type: 'error', message: "Sessão expirada. Faça login novamente." });
             return;
         }
 
         if (!formData.id_evento) {
-            alert("Selecione um evento.");
+            setToast({ type: 'warning', message: "Selecione um evento para continuar." });
             return;
         }
 
@@ -62,29 +60,33 @@ const Requisicao = () => {
                 const errData = await response.json();
                 throw new Error(errData.detalhes || errData.erro || "Erro no servidor");
             }
-
             
             const resJson = await response.json();
             
-            if(window.confirm("Requisição criada! Queres começar a adicionar materiais agora?")) {
-                const eventoTrabalho = eventos.find(e => e.id_evento == formData.id_evento);
-                localStorage.setItem('evento_trabalho', JSON.stringify({
-                    id_req: resJson.id,
-                    nome: eventoTrabalho ? eventoTrabalho.nome_evento : 'Evento'
-                }));
+            const eventoTrabalho = eventos.find(e => e.id_evento == formData.id_evento);
+            
+            localStorage.setItem('evento_trabalho', JSON.stringify({
+                id_req: resJson.id_req, 
+                nome: eventoTrabalho ? eventoTrabalho.nome_evento : 'Evento'
+            }));
+
+            
+            setToast({ type: 'success', message: "Requisição criada! A redirecionar para o Catálogo..." });
+
+            setTimeout(() => {
                 navigate('/explorar');
-            } else {
-                navigate('/home'); 
-            }
+            }, 1500);
 
         } catch (err) {
             console.error("Erro:", err);
-            alert(`Erro: ${err.message}`);
+            setToast({ type: 'error', message: `Erro: ${err.message}` });
         }
     };
 
     return (
         <div className="requisicao-page-layout">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <div className="logo-esp"><img src={logo} alt="Logo" className="logo-img" /></div>
@@ -124,7 +126,7 @@ const Requisicao = () => {
                             </select>
                             {eventos.length === 0 && (
                                 <small style={{color: 'red', marginTop: '5px'}}>
-                                    Não tens eventos aprovados. Cria um evento primeiro e aguarda aprovação.
+                                    Não tem eventos aprovados. Crie um evento primeiro e aguarde aprovação.
                                 </small>
                             )}
                         </div>
@@ -134,7 +136,7 @@ const Requisicao = () => {
                         </div>
                         <div className="req-button-row">
                             <button type="button" className="btn-cancelar" onClick={() => navigate('/home')}>CANCELAR</button>
-                            <button type="submit" className="btn-submeter">CRIAR REQUISIÇÃO</button>
+                            <button type="submit" className="btn-submeter">CRIAR & SELECIONAR MATERIAIS</button>
                         </div>
                     </form>
                 </div>

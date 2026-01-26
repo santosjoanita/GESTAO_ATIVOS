@@ -137,3 +137,25 @@ exports.eliminar = async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 };
+
+// 9. LIMITES DO EVENTO 
+exports.getLimitesEvento = async (req, res) => {
+    const { idReq } = req.params;
+    try {
+        const [rows] = await db.execute(`
+            SELECT e.data_inicio, e.data_fim 
+            FROM Requisicao r 
+            JOIN Evento e ON r.id_evento = e.id_evento 
+            WHERE r.id_req = ?
+        `, [idReq]);
+        
+        if (rows.length > 0) {
+            res.json(rows[0]);
+        } else {
+            res.status(404).json({ error: "Evento não encontrado para esta requisição." });
+        }
+    } catch (e) {
+        console.error("Erro Limites:", e.message);
+        res.status(500).json({ error: e.message });
+    }
+};

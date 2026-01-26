@@ -1,68 +1,81 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ShoppingCart, User, CornerDownLeft, ArrowLeft, Package, AlertCircle, Calendar as CalendarIcon } from 'lucide-react';
+import { ShoppingCart, User, CornerDownLeft, Package, AlertCircle } from 'lucide-react';
 import './Produto.css';
 import logo from '../../assets/img/esposende.png';
+import Toast from '../../components/Toast';
 
 const Produto = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     
-    // Estados do Material e Stock
     const [material, setMaterial] = useState(null);
     const [quantidade, setQuantidade] = useState(1);
     const [datas, setDatas] = useState({ levantamento: '', devolucao: '' });
-    
-    // Estados de Disponibilidade e Limites
-    const [periodosOcupados, setPeriodosOcupados] = useState([]);
     const [limitesEvento, setLimitesEvento] = useState({ min: '', max: '' });
-    
-    // Dados do Contexto Local
+    const [toast, setToast] = useState(null);
+
     const user = JSON.parse(localStorage.getItem('user'));
     const eventoRaw = localStorage.getItem('evento_trabalho');
     const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
     const itensCarrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 
+    const getAuthHeaders = () => {
+        const storedData = localStorage.getItem('user');
+        const userData = storedData ? JSON.parse(storedData) : null;
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': userData && userData.token ? `Bearer ${userData.token}` : ''
+        };
+    };
+
     useEffect(() => {
-        // 1. Carregar detalhes do Material
-        fetch(`http://localhost:3002/api/materiais/${id}`)
+        const headers = getAuthHeaders();
+
+        // 1. Carregar Material
+        fetch(`http://localhost:3002/api/materiais/${id}`, { headers })
             .then(res => res.json())
             .then(data => setMaterial(data))
-            .catch(err => console.error("Erro ao carregar material:", err));
+            .catch(err => console.error(err));
 
-        // 2. Carregar períodos em que este material já está ocupado por outros
-        fetch(`http://localhost:3002/api/materiais/${id}/ocupacao`)
-            .then(res => res.json())
-            .then(data => setPeriodosOcupados(data))
-            .catch(err => console.error("Erro ao carregar ocupação:", err));
-
-        // 3. Carregar as datas limites do Evento Pai (para bloquear o calendário)
         if (eventoAtivo?.id_req) {
-            fetch(`http://localhost:3002/api/materiais/limites-evento/${eventoAtivo.id_req}`)
-                .then(res => res.json())
+            fetch(`http://localhost:3002/api/materiais/limites-evento/${eventoAtivo.id_req}`, { headers })
+                .then(res => {
+                    if (res.ok) return res.json();
+                    return null;
+                })
                 .then(data => {
                     if (data) {
                         setLimitesEvento({
-                            min: data.data_inicio.split('T')[0],
-                            max: data.data_fim.split('T')[0]
+                            min: data.data_inicio ? data.data_inicio.split('T')[0] : '',
+                            max: data.data_fim ? data.data_fim.split('T')[0] : ''
+                        });
+                   
+                        setDatas({
+                            levantamento: data.data_inicio ? data.data_inicio.split('T')[0] : '',
+                            devolucao: data.data_fim ? data.data_fim.split('T')[0] : ''
                         });
                     }
                 })
-                .catch(err => console.error("Erro ao carregar limites do evento:", err));
+                .catch(err => console.error("Erro limites:", err));
         }
     }, [id, eventoAtivo?.id_req]);
 
     const handleAdicionar = () => {
         if (!eventoAtivo) {
-            return alert("Atenção: Deves selecionar uma requisição no teu Perfil para poderes adicionar materiais!");
+            setToast({ type: 'warning', message: "Atenção: Seleciona 'Editar' numa requisição no Perfil primeiro!" });
+            return;
         }
         
-        if (!datas.levantamento || !datas.devolucao) {
-            return alert("Por favor, seleciona as datas de levantamento e devolução.");
+        // Validações simples
+        if (datas.levantamento < limitesEvento.min || datas.devolucao > limitesEvento.max) {
+            setToast({ type: 'error', message: "As datas devem estar dentro do período do evento." });
+            return;
         }
 
         if (datas.devolucao < datas.levantamento) {
-            return alert("A data de devolução não pode ser anterior à data de levantamento.");
+            setToast({ type: 'error', message: "Data de devolução inválida." });
+            return;
         }
 
         const novoItem = {
@@ -77,17 +90,16 @@ const Produto = () => {
         const novoCarrinho = [...itensCarrinho, novoItem];
         localStorage.setItem('carrinho', JSON.stringify(novoCarrinho));
         
-        alert(`${material.nome} adicionado ao carrinho!`);
-        navigate('/explorar');
+        setToast({ type: 'success', message: `${material.nome} adicionado ao carrinho!` });
+        setTimeout(() => navigate('/explorar'), 1000);
     };
 
-    if (!material) return <div className="loading-state">A carregar detalhes do produto...</div>;
-
-    const hoje = new Date().toISOString().split("T")[0];
-    const dataMinimaPermitida = limitesEvento.min > hoje ? limitesEvento.min : hoje;
+    if (!material) return <div className="loading-state">A carregar...</div>;
 
     return (
         <div className="layout-padrao-produto">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}}/>
@@ -109,18 +121,17 @@ const Produto = () => {
             </header>
 
             <main className="produto-main">
-                
-
                 <div className="produto-grid">
                     <div className="produto-media">
                         <img 
                             src={material.imagem_url ? `http://localhost:3002/uploads/${material.imagem_url}` : logo} 
                             alt={material.nome} 
+                            onError={(e) => { e.target.src = logo; }}
                         />
                     </div>
 
                     <div className="produto-info-detalhe">
-                        <div className="categoria-tag">{material.categoria_nome || 'MATERIAL'}</div>
+                        <div className="categoria-tag">{material.categoria_nome}</div>
                         <h1>{material.nome?.toUpperCase()}</h1>
                         
                         <div className="specs-box-estilizada">
@@ -129,53 +140,34 @@ const Produto = () => {
                             <div className="stock-label-esp">STOCK DISPONÍVEL: {material.quantidade_disp}</div>
                         </div>
 
-                        {periodosOcupados.length > 0 && (
-                            <div className="ocupacao-container">
-                                <h4 className="ocupacao-titulo"><AlertCircle size={16} /> CALENDÁRIO DE INDISPONIBILIDADE:</h4>
-                                <ul className="ocupacao-lista">
-                                    {periodosOcupados.map((p, idx) => (
-                                        <li key={idx}>
-                                            Reservado de <strong>{new Date(p.data_saida).toLocaleDateString()}</strong> até <strong>{new Date(p.data_devolucao).toLocaleDateString()}</strong> ({p.quantidade} un.)
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-
                         <div className="form-reserva-esp">
                             <div className="input-group-esp">
                                 <label>QUANTIDADE</label>
-                                <input 
-                                    type="number" 
-                                    min="1" 
-                                    max={material.quantidade_disp} 
-                                    value={quantidade} 
-                                    onChange={(e) => setQuantidade(e.target.value)} 
-                                />
+                                <input type="number" min="1" max={material.quantidade_disp} value={quantidade} onChange={(e) => setQuantidade(e.target.value)} />
                             </div>
-
+                            
                             <div className="input-group-esp">
                                 <label>LEVANTAMENTO</label>
                                 <input 
                                     type="date" 
-                                    min={dataMinimaPermitida}
-                                    max={limitesEvento.max}
-                                    value={datas.levantamento}
+                                    min={limitesEvento.min} 
+                                    max={limitesEvento.max} 
+                                    value={datas.levantamento} 
                                     onChange={(e) => setDatas({...datas, levantamento: e.target.value})} 
                                 />
-                                {limitesEvento.min && <small className="hint-date">Início do evento: {new Date(limitesEvento.min).toLocaleDateString()}</small>}
+                                <small style={{fontSize:'10px', color:'#666'}}>
+                                    Permitido entre: {limitesEvento.min} e {limitesEvento.max}
+                                </small>
                             </div>
-
                             <div className="input-group-esp">
                                 <label>DEVOLUÇÃO</label>
                                 <input 
                                     type="date" 
-                                    min={datas.levantamento || dataMinimaPermitida}
-                                    max={limitesEvento.max}
-                                    value={datas.devolucao}
+                                    min={datas.levantamento || limitesEvento.min} 
+                                    max={limitesEvento.max} 
+                                    value={datas.devolucao} 
                                     onChange={(e) => setDatas({...datas, devolucao: e.target.value})} 
                                 />
-                                {limitesEvento.max && <small className="hint-date">Fim do evento: {new Date(limitesEvento.max).toLocaleDateString()}</small>}
                             </div>
                         </div>
 
@@ -187,24 +179,14 @@ const Produto = () => {
                             <ShoppingCart size={20} /> 
                             {material.quantidade_disp <= 0 ? "SEM DISPONIBILIDADE" : "ADICIONAR AO CARRINHO"}
                         </button>
-                        
-                        {!eventoAtivo && (
-                            <p className="erro-trabalho-msg">
-                                <AlertCircle size={14} /> Precisas de selecionar "Trabalhar" numa requisição no teu perfil para adicionar itens.
-                            </p>
-                        )}
                     </div>
                 </div>
             </main>
 
-            <footer className="fixed-footer-esp">
-                <div className="footer-content-esp centered-content">
-                    <span className="footer-project-esp">
-                        {eventoAtivo 
-                            ? `A TRABALHAR NA REQUISIÇÃO: ${eventoAtivo.nome.toUpperCase()}` 
-                            : "SELECIONE UMA REQUISIÇÃO NO SEU PERFIL PARA CONTINUAR"}
-                    </span>
-                </div>
+            <footer className="fixed-footer-esp" style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                <span className="footer-project-esp">
+                    {eventoAtivo ? `A TRABALHAR: ${eventoAtivo.nome.toUpperCase()}` : "SELECIONE 'EDITAR' NO PERFIL"}
+                </span>
             </footer>
         </div>
     );

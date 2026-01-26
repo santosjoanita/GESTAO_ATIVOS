@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, User, X, Calendar, Download, Package, Activity, Search, Filter, MapPin, CheckCircle, XCircle, Truck, RotateCcw, FileClock, Ban } from 'lucide-react';
+import { LogOut, User, X, Calendar, Download, Package, Activity, Search, Filter, MapPin, CheckCircle, XCircle, Truck, RotateCcw, FileClock, Ban, FileText } from 'lucide-react';
 import './GestorDashboard.css';
 import logo from '../../assets/img/esposende.png';
+import Toast from '../../components/Toast';
+import ModalConfirmacao from '../../components/ModalConfirmacao';
 
 const GestorDashboard = () => {
     const [items, setItems] = useState([]);
@@ -13,6 +15,9 @@ const GestorDashboard = () => {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('todos');
+
+    const [toast, setToast] = useState(null);
+    const [modal, setModal] = useState({ isOpen: false, action: null, id: null, novoEstado: null });
 
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
@@ -56,6 +61,7 @@ const GestorDashboard = () => {
             setItems(Array.isArray(data) ? data : []);
         } catch (error) { 
             console.error("Erro ao carregar:", error);
+            setToast({ type: 'error', message: "Erro de conexão ao carregar dados." });
             setItems([]);
         }
     };
@@ -82,19 +88,24 @@ const GestorDashboard = () => {
         }
     };
 
-    // --- LÓGICA DE AÇÃO INTELIGENTE ---
-    const handleAcao = async (id, id_estado_novo) => {
+    const prepararAcao = (id, id_estado_novo) => {
+        if (id_estado_novo === 5 || id_estado_novo === 6 || id_estado_novo === 3) {
+            setModal({ isOpen: true, action: 'confirmar_acao', id, novoEstado: id_estado_novo });
+        } else {
+            executarAcao(id, id_estado_novo);
+        }
+    };
+
+    const executarAcao = async (id = modal.id, id_estado_novo = modal.novoEstado) => {
         let url = '';
         let body = { id_estado: id_estado_novo };
 
         if (tab === 'requisicoes') {
             if (id_estado_novo === 5) {
-                if(!window.confirm("Isto irá devolver o stock ao armazém. Continuar?")) return;
                 url = `http://localhost:3002/api/requisicoes/${id}/devolver`;
                 body = { id_user: user.id_user }; 
             } 
             else if (id_estado_novo === 6) {
-                if(!window.confirm("Tem a certeza que quer CANCELAR? Se já houver stock cativo, será reposto.")) return;
                 url = `http://localhost:3002/api/requisicoes/${id}/cancelar`;
                 body = { id_user: user.id_user };
             } 
@@ -102,7 +113,6 @@ const GestorDashboard = () => {
                 url = `http://localhost:3002/api/requisicoes/${id}/estado`;
             }
         } else {
-            // Eventos
             url = `http://localhost:3002/api/eventos/${id}/estado`;
         }
 
@@ -114,17 +124,31 @@ const GestorDashboard = () => {
             });
 
             if (res.ok) {
-                alert("Ação realizada com sucesso!");
+                setToast({ type: 'success', message: "Ação realizada com sucesso!" });
                 setSelectedItem(null);
                 loadData();
             } else {
                 const err = await res.json();
-                alert("Erro: " + (err.message || err.error));
+                setToast({ type: 'error', message: "Erro: " + (err.message || err.error) });
             }
-        } catch (err) { console.error(err); alert("Erro de conexão."); }
+        } catch (err) { 
+            console.error(err); 
+            setToast({ type: 'error', message: "Erro de conexão." }); 
+        }
+        
+        setModal({ isOpen: false, action: null, id: null, novoEstado: null });
     };
 
-    // --- LÓGICA DE FILTRAGEM ---
+    const getModalText = () => {
+        const st = modal.novoEstado;
+        if (st === 5) return { title: "Finalizar & Devolver", msg: "Confirma a devolução dos materiais? O stock será reposto automaticamente.", color: "#2ecc71" };
+        if (st === 6) return { title: "Cancelar Requisição", msg: "Tem a certeza? Se já houver stock reservado, ele será libertado.", color: "#e74c3c" };
+        if (st === 3) return { title: "Rejeitar Pedido", msg: "Deseja rejeitar este pedido?", color: "#e74c3c" };
+        return { title: "Confirmação", msg: "Prosseguir?", color: "#1f3a52" };
+    };
+
+    const modalContent = getModalText();
+
     const filteredItems = items.filter(item => {
         const searchLower = searchTerm.toLowerCase();
         let matchesSearch = false;
@@ -158,6 +182,18 @@ const GestorDashboard = () => {
 
     return (
         <div className="gestao-layout">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            
+            <ModalConfirmacao 
+                isOpen={modal.isOpen}
+                title={modalContent.title}
+                message={modalContent.msg}
+                confirmText="Confirmar"
+                confirmColor={modalContent.color}
+                onConfirm={() => executarAcao()}
+                onCancel={() => setModal({ isOpen: false, action: null, id: null, novoEstado: null })}
+            />
+
             <header className="fixed-header-esp">
                 <div className="header-content-esp">
                     <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor: 'pointer'}} />
@@ -186,15 +222,21 @@ const GestorDashboard = () => {
                         {tab === 'eventos' && 'GERIR EVENTOS'}
                     </h2>
                     
+                    {/* FILTROS MODERNOS */}
                     <div className="filters-container">
                         <div className="search-input-wrapper">
-                            <Search size={18} className="search-icon"/>
-                            <input type="text" placeholder="Pesquisar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/>
+                            <Search size={20} className="search-icon"/>
+                            <input 
+                                type="text" 
+                                placeholder="Pesquisar por nome, ID ou requerente..." 
+                                value={searchTerm} 
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
                         </div>
                         
                         {tab !== 'stock' && tab !== 'historico_req' && (
                             <div className="filter-select-wrapper">
-                                <Filter size={18} className="filter-icon"/>
+                                <Filter size={20} className="filter-icon"/>
                                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                                     <option value="todos">Todos os Estados</option>
                                     <option value="pendente">Pendente</option>
@@ -218,28 +260,21 @@ const GestorDashboard = () => {
                                  style={{ cursor: (tab === 'stock' || tab === 'historico_req') ? 'default' : 'pointer' }}>
                                 
                                 <div className="card-info">
-                                    {/* CARD STOCK */}
-                                    {tab === 'stock' && (
+                                    {tab === 'stock' ? (
                                         <>
                                             <strong><Package size={16} /> {item.item_nome}</strong>
                                             <p><User size={14} /> {item.nome_utilizador}</p>
                                             <p><Activity size={14} /> {item.tipo_movimento} ({item.quantidade_alt})</p>
                                             <p style={{fontSize:'0.8em', color:'#888'}}>{new Date(item.data_movimento).toLocaleString('pt-PT')}</p>
                                         </>
-                                    )}
-
-                                    {/* CARD HISTÓRICO REQUISIÇÕES */}
-                                    {tab === 'historico_req' && (
+                                    ) : tab === 'historico_req' ? (
                                         <>
                                             <strong><FileClock size={16} /> Req #{item.id_req} - {item.acao}</strong>
                                             <p><User size={14} /> Por: {item.nome_responsavel}</p>
                                             <p style={{fontStyle:'italic', color:'#555', fontSize:'0.9em'}}>{item.detalhes}</p>
                                             <p style={{fontSize:'0.8em', color:'#888'}}><Calendar size={12}/> {new Date(item.data_acao).toLocaleString('pt-PT')}</p>
                                         </>
-                                    )}
-
-                                    {/* CARD NORMAL */}
-                                    {tab !== 'stock' && tab !== 'historico_req' && (
+                                    ) : (
                                         <>
                                             <strong>{item.nome_evento || `Requisição #${item.id_req}`}</strong>
                                             <p>{item.requerente}</p>
@@ -257,60 +292,105 @@ const GestorDashboard = () => {
                 </div>
             </main>
 
-            {/* MODAL GESTOR */}
+            {/* MODAL DETALHES GESTOR */}
             {selectedItem && tab !== 'stock' && tab !== 'historico_req' && (
                 <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-content new-gestor-modal" onClick={(e) => e.stopPropagation()}>
+                        
                         <div className="modal-header">
-                            <h3>DETALHES REQ #{selectedItem.id_req || selectedItem.id_evento}</h3>
+                            <h3>{tab === 'eventos' ? `EVENTO #${selectedItem.id_evento}` : `REQUISIÇÃO #${selectedItem.id_req}`}</h3>
                             <button onClick={() => setSelectedItem(null)} className="close-btn"><X size={24} /></button>
                         </div>
-                        <div className="modal-body">
-                            <h4 className="modal-main-title">{selectedItem.nome_evento || `Requisição #${selectedItem.id_req}`}</h4>
+
+                        <div className="modal-body-scrollable">
+                            <h2 className="modal-main-title">{selectedItem.nome_evento || `Requisição #${selectedItem.id_req}`}</h2>
                             
-                            <div className="info-grid-esp">
-                                <p><User size={16} /> <strong>Requerente:</strong> {selectedItem.requerente}</p>
-                                <p><Calendar size={16} /> <strong>Data:</strong> {selectedItem.data_inicio ? new Date(selectedItem.data_inicio).toLocaleDateString() : new Date(selectedItem.data_pedido).toLocaleDateString()}</p>
-                                <p><strong>Estado:</strong> {selectedItem.estado_nome}</p>
+                            <div className="detail-grid">
+                                <div className="detail-item">
+                                    <span className="label">Requerente</span>
+                                    <span className="value"><User size={14}/> {selectedItem.requerente}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span className="label">Data de Início</span>
+                                    <span className="value">
+                                        <Calendar size={14}/> {selectedItem.data_inicio ? new Date(selectedItem.data_inicio).toLocaleDateString() : new Date(selectedItem.data_pedido).toLocaleDateString()}
+                                    </span>
+                                </div>
+                                <div className="detail-item">
+                                    <span className="label">Estado Atual</span>
+                                    <span className={`status-badge-large ${selectedItem.estado_nome?.toLowerCase().replace(' ', '-')}`}>
+                                        {selectedItem.estado_nome}
+                                    </span>
+                                </div>
+                                {tab === 'eventos' && (
+                                    <div className="detail-item full-width">
+                                        <span className="label">Localização</span>
+                                        <span className="value"><MapPin size={14}/> {selectedItem.localizacao || 'N/A'}</span>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Materiais e Anexos (Visualização simplificada para brevidade) */}
-                            {materiais.length > 0 && (
-                                <div style={{ marginTop: '15px' }}>
-                                    <label style={{fontWeight:'800', fontSize:'13px', color:'var(--primary-blue)'}}>MATERIAIS:</label>
-                                    <ul style={{background:'#f8f9fa', padding:'10px', borderRadius:'8px', listStyle:'none'}}>
-                                        {materiais.map((m, idx) => (<li key={idx} style={{padding:'3px 0', borderBottom:'1px solid #eee'}}>{m.nome} — <strong>{m.quantidade}</strong></li>))}
+                            {tab === 'eventos' && selectedItem.descricao && (
+                                <div className="section-block">
+                                    <h4><FileText size={16}/> DESCRIÇÃO</h4>
+                                    <p className="description-text">{selectedItem.descricao}</p>
+                                </div>
+                            )}
+
+                            {tab === 'eventos' && anexos.length > 0 && (
+                                <div className="section-block">
+                                    <h4>ANEXOS</h4>
+                                    <ul className="attachments-list">
+                                        {anexos.map(a => (
+                                            <li key={a.id_anexo}>
+                                                <a href={`http://localhost:3002/uploads/${a.caminho_ficheiro}`} target="_blank" rel="noreferrer">
+                                                    <Download size={14}/> {a.nome_ficheiro}
+                                                </a>
+                                            </li>
+                                        ))}
                                     </ul>
                                 </div>
                             )}
 
-                            {/* BOTÕES DE AÇÃO */}
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '30px', flexWrap: 'wrap' }}>
-                                {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
-                                    <>
-                                        <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-action-gestor btn-aprovar"><CheckCircle size={16} /> APROVAR</button>
-                                        <button onClick={() => handleAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-action-gestor btn-rejeitar"><XCircle size={16} /> REJEITAR</button>
-                                    </>
-                                )}
-                                
-                                {tab === 'requisicoes' && (selectedItem.estado_nome?.toLowerCase().includes('aprov') || selectedItem.estado_nome?.toLowerCase().includes('agend')) && (
-                                    <>
-                                        <button onClick={() => handleAcao(selectedItem.id_req, 4)} className="btn-action-gestor btn-em-curso" style={{background:'#f39c12', color:'white'}}>
-                                            <Truck size={16} /> MARCAR LEVANTAMENTO
-                                        </button>
-                                        {/* Botão Cancelar (Extra para Gestor) */}
-                                        <button onClick={() => handleAcao(selectedItem.id_req, 6)} className="btn-action-gestor btn-cancelar" style={{background:'#e74c3c', color:'white'}}>
-                                            <Ban size={16} /> CANCELAR
-                                        </button>
-                                    </>
-                                )}
+                            {tab === 'requisicoes' && materiais.length > 0 && (
+                                <div className="section-block">
+                                    <h4><Package size={16}/> LISTA DE MATERIAIS</h4>
+                                    <div className="materials-table-wrapper">
+                                        <table className="materials-table-clean">
+                                            <thead><tr><th>Item</th><th>Qtd</th></tr></thead>
+                                            <tbody>
+                                                {materiais.map((m, idx) => (
+                                                    <tr key={idx}><td>{m.nome}</td><td><strong>{m.quantidade}</strong></td></tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
-                                {tab === 'requisicoes' && selectedItem.estado_nome?.toLowerCase().includes('em curso') && (
-                                    <button onClick={() => handleAcao(selectedItem.id_req, 5)} className="btn-action-gestor btn-finalizar" style={{background:'#2ecc71', color:'white'}}>
-                                        <RotateCcw size={16} /> FINALIZAR (DEVOLVIDO)
+                        <div className="modal-footer-actions">
+                            {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
+                                <>
+                                    <button onClick={() => prepararAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-action-outline danger">REJEITAR</button>
+                                    <button onClick={() => prepararAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-action-solid success">APROVAR PEDIDO</button>
+                                </>
+                            )}
+                            
+                            {tab === 'requisicoes' && (selectedItem.estado_nome?.toLowerCase().includes('aprov') || selectedItem.estado_nome?.toLowerCase().includes('agend')) && (
+                                <>
+                                    <button onClick={() => prepararAcao(selectedItem.id_req, 6)} className="btn-action-outline danger">CANCELAR</button>
+                                    <button onClick={() => prepararAcao(selectedItem.id_req, 4)} className="btn-action-solid warning">
+                                        <Truck size={16} style={{marginRight:5}}/> MARCAR LEVANTAMENTO
                                     </button>
-                                )}
-                            </div>
+                                </>
+                            )}
+
+                            {tab === 'requisicoes' && selectedItem.estado_nome?.toLowerCase().includes('em curso') && (
+                                <button onClick={() => prepararAcao(selectedItem.id_req, 5)} className="btn-action-solid success full-width">
+                                    <RotateCcw size={16} style={{marginRight:5}}/> FINALIZAR (DEVOLVER STOCK)
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

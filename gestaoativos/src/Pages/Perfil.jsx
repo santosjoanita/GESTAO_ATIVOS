@@ -1,28 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft, Package, Edit, RotateCcw, XCircle, Briefcase } from 'lucide-react';
+import { ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft, Package, RotateCcw, XCircle, Briefcase } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
+import Toast from '../components/Toast';
+import ModalConfirmacao from '../components/ModalConfirmacao';
 
 const formatDate = (dateString) => {
     if (!dateString) return '--/--/----';
     const date = new Date(dateString);
     if (isNaN(date)) return 'Data Inválida';
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return date.toLocaleDateString('pt-PT');
 };
 
-const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, onDevolver, onCancelar, isRequisicao, materiais }) => {
+const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick, onCancelarClick, isRequisicao, materiais }) => {
     if (!event) return null;
     const estado = event.id_estado_req;
 
-    // Aprovada (2) ou Em Curso (4) -> Pode Trabalhar ou Devolver
-    const podeTrabalhar = isRequisicao && (estado === 2 || estado === 4);
+    const podeEditar = isRequisicao && (estado === 2 || estado === 4);
     const podeDevolver = isRequisicao && (estado === 4 || estado === 2);
-    // Pendente (1) -> Pode Cancelar
-    const podeCancelar = isRequisicao && estado === 1;
+    
+    const podeCancelar = isRequisicao && estado === 1; 
 
     return (
         <div className={`event-card ${event.colorClass} ${isExpanded ? 'expanded' : ''}`}>
@@ -35,29 +33,26 @@ const EventCard = ({ event, isExpanded, onToggle, onTrabalhar, onDevolver, onCan
                     )}
                 </div>
                 <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
-                    {podeTrabalhar && (
-                        <button className="edit-button-esp btn-pendente" onClick={onTrabalhar} title="Adicionar Materiais">
-                            <Briefcase size={14} style={{marginRight: '5px'}}/> TRABALHAR
+                    
+                    {podeEditar && (
+                        <button className="edit-button-esp btn-pendente" onClick={() => onEditarClick(event)} title="Gerir Materiais">
+                            <Briefcase size={14} style={{marginRight: '5px'}}/> EDITAR
                         </button>
                     )}
-                    {podeCancelar && (
-                        <button className="edit-button-esp btn-cancelar" onClick={() => { if(window.confirm('Cancelar requisição?')) onCancelar(); }} style={{backgroundColor:'#e74c3c', marginLeft:'5px'}}>
-                            <XCircle size={14} />
-                        </button>
-                    )}
+
+
                     {podeDevolver && (
-                        <button className="edit-button-esp btn-devolver" onClick={() => { if(window.confirm('Confirma a devolução de todos os materiais?')) onDevolver(); }} style={{backgroundColor:'#e67e22'}}>
+                        <button className="edit-button-esp btn-devolver" onClick={() => onDevolverClick(event.id_orig)} style={{backgroundColor:'#27ae60', color:'white', borderColor:'#219150'}}>
                             <RotateCcw size={14} /> DEVOLVER
                         </button>
                     )}
+                    
                     <div className="event-arrow-container">{isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}</div>
                 </div>
             </div>
             {isExpanded && (
                 <div className="event-details">
-                    <h4 className="details-title">Detalhes:</h4>
                     <div className="details-info-grid">
-                        <p><strong>Local:</strong> {event.localizacao || 'N/A'}</p>
                         {isRequisicao && (
                             <div className="materiais-container-perfil" style={{marginTop:'15px'}}>
                                 <p style={{fontWeight:'800',fontSize:'13px',color:'var(--primary-blue)'}}><Package size={16}/> MATERIAIS:</p>
@@ -83,6 +78,9 @@ const Perfil = () => {
     const [expandedCardId, setExpandedCardId] = useState(null); 
     const [filtroEstado, setFiltroEstado] = useState('todos');
     const [materiaisCard, setMateriaisCard] = useState([]);
+    
+    const [toast, setToast] = useState(null);
+    const [modal, setModal] = useState({ isOpen: false, type: null, id: null });
 
     const getAuthHeaders = useCallback(() => {
         const u = localStorage.getItem('user');
@@ -153,35 +151,63 @@ const Perfil = () => {
         } catch (err) { console.error(err); }
     };
 
-    // 1. CANCELAR (Estado 6) - Rota Segura com Reposição de Stock
-    const handleCancelar = async (id) => {
-        const u = localStorage.getItem('user');
-        const user = u ? JSON.parse(u) : null;
-        if (!user) return;
+    const handleEditar = async (item) => {
+        localStorage.setItem('evento_trabalho', JSON.stringify({ id_req: item.id_orig, nome: item.title }));
 
-        try {
-            const res = await fetch(`http://localhost:3002/api/requisicoes/${id}/cancelar`, {
-                method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_user: user.id_user || user.id })
-            });
-            if(res.ok) { alert("Requisição cancelada."); fetchPerfilData(); }
-            else { const err = await res.json(); alert("Erro: " + (err.message || err.error)); }
-        } catch (e) { alert("Erro de conexão"); }
+        if (item.id_estado_req === 2) {
+            try {
+                await fetch(`http://localhost:3002/api/requisicoes/${item.id_orig}/estado`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ id_estado: 4 })
+                });
+            } catch (e) {
+                console.error("Erro ao mudar estado para Em Curso", e);
+            }
+        }
+
+        // 3. Navegar para o Catálogo
+        navigate('/explorar');
     };
 
-    // 2. DEVOLVER (Estado 5) - Rota Segura com Reposição de Stock
-    const handleDevolver = async (idReq) => {
+    const executeCancelar = async () => {
         const u = localStorage.getItem('user');
         const user = u ? JSON.parse(u) : null;
-        if (!user) return;
-
         try {
-            const res = await fetch(`http://localhost:3002/api/requisicoes/${idReq}/devolver`, {
+            const res = await fetch(`http://localhost:3002/api/requisicoes/${modal.id}/cancelar`, {
                 method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_user: user.id_user || user.id })
             });
-            if (res.ok) { alert("Devolução registada com sucesso!"); fetchPerfilData(); }
-            else { const err = await res.json(); alert("Erro ao devolver: " + (err.message || err.error)); }
-        } catch (e) { alert("Erro de conexão ao devolver."); }
+            if(res.ok) { 
+                setToast({ type: 'success', message: "Requisição cancelada com sucesso." });
+                fetchPerfilData(); 
+            } else { 
+                const err = await res.json(); 
+                setToast({ type: 'error', message: "Erro: " + (err.message || err.error) });
+            }
+        } catch (e) { setToast({ type: 'error', message: "Erro de conexão" }); }
+        setModal({ isOpen: false, type: null, id: null });
     };
+
+    const executeDevolver = async () => {
+        const u = localStorage.getItem('user');
+        const user = u ? JSON.parse(u) : null;
+        try {
+            const res = await fetch(`http://localhost:3002/api/requisicoes/${modal.id}/devolver`, {
+                method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_user: user.id_user || user.id })
+            });
+            if (res.ok) { 
+                setToast({ type: 'success', message: "Devolução registada e stock reposto!" });
+                fetchPerfilData(); 
+            } else { 
+                const err = await res.json(); 
+                setToast({ type: 'error', message: "Erro: " + (err.message || err.error) });
+            }
+        } catch (e) { setToast({ type: 'error', message: "Erro de conexão" }); }
+        setModal({ isOpen: false, type: null, id: null });
+    };
+
+    const confirmCancelar = (id) => setModal({ isOpen: true, type: 'cancelar', id });
+    const confirmDevolver = (id) => setModal({ isOpen: true, type: 'devolver', id });
 
     const handleToggle = (item) => {
         if (expandedCardId === item.id) { setExpandedCardId(null); setMateriaisCard([]); }
@@ -208,6 +234,21 @@ const Perfil = () => {
 
     return (
         <div className="perfil-page-app">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+            
+            <ModalConfirmacao 
+                isOpen={modal.isOpen}
+                onCancel={() => setModal({ isOpen: false, type: null, id: null })}
+                onConfirm={modal.type === 'cancelar' ? executeCancelar : executeDevolver}
+                title={modal.type === 'cancelar' ? "Cancelar Requisição" : "Devolver Materiais"}
+                message={modal.type === 'cancelar' 
+                    ? "Tem a certeza que quer cancelar o pedido?"
+                    : "Confirma a entrega de todos os materiais desta requisição? O stock será reposto."
+                }
+                confirmText={modal.type === 'cancelar' ? "Sim, Cancelar" : "Sim, Devolver"}
+                confirmColor={modal.type === 'cancelar' ? "#e74c3c" : "#27ae60"}
+            />
+
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}}/>
@@ -230,7 +271,7 @@ const Perfil = () => {
                 </div>
 
                 <div className="tabs-container-esp">
-                    {['todos', 'eventos', 'requisicoes'].map(t => (<button key={t} className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab(t)}>{t.toUpperCase()}</button>))}
+                    {['todos', 'eventos', 'requisições'].map(t => (<button key={t} className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab(t)}>{t.toUpperCase()}</button>))}
                 </div>
 
                 <div className="status-filter-bar-esp">
@@ -241,9 +282,9 @@ const Perfil = () => {
                     {displayItems.length > 0 ? displayItems.map(item => (
                         <EventCard key={item.id} event={item} isRequisicao={item.isRequisicao} isExpanded={expandedCardId === item.id} materiais={materiaisCard}
                             onToggle={() => handleToggle(item)}
-                            onDevolver={() => handleDevolver(item.id_orig)}
-                            onCancelar={() => handleCancelar(item.id_orig)} 
-                            onTrabalhar={() => { localStorage.setItem('evento_trabalho', JSON.stringify({ id_req: item.id_orig, nome: item.title })); navigate('/explorar'); }} 
+                            onDevolverClick={confirmDevolver} 
+                            onCancelarClick={confirmCancelar}
+                            onEditarClick={handleEditar} // Nova função de editar
                         />
                     )) : <p className="no-items-msg">Nenhum item encontrado.</p>}
                 </div>

@@ -5,29 +5,21 @@ import MapPicker from './MapPicker';
 import './EventoForm.css'; 
 import '../Pages/Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
+import Toast from '../components/Toast';
 
 const EventoForm = ({ onLogout }) => {
     const navigate = useNavigate();
+    const [toast, setToast] = useState(null); 
     
-    // Estado para campos de texto
     const [formData, setFormData] = useState({
-        nome: '',
-        descricao: '',
-        localizacao: '',
-        latitude: '',  // NOVO CAMPO
-        longitude: '', // NOVO CAMPO
-        data_inicio: '',
-        hora_inicio: '',
-        data_fim: '',
-        hora_fim: '',
+        nome: '', descricao: '', localizacao: '',
+        latitude: '', longitude: '',
+        data_inicio: '', hora_inicio: '', data_fim: '', hora_fim: '',
     });
 
-    // Estado para os ficheiros 
     const [selectedFiles, setSelectedFiles] = useState([]);
 
-    // Função para receber a morada E COORDENADAS do mapa
     const handleLocationSelect = (locationData) => {
-        // locationData deve vir do MapPicker como { address: "...", lat: 123, lng: 456 }
         setFormData(prev => ({
             ...prev,
             localizacao: locationData.address || "Localização selecionada no mapa",
@@ -38,68 +30,55 @@ const EventoForm = ({ onLogout }) => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleFileChange = (e) => {
-        setSelectedFiles(e.target.files);
-    };
+    const handleFileChange = (e) => setSelectedFiles(e.target.files);
 
-   const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user || (!user.id && !user.id_user)) {
-        alert("Sessão expirada. Faça login novamente.");
-        return;
-    }
-
-    const formDataToSend = new FormData();
-    
-    // Campos de texto
-    formDataToSend.append('nome_evento', formData.nome);
-    formDataToSend.append('descricao', formData.descricao);
-    formDataToSend.append('localizacao', formData.localizacao);
-    
-    // Enviar Coordenadas se existirem
-    if (formData.latitude) formDataToSend.append('latitude', formData.latitude);
-    if (formData.longitude) formDataToSend.append('longitude', formData.longitude);
-
-    formDataToSend.append('data_inicio', formData.data_inicio);
-    formDataToSend.append('data_fim', formData.data_fim || formData.data_inicio);
-    formDataToSend.append('id_user', user.id || user.id_user);
-
-    // Adicionar múltiplos ficheiros (Anexos)
-    if (selectedFiles.length > 0) {
-        for (let i = 0; i < selectedFiles.length; i++) {
-            formDataToSend.append('anexos', selectedFiles[i]);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || (!user.id && !user.id_user)) {
+            setToast({ type: 'error', message: "Sessão expirada. Faça login novamente." });
+            return;
         }
-    }
 
-    try {
-        const response = await fetch('http://localhost:3002/api/eventos', { 
-            method: 'POST',
-            body: formDataToSend, 
-            headers: {
-                'Authorization': user && user.token ? `Bearer ${user.token}` : ''
+        const formDataToSend = new FormData();
+        formDataToSend.append('nome_evento', formData.nome);
+        formDataToSend.append('descricao', formData.descricao);
+        formDataToSend.append('localizacao', formData.localizacao);
+        if (formData.latitude) formDataToSend.append('latitude', formData.latitude);
+        if (formData.longitude) formDataToSend.append('longitude', formData.longitude);
+        formDataToSend.append('data_inicio', formData.data_inicio);
+        formDataToSend.append('data_fim', formData.data_fim || formData.data_inicio);
+        formDataToSend.append('id_user', user.id || user.id_user);
+        if (selectedFiles.length > 0) {
+            for (let i = 0; i < selectedFiles.length; i++) formDataToSend.append('anexos', selectedFiles[i]);
+        }
+
+        try {
+            const response = await fetch('http://localhost:3002/api/eventos', { 
+                method: 'POST',
+                body: formDataToSend, 
+                headers: { 'Authorization': user && user.token ? `Bearer ${user.token}` : '' }
+            });
+
+            if (response.ok) {
+                setToast({ type: 'success', message: "Sucesso! Evento criado." });
+                setTimeout(() => {
+                    navigate('/home');
+                }, 2000);
+            } else {
+                const errorData = await response.json();
+                setToast({ type: 'error', message: `Falha: ${errorData.error || 'Erro desconhecido'}` });
             }
-        });
-
-        if (response.ok) {
-            alert(`Sucesso! Evento criado.`);
-            navigate('/home');
-        } else {
-            const errorData = await response.json();
-            alert(`Falha: ${errorData.error || 'Erro desconhecido'}`);
+        } catch (error) {
+            console.error("Erro ao submeter:", error);
+            setToast({ type: 'error', message: "Erro de conexão ao servidor." });
         }
-    } catch (error) {
-        console.error("Erro ao submeter:", error);
-        alert('Erro de conexão ao servidor.');
-    }
-};
+    };
+
     const handleCancel = () => navigate('/home');
     
     const handleLogout = () => {
@@ -109,6 +88,8 @@ const EventoForm = ({ onLogout }) => {
 
     return (
         <div className="form-page-layout">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <div className="logo-esp">
@@ -149,25 +130,12 @@ const EventoForm = ({ onLogout }) => {
                                 </div>
                                 <div className="form-group full-width">
                                     <label>Localização (Clique no mapa) *</label>
-                                    <input 
-                                        type="text" 
-                                        name="localizacao" 
-                                        value={formData.localizacao} 
-                                        readOnly
-                                        onChange={handleChange} 
-                                        placeholder="Selecione no mapa ao lado..."
-                                        required 
-                                    />
-                                    {/* Campos escondidos para debug ou verificação visual */}
-                                    <p style={{fontSize:'10px', color:'#999', marginTop:'5px'}}>
-                                        Coords: {formData.latitude}, {formData.longitude}
-                                    </p>
+                                    <input type="text" name="localizacao" value={formData.localizacao} readOnly onChange={handleChange} placeholder="Selecione no mapa ao lado..." required />
                                 </div>
                             </div>
 
                             <div className="map-column-layout">
                                 <div className="map-image-placeholder-layout">
-                                    {/* COMPONENTE DO MAPA LEAFLET - Certifica-te que o MapPicker envia {lat, lng, address} */}
                                     <MapPicker onLocationSelect={handleLocationSelect} />
                                 </div>
                             </div>
@@ -182,13 +150,7 @@ const EventoForm = ({ onLogout }) => {
 
                         <div className="form-group full-width attachments-row-layout">
                             <label>Anexos / Documentos de Apoio (Plantas, Licenças)</label>
-                            <input 
-                                type="file" 
-                                name="anexos" 
-                                multiple 
-                                onChange={handleFileChange} 
-                                className="file-input-field"
-                            />
+                            <input type="file" name="anexos" multiple onChange={handleFileChange} className="file-input-field"/>
                         </div>
 
                         <div className="form-actions-layout">

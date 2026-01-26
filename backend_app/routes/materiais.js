@@ -24,6 +24,7 @@ router.get('/:id', materiaisController.getById);
 
 // Ocupação (Protegida com verifyToken)
 router.get('/:id/ocupacao', verifyToken, materiaisController.getOcupacao);
+router.get('/limites-evento/:idReq', verifyToken, materiaisController.getLimitesEvento);
 
 // Gestão (Protegidas com verifyToken + Upload)
 router.post('/', verifyToken, upload.single('imagem'), materiaisController.criar);
