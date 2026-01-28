@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, User, Plus, Save, Upload, X, Search, Filter } from 'lucide-react';
+import { CornerDownLeft, User, Plus, Save, Upload, X, Search, Filter } from 'lucide-react';
 import './Stock.css';
 import logo from '../../assets/img/esposende.png';
 import ModalConfirmacao from '../../components/ModalConfirmacao';
@@ -121,7 +121,7 @@ const Stock = () => {
                     </nav>
                     <div className="header-icons-esp">
                         <Link to="/perfil"><User size={22} className="icon-esp" /></Link>
-                        <button onClick={() => { localStorage.clear(); navigate('/'); }} className="logout-btn"><LogOut size={24} className="icon-esp" /></button>
+                        <button onClick={() => { localStorage.clear(); navigate('/'); }} className="logout-btn"><CornerDownLeft size={24} className="icon-esp" /></button>
                     </div>
                 </div>
             </header>

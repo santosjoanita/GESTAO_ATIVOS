@@ -1,129 +1,67 @@
 .layout-padrao-carrinho {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--bg-gray);
+    display: flex; flex-direction: column;
+    background-color: #f4f7f6;
+    padding-top: 120px; padding-bottom: 80px;
 }
 
 .carrinho-main {
-    flex: 1;
-    padding-top: 140px;
-    max-width: 1000px;
-    margin: 0 auto;
-    width: 90%;
-    padding-bottom: 120px;
-}
-
-.carrinho-info-topo {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.carrinho-info-topo h2 {
-    color: var(--primary-blue);
-    font-size: 30px;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-.carrinho-info-topo p {
-    color: #7f8c8d;
-    margin-top: 5px;
-}
-
-.tabela-container-esp {
-    background: white;
-    border-radius: 20px;
-    overflow: hidden;
+    width: 90%; max-width: 1200px; margin: 0 auto;
+    background: white; border-radius: 16px; padding: 40px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-    margin-bottom: 40px;
 }
 
-.tabela-carrinho {
-    width: 100%;
-    border-collapse: collapse;
-}
+.carrinho-info-topo h2 { color: #1f3a52; margin-bottom: 10px; font-weight: 800; }
+.carrinho-info-topo p { color: #7f8c8d; margin-bottom: 30px; }
 
-.tabela-carrinho th {
-    background-color: var(--primary-blue);
-    color: white;
-    padding: 20px;
-    text-align: left;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.tabela-carrinho td {
-    padding: 20px;
-    border-bottom: 1px solid #f1f1f1;
-    color: #2c3e50;
-    font-weight: 600;
-}
-
-.remover-btn-esp {
-    color: var(--danger-red);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.remover-btn-esp:hover {
-    transform: scale(1.2);
-}
+.tabela-container-esp { overflow-x: auto; margin-bottom: 30px; }
+.tabela-carrinho { width: 100%; border-collapse: collapse; min-width: 600px; }
+.tabela-carrinho th { text-align: left; padding: 15px; background: #1f3a52; color: white; font-size: 13px; text-transform: uppercase; }
+.tabela-carrinho td { padding: 15px; border-bottom: 1px solid #eee; color: #333; }
+.input-icon-wrapper { position: relative; display: flex; align-items: center; }
+.input-icon { position: absolute; left: 10px; color: #1f3a52; }
+.input-icon-wrapper input { padding: 8px 8px 8px 35px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
+.remover-btn-esp { color: #e74c3c; cursor: pointer; transition: 0.2s; }
+.remover-btn-esp:hover { transform: scale(1.1); }
 
 .carrinho-acoes-finais {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;
 }
+
+/* --- CORES DOS BOTÕES DO CARRINHO --- */
+.btn-cancelar-total {
+    background-color: transparent;
+    border: 2px solid #e74c3c;
+    color: #e74c3c;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    transition: 0.2s;
+}
+.btn-cancelar-total:hover { background-color: #e74c3c; color: white; }
 
 .btn-submeter-final {
-    background-color: var(--success-green);
-    color: white;
+    background-color: #27ae60;
     border: none;
-    padding: 18px 40px;
-    border-radius: 12px;
-    font-weight: 800;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: var(--transition);
-}
-
-.btn-cancelar-total {
-    background-color: var(--danger-red);
     color: white;
-    border: none;
-    padding: 18px 40px;
-    border-radius: 12px;
-    font-weight: 800;
+    padding: 14px 35px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 16px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: var(--transition);
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    transition: 0.2s;
 }
+.btn-submeter-final:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4); }
+.btn-submeter-final:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; transform: none; }
 
-.btn-submeter-final:hover, .btn-cancelar-total:hover {
-    filter: brightness(1.1);
-    transform: translateY(-2px);
-}
-
-/* Badge que aparece no Header */
-.cart-badge-count {
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    background: var(--danger-red);
-    color: white;
-    font-size: 11px;
-    font-weight: 900;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
+.fixed-footer-esp{
     align-items: center;
-    justify-content: center;
-    border: 2px solid var(--primary-blue);
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 50px;
+    background: var(--primary-blue); color: white;
+    display: flex; justify-content: center; align-items: center; z-index: 1000;
 }

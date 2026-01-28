@@ -62,8 +62,10 @@ a {
 }
 
 .fixed-footer-esp {
+    align-items: center;
     bottom: 0;
     height: 60px;
+    align-items: center;
 }
 
 .header-content-esp, .footer-content-esp {

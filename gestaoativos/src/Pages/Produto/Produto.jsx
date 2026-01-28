@@ -16,8 +16,11 @@ const Produto = () => {
     const [toast, setToast] = useState(null);
 
     const user = JSON.parse(localStorage.getItem('user'));
+    
+    // --- DEFINIÇÃO DA VARIÁVEL QUE ESTAVA A DAR ERRO ---
     const eventoRaw = localStorage.getItem('evento_trabalho');
     const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
+    
     const itensCarrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
 
     const getAuthHeaders = () => {
@@ -38,6 +41,7 @@ const Produto = () => {
             .then(data => setMaterial(data))
             .catch(err => console.error(err));
 
+        // 2. Carregar Limites do Evento
         if (eventoAtivo?.id_req) {
             fetch(`http://localhost:3002/api/materiais/limites-evento/${eventoAtivo.id_req}`, { headers })
                 .then(res => {
@@ -50,7 +54,6 @@ const Produto = () => {
                             min: data.data_inicio ? data.data_inicio.split('T')[0] : '',
                             max: data.data_fim ? data.data_fim.split('T')[0] : ''
                         });
-                   
                         setDatas({
                             levantamento: data.data_inicio ? data.data_inicio.split('T')[0] : '',
                             devolucao: data.data_fim ? data.data_fim.split('T')[0] : ''
@@ -67,9 +70,8 @@ const Produto = () => {
             return;
         }
         
-        // Validações simples
         if (datas.levantamento < limitesEvento.min || datas.devolucao > limitesEvento.max) {
-            setToast({ type: 'error', message: "As datas devem estar dentro do período do evento." });
+            setToast({ type: 'error', message: "As datas têm de estar dentro do período do evento." });
             return;
         }
 
@@ -131,7 +133,7 @@ const Produto = () => {
                     </div>
 
                     <div className="produto-info-detalhe">
-                        <div className="categoria-tag">{material.categoria_nome}</div>
+                        <div className="categoria-tag">{material.categoria_nome || 'MATERIAL'}</div>
                         <h1>{material.nome?.toUpperCase()}</h1>
                         
                         <div className="specs-box-estilizada">
@@ -156,7 +158,7 @@ const Produto = () => {
                                     onChange={(e) => setDatas({...datas, levantamento: e.target.value})} 
                                 />
                                 <small style={{fontSize:'10px', color:'#666'}}>
-                                    Permitido entre: {limitesEvento.min} e {limitesEvento.max}
+                                    Evento começa a: {limitesEvento.min}
                                 </small>
                             </div>
                             <div className="input-group-esp">
@@ -168,6 +170,9 @@ const Produto = () => {
                                     value={datas.devolucao} 
                                     onChange={(e) => setDatas({...datas, devolucao: e.target.value})} 
                                 />
+                                <small style={{fontSize:'10px', color:'#666'}}>
+                                    Evento termina a: {limitesEvento.max}
+                                </small>
                             </div>
                         </div>
 

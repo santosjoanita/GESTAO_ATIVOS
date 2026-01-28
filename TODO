@@ -40,7 +40,6 @@
 [x] Coordenadas e Mapas (Google Maps link no detalhe).
 
 🔵 NÃO FEITO / FUTURO (Prioridade Baixa ou Complexa)
-1. Gestão de Calendário de Produtos (Conflitos de Stock)
 
-[ ] Lógica: O sistema atual valida o stock no momento (quantidade_disp atual). Não verifica se o material estará ocupado numa data futura específica (cruzamento de datas de eventos).
+
 

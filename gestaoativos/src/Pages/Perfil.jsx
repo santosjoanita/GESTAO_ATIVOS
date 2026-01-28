@@ -17,10 +17,10 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
     if (!event) return null;
     const estado = event.id_estado_req;
 
-    const podeEditar = isRequisicao && (estado === 2 || estado === 4);
-    const podeDevolver = isRequisicao && (estado === 4 || estado === 2);
-    
-    const podeCancelar = isRequisicao && estado === 1; 
+    // Regras de visualização dos botões
+    const podeEditar = isRequisicao && (estado === 2 || estado === 4); // Aprovada ou Em Curso
+    const podeDevolver = isRequisicao && estado === 4; // Só Em Curso
+    const podeCancelar = isRequisicao && estado === 1; // Só Pendente
 
     return (
         <div className={`event-card ${event.colorClass} ${isExpanded ? 'expanded' : ''}`}>
@@ -32,33 +32,69 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                          <p className="event-date" style={{fontSize: '0.8em', color: '#666'}}>Válido até: {formatDate(event.data_fim)}</p>
                     )}
                 </div>
-                <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()}>
+                
+                <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()} style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
                     
                     {podeEditar && (
-                        <button className="edit-button-esp btn-pendente" onClick={() => onEditarClick(event)} title="Gerir Materiais">
+                        <button className="edit-button-esp btn-pendente" onClick={() => onEditarClick(event)} title="Adicionar mais materiais">
                             <Briefcase size={14} style={{marginRight: '5px'}}/> EDITAR
                         </button>
                     )}
 
+                    {podeCancelar && (
+                        <button className="edit-button-esp btn-cancelar" onClick={() => onCancelarClick(event.id_orig)} style={{backgroundColor:'#e74c3c'}}>
+                            <XCircle size={14} />
+                        </button>
+                    )}
 
                     {podeDevolver && (
                         <button className="edit-button-esp btn-devolver" onClick={() => onDevolverClick(event.id_orig)} style={{backgroundColor:'#27ae60', color:'white', borderColor:'#219150'}}>
-                            <RotateCcw size={14} /> DEVOLVER
+                            <RotateCcw size={14} style={{marginRight: '5px'}} /> DEVOLVER
                         </button>
                     )}
                     
                     <div className="event-arrow-container">{isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}</div>
                 </div>
             </div>
+            
             {isExpanded && (
                 <div className="event-details">
                     <div className="details-info-grid">
+                        <p><strong>Local:</strong> {event.localizacao || 'N/A'}</p>
+                        
                         {isRequisicao && (
                             <div className="materiais-container-perfil" style={{marginTop:'15px'}}>
-                                <p style={{fontWeight:'800',fontSize:'13px',color:'var(--primary-blue)'}}><Package size={16}/> MATERIAIS:</p>
+                                <p style={{fontWeight:'800',fontSize:'13px',color:'var(--primary-blue)', marginBottom:'10px'}}>
+                                    <Package size={16} style={{verticalAlign:'middle'}}/> LISTA DE MATERIAIS:
+                                </p>
+                                
                                 {materiais?.length > 0 ? (
-                                    <ul style={{listStyle:'none',padding:'10px 0'}}>
-                                        {materiais.map((m, idx) => (<li key={idx} style={{fontSize:'12px',borderBottom:'1px solid #eee'}}>• {m.nome} — <strong>{m.quantidade}</strong></li>))}
+                                    <ul style={{listStyle:'none', padding:0}}>
+                                        {materiais.map((m, idx) => (
+                                            <li key={idx} style={{
+                                                fontSize:'13px', 
+                                                borderBottom:'1px solid #eee', 
+                                                padding:'8px 0', 
+                                                display:'flex', 
+                                                justifyContent:'space-between',
+                                                alignItems:'center'
+                                            }}>
+                                                <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
+                                                
+                                                {/* ETIQUETA DE ESTADO DO ITEM */}
+                                                <span style={{
+                                                    fontSize:'10px', 
+                                                    fontWeight:'800', 
+                                                    textTransform:'uppercase',
+                                                    padding: '2px 6px',
+                                                    borderRadius: '4px',
+                                                    backgroundColor: m.status_item === 'pendente' ? '#fef3c7' : '#dcfce7',
+                                                    color: m.status_item === 'pendente' ? '#d97706' : '#166534'
+                                                }}>
+                                                    {m.status_item || 'APROVADO'}
+                                                </span>
+                                            </li>
+                                        ))}
                                     </ul>
                                 ) : <p style={{fontSize:'12px',color:'#777'}}>Sem materiais listados.</p>}
                             </div>
@@ -81,6 +117,9 @@ const Perfil = () => {
     
     const [toast, setToast] = useState(null);
     const [modal, setModal] = useState({ isOpen: false, type: null, id: null });
+
+    const eventoRaw = localStorage.getItem('evento_trabalho');
+    const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
 
     const getAuthHeaders = useCallback(() => {
         const u = localStorage.getItem('user');
@@ -154,19 +193,6 @@ const Perfil = () => {
     const handleEditar = async (item) => {
         localStorage.setItem('evento_trabalho', JSON.stringify({ id_req: item.id_orig, nome: item.title }));
 
-        if (item.id_estado_req === 2) {
-            try {
-                await fetch(`http://localhost:3002/api/requisicoes/${item.id_orig}/estado`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ id_estado: 4 })
-                });
-            } catch (e) {
-                console.error("Erro ao mudar estado para Em Curso", e);
-            }
-        }
-
-        // 3. Navegar para o Catálogo
         navigate('/explorar');
     };
 
@@ -178,13 +204,13 @@ const Perfil = () => {
                 method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_user: user.id_user || user.id })
             });
             if(res.ok) { 
-                setToast({ type: 'success', message: "Requisição cancelada com sucesso." });
+                setToast({ type: 'success', message: "Cancelado com sucesso." });
                 fetchPerfilData(); 
             } else { 
                 const err = await res.json(); 
                 setToast({ type: 'error', message: "Erro: " + (err.message || err.error) });
             }
-        } catch (e) { setToast({ type: 'error', message: "Erro de conexão" }); }
+        } catch (e) { setToast({ type: 'error', message: "Erro conexão" }); }
         setModal({ isOpen: false, type: null, id: null });
     };
 
@@ -196,13 +222,13 @@ const Perfil = () => {
                 method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_user: user.id_user || user.id })
             });
             if (res.ok) { 
-                setToast({ type: 'success', message: "Devolução registada e stock reposto!" });
+                setToast({ type: 'success', message: "Devolvido e stock reposto!" });
                 fetchPerfilData(); 
             } else { 
                 const err = await res.json(); 
                 setToast({ type: 'error', message: "Erro: " + (err.message || err.error) });
             }
-        } catch (e) { setToast({ type: 'error', message: "Erro de conexão" }); }
+        } catch (e) { setToast({ type: 'error', message: "Erro conexão" }); }
         setModal({ isOpen: false, type: null, id: null });
     };
 
@@ -284,12 +310,20 @@ const Perfil = () => {
                             onToggle={() => handleToggle(item)}
                             onDevolverClick={confirmDevolver} 
                             onCancelarClick={confirmCancelar}
-                            onEditarClick={handleEditar} // Nova função de editar
+                            onEditarClick={handleEditar} 
                         />
                     )) : <p className="no-items-msg">Nenhum item encontrado.</p>}
                 </div>
             </main>
-            <footer className="fixed-footer-esp"><div className="footer-content-esp centered-content"><span className="footer-project-esp">ESPOSENDE GESTÃO</span></div></footer>
+            <footer className="fixed-footer-esp">
+                <div className="footer-content-esp centered-content">
+                    <div className="footer-items-wrapper"> 
+                        <span className="footer-project-esp">
+                            {eventoAtivo ? `REQUISIÇÃO ATIVA: ${eventoAtivo.nome.toUpperCase()}` : "MUNICÍPIO DE ESPOSENDE"}
+                        </span>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 };

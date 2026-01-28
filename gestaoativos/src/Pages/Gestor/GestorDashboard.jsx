@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogOut, User, X, Calendar, Download, Package, Activity, Search, Filter, MapPin, CheckCircle, XCircle, Truck, RotateCcw, FileClock, Ban, FileText } from 'lucide-react';
+import { CornerDownLeft, User, X, Calendar, Download, Package, Activity, Search, Filter, MapPin, CheckCircle, XCircle, Truck, RotateCcw, FileClock, Ban, FileText } from 'lucide-react';
 import './GestorDashboard.css';
 import logo from '../../assets/img/esposende.png';
 import Toast from '../../components/Toast';
@@ -27,6 +27,7 @@ const GestorDashboard = () => {
             navigate('/'); 
             return;
         }
+        setItems([]);
         loadData();
         setSearchTerm('');
         setStatusFilter('todos');
@@ -43,10 +44,11 @@ const GestorDashboard = () => {
 
     const loadData = async () => {
         let url = '';
+        // CORREÇÃO: URLs corretos para cada tab
         if (tab === 'requisicoes') url = 'http://localhost:3002/api/requisicoes/todas';
         else if (tab === 'eventos') url = 'http://localhost:3002/api/eventos/todos';
         else if (tab === 'stock') url = 'http://localhost:3002/api/gestao/stock/historico';
-        else if (tab === 'historico_req') url = 'http://localhost:3002/api/requisicoes/historico';
+        else if (tab === 'historico_req') url = 'http://localhost:3002/api/requisicoes/historico'; // Confirma se esta rota existe no backend!
         
         try {
             const res = await fetch(url, { headers: getAuthHeaders() });
@@ -57,7 +59,10 @@ const GestorDashboard = () => {
                 return;
             }
 
+            if (!res.ok) throw new Error("Falha ao carregar dados");
+
             const data = await res.json();
+            console.log(`Dados carregados para ${tab}:`, data); // Debug para veres se chegam dados
             setItems(Array.isArray(data) ? data : []);
         } catch (error) { 
             console.error("Erro ao carregar:", error);
@@ -67,7 +72,7 @@ const GestorDashboard = () => {
     };
 
     const handleVerDetalhes = async (item) => {
-        if (tab === 'stock' || tab === 'historico_req') return;
+        if (tab === 'stock' || tab === 'historico_req') return; // Histórico não tem modal de detalhes
         
         setSelectedItem(item);
         setAnexos([]);
@@ -89,9 +94,17 @@ const GestorDashboard = () => {
     };
 
     const prepararAcao = (id, id_estado_novo) => {
+        // CORREÇÃO: Garante que ID não é undefined
+        if (!id) {
+            setToast({ type: 'error', message: "Erro: ID do item inválido." });
+            return;
+        }
+        
+        // Abre modal de confirmação para ações críticas
         if (id_estado_novo === 5 || id_estado_novo === 6 || id_estado_novo === 3) {
             setModal({ isOpen: true, action: 'confirmar_acao', id, novoEstado: id_estado_novo });
         } else {
+            // Aprovar (2) ou Marcar Levantamento (4) vai direto
             executarAcao(id, id_estado_novo);
         }
     };
@@ -110,9 +123,11 @@ const GestorDashboard = () => {
                 body = { id_user: user.id_user };
             } 
             else {
+                // Rota genérica para mudar estado (Aprovar/Rejeitar/Em Curso)
                 url = `http://localhost:3002/api/requisicoes/${id}/estado`;
             }
         } else {
+            // Para Eventos
             url = `http://localhost:3002/api/eventos/${id}/estado`;
         }
 
@@ -125,11 +140,11 @@ const GestorDashboard = () => {
 
             if (res.ok) {
                 setToast({ type: 'success', message: "Ação realizada com sucesso!" });
-                setSelectedItem(null);
-                loadData();
+                setSelectedItem(null); // Fecha o modal
+                loadData(); // Recarrega a lista para ver o novo estado
             } else {
                 const err = await res.json();
-                setToast({ type: 'error', message: "Erro: " + (err.message || err.error) });
+                setToast({ type: 'error', message: "Erro: " + (err.message || err.error || "Falha na operação") });
             }
         } catch (err) { 
             console.error(err); 
@@ -207,7 +222,7 @@ const GestorDashboard = () => {
                     <div className="header-icons-esp">
                         <Link to="/perfil"><User size={22} className="icon-esp" /></Link>
                         <button onClick={() => { localStorage.clear(); navigate('/'); }} className="logout-btn">
-                            <LogOut size={24} className="icon-esp" />
+                            <CornerDownLeft size={24} className="icon-esp" />
                         </button>
                     </div>
                 </div>
@@ -222,7 +237,6 @@ const GestorDashboard = () => {
                         {tab === 'eventos' && 'GERIR EVENTOS'}
                     </h2>
                     
-                    {/* FILTROS MODERNOS */}
                     <div className="filters-container">
                         <div className="search-input-wrapper">
                             <Search size={20} className="search-icon"/>
@@ -292,7 +306,6 @@ const GestorDashboard = () => {
                 </div>
             </main>
 
-            {/* MODAL DETALHES GESTOR */}
             {selectedItem && tab !== 'stock' && tab !== 'historico_req' && (
                 <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
                     <div className="modal-content new-gestor-modal" onClick={(e) => e.stopPropagation()}>
@@ -369,9 +382,11 @@ const GestorDashboard = () => {
                             )}
                         </div>
 
+                        {/* BOTÕES DE AÇÃO CORRIGIDOS */}
                         <div className="modal-footer-actions">
                             {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
                                 <>
+                                    {/* CORREÇÃO: Passa ID correto (id_req para requisições, id_evento para eventos) */}
                                     <button onClick={() => prepararAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-action-outline danger">REJEITAR</button>
                                     <button onClick={() => prepararAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-action-solid success">APROVAR PEDIDO</button>
                                 </>

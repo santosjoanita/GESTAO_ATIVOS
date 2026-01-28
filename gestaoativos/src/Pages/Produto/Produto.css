@@ -134,6 +134,9 @@
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(31, 58, 82, 0.3);
 }
+.fixed-footer-esp{
+    align-items: center;
+}
 
 @media (max-width: 900px) {
     .produto-grid { grid-template-columns: 1fr; }

@@ -25,7 +25,6 @@ const Home = ({ onLogout }) => {
     const fetchDashboardData = async () => {
         if (!userId || !token) return;
         
-        // CORREÇÃO CRÍTICA: Adicionar o Token de Autorização
         const headers = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}` 
@@ -35,11 +34,9 @@ const Home = ({ onLogout }) => {
             const [resEv, resReq, resNotif] = await Promise.all([
                fetch(`http://localhost:3002/api/eventos/user/${userId}`, { headers }),
                fetch(`http://localhost:3002/api/requisicoes/user/${userId}`, { headers }),
-               // Esta rota pode precisar de ajuste no backend se não estiver a aceitar o ID assim
                fetch(`http://localhost:3002/api/gestao/notificacoes/prazos/${userId}`, { headers })
             ]);
 
-            // Se der erro 401, faz logout
             if (resEv.status === 401 || resReq.status === 401) {
                 localStorage.clear();
                 navigate('/');
@@ -49,7 +46,6 @@ const Home = ({ onLogout }) => {
             const dataEv = resEv.ok ? await resEv.json() : [];
             const dataReq = resReq.ok ? await resReq.json() : [];
             
-            // As notificações podem vir vazias se o backend não tiver a rota exata, tratamos isso
             let dataNotif = [];
             if (resNotif.ok) {
                 try { dataNotif = await resNotif.json(); } catch(e){}
@@ -81,6 +77,18 @@ const Home = ({ onLogout }) => {
         if (onLogout) onLogout();
         navigate('/');
     };
+    const calcularDiasRestantes = (dataFim) => {
+    if (!dataFim) return 999; 
+    const hoje = new Date();
+    const fim = new Date(dataFim);
+    const diffTime = fim - hoje;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    const notificacoesUrgentes = notifications.filter(n => {
+        const dias = calcularDiasRestantes(n.data_fim);
+        return dias >= 0 && dias <= 3;
+    });
 
     return (
         <div className="home-page-layout">
@@ -115,16 +123,21 @@ const Home = ({ onLogout }) => {
             <main className="main-home-content">
                 <section className="home-section">
                     <h3 className="section-title"><Bell size={24} /> NOTIFICAÇÕES:</h3>
-                    <div className="notifications-container">
-                        {notifications.length > 0 ? (
-                            notifications.map(n => (
+                      <div className="notifications-container">
+                        {notificacoesUrgentes.length > 0 ? (
+                            notificacoesUrgentes.map(n => (
                                 <div key={n.id_req} className="notification-item-home warning">
                                     <div className="notification-content">
-                                        <p><strong>ATENÇÃO:</strong> O evento "{n.nome_evento}" requer atenção.</p>                                        
+                                        <p>
+                                            <strong>ATENÇÃO:</strong> O evento "{n.nome_evento}" acaba em 
+                                            <strong> {calcularDiasRestantes(n.data_fim)} </strong> dias.
+                                        </p>
                                     </div>
                                 </div>
                             ))
-                        ) : <p className="no-notifications">Não existem prazos críticos para os teus materiais.</p>}
+                        ) : (
+                            <p className="no-notifications">Não existem prazos críticos para os seus materiais.</p>
+                        )}
                     </div>
                 </section>
                 

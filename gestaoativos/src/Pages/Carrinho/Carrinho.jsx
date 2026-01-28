@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShoppingCart, User, CornerDownLeft, Trash2, CheckCircle, XCircle, Calendar, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, User, CornerDownLeft, Trash2, CheckCircle, XCircle, Calendar } from 'lucide-react';
 import './Carrinho.css';
 import logo from '../../assets/img/esposende.png';
 import Toast from '../../components/Toast';
 import ModalConfirmacao from '../../components/ModalConfirmacao';
+
 const Carrinho = () => {
     const navigate = useNavigate();
     const [itens, setItens] = useState(JSON.parse(localStorage.getItem('carrinho')) || []);
     const user = JSON.parse(localStorage.getItem('user'));
     const eventoAtivo = JSON.parse(localStorage.getItem('evento_trabalho'));
 
-    // --- estado do toast e modal ---
     const [toast, setToast] = useState(null); 
     const [showModal, setShowModal] = useState(false);
 
@@ -43,28 +43,31 @@ const Carrinho = () => {
 
         const itensInvalidos = itens.filter(i => !i.levantamento || !i.devolucao);
         if (itensInvalidos.length > 0) {
-            setToast({ type: 'error', message: "Preencha as datas de levantamento e devolução em todos os itens." });
+            setToast({ type: 'error', message: "Preencha as datas de todos os itens." });
             return;
         }
 
         try {
-            const res = await fetch(`http://localhost:3002/api/requisicoes/${eventoAtivo.id_req}/materiais`, {
+            // Rota correta: /submeter
+            const res = await fetch(`http://localhost:3002/api/requisicoes/${eventoAtivo.id_req}/submeter`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify({ materiais: itens })
             });
 
             if (res.ok) {
-                localStorage.removeItem('carrinho');
-                localStorage.removeItem('evento_trabalho');
                 setToast({ type: 'success', message: "Pedido submetido com sucesso!" });
                 
+                // CORREÇÃO DO BUG DO LOGIN:
+                // Só limpamos o localStorage e navegamos DEPOIS do delay.
                 setTimeout(() => {
+                    localStorage.removeItem('carrinho');
+                    localStorage.removeItem('evento_trabalho');
                     navigate('/perfil');
                 }, 2000);
             } else {
                 const err = await res.json();
-                setToast({ type: 'error', message: "Erro: " + (err.error || "Falha ao submeter") });
+                setToast({ type: 'error', message: "Erro: " + (err.message || "Falha ao submeter") });
             }
         } catch (e) {
             setToast({ type: 'error', message: "Erro de conexão ao servidor." });
@@ -88,7 +91,6 @@ const Carrinho = () => {
 
     return (
         <div className="layout-padrao-carrinho">
-            {/* --- COMPONENTES VISUAIS --- */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             
             <ModalConfirmacao 
