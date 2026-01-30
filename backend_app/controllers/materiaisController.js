@@ -61,7 +61,6 @@ exports.criar = async (req, res) => {
             [nome, quantidade_total, quantidade_total, categoria, especificacoes, descricao_tecnica, local_armazenamento, imagem_url]
         );
         
-        // CORREÇÃO: Removido 'motivo'. Usamos apenas as colunas que existem na imagem.
         await db.execute(
             `INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'entrada', ?)`, 
             [id_user || 1, nome, quantidade_total]
@@ -102,7 +101,6 @@ exports.editar = async (req, res) => {
         
         if (diferenca !== 0) {
             const tipo = diferenca > 0 ? 'ajuste (entrada)' : 'ajuste (saida)';
-            // CORREÇÃO: Removido 'motivo'.
             await db.execute(
                 `INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, ?, ?)`, 
                 [id_user || 1, nome, tipo, Math.abs(diferenca)]

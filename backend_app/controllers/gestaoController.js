@@ -49,7 +49,6 @@ exports.getHistoricoStock = async (req, res) => {
     try {
         console.log("A ler histórico..."); 
         
-        // CORREÇÃO: Usamos 'h.*' que traz 'id_historico' e 'quantidade_alt' automaticamente.
         const [rows] = await db.execute(`
             SELECT 
                 h.*, 

@@ -1,4 +1,3 @@
-// gestaoativos/src/AuthModal.jsx
 import React, { useState } from 'react';
 import { User, Lock, X } from 'lucide-react'; 
 import './AuthModal.css';

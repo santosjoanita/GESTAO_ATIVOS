@@ -4,7 +4,6 @@ const eventosController = require('../controllers/eventosController');
 const multer = require('multer');
 const path = require('path');
 
-// --- CORREÇÃO 1: Importar com { } ---
 const { verifyToken } = require('../middleware/authMiddleware');
 
 const storage = multer.diskStorage({

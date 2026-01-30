@@ -11,7 +11,7 @@ export default function ProtectedRoute({ children, auth, permission }) {
   }
 
   if (auth && !isAuthenticated) {
-    return <Navigate to="/" replace />; // Redireciona para o login 
+    return <Navigate to="/" replace />; 
   }
 
   if (permission && !hasPermission(user, permission)) {

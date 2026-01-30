@@ -42,7 +42,6 @@ exports.criar = async (req, res) => {
              VALUES (?, ?, NOW(), 1, ?)`, [id_user, id_evento, descricao || "Sem descrição"]
         );
         
-        // Regista criação no histórico
         await db.execute(`INSERT INTO Historico_Requisicao (id_req, id_user, acao, detalhes, data_acao) VALUES (?, ?, 'Criada', 'Requisição iniciada', NOW())`, [result.insertId, id_user]);
 
         res.status(201).json({ id_req: result.insertId });
@@ -92,7 +91,7 @@ exports.submeterMateriais = async (req, res) => {
     } finally { connection.release(); }
 };
 
-// 5. ATUALIZAR ESTADO (Aprovar/Rejeitar)
+// 5. ATUALIZAR ESTADO 
 exports.atualizarEstado = async (req, res) => {
     const { id } = req.params; 
     const { id_estado } = req.body;
@@ -129,7 +128,6 @@ exports.atualizarEstado = async (req, res) => {
             acaoHistorico = 'Aprovação'; detalheHistorico = `Estado alterado para ${novoNomeEstado}.`;
         }
 
-        // NOVO: Regista a decisão do Gestor no histórico
         await connection.execute(
             `INSERT INTO Historico_Requisicao (id_req, id_user, acao, detalhes, data_acao) VALUES (?, ?, ?, ?, NOW())`,
             [id, idUserLogado, acaoHistorico, detalheHistorico]
@@ -163,7 +161,6 @@ exports.devolverRequisicao = async (req, res) => {
         }
         await connection.execute('UPDATE Requisicao SET id_estado_req = 5 WHERE id_req = ?', [id]);
         
-        // Já existia, mas garante que grava
         await connection.execute(`INSERT INTO Historico_Requisicao (id_req, id_user, acao, detalhes, data_acao) VALUES (?, ?, 'Finalizada', 'Devolução de material', NOW())`, [id, id_user || 1]);
         
         await connection.commit();
@@ -193,7 +190,6 @@ exports.cancelarRequisicao = async (req, res) => {
         }
         await connection.execute('UPDATE Requisicao SET id_estado_req = 6 WHERE id_req = ?', [id]);
         
-        // Já existia, mas garante que grava
         await connection.execute(`INSERT INTO Historico_Requisicao (id_req, id_user, acao, detalhes, data_acao) VALUES (?, ?, 'Cancelada', 'Cancelada pelo utilizador', NOW())`, [id, id_user || 1]);
         
         await connection.commit();

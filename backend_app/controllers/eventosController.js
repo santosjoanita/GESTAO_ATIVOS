@@ -35,7 +35,6 @@ exports.criar = async (req, res) => {
         if (fim < inicio) {
             return res.status(400).json({ error: "A data de fim não pode ser anterior à data de início." });
         }
-        // ---------------------------
 
         const [resEv] = await db.execute(
             `INSERT INTO Evento (nome_evento, descricao, data_inicio, data_fim, localizacao, id_user, id_estado, latitude, longitude) 

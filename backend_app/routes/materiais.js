@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const materiaisController = require('../controllers/materiaisController');
 
-// --- CORREÇÃO AQUI ---
 const { verifyToken } = require('../middleware/authMiddleware'); 
 
 const multer = require('multer');
@@ -15,7 +14,7 @@ const upload = multer({ storage: storage });
 
 // --- ROTAS ---
 
-// Listagens (Públicas ou não, conforme a tua lógica)
+// Listagens 
 router.get('/', materiaisController.listarTodos);
 router.get('/categorias', materiaisController.listarCategorias);
 

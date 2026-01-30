@@ -30,7 +30,6 @@ const Login = ({ onLoginSuccess }) => {
                     token: serverResponse.token 
                 };
                 
-                // Limpa sessões antigas e guarda a nova
                 localStorage.clear();
                 localStorage.setItem('user', JSON.stringify(userToSave));
                 

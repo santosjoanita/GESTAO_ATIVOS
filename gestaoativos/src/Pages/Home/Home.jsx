@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, CornerDownLeft, Bell, Calendar, Repeat } from 'lucide-react';
+import { ShoppingCart, User, CornerDownLeft, Bell, Calendar, Repeat, Search, CalendarPlus, UserCheck } from 'lucide-react';
 import './Home.css'; 
 import logo from '../../assets/img/esposende.png';
 
@@ -78,9 +78,12 @@ const Home = ({ onLogout }) => {
         navigate('/');
     };
     const calcularDiasRestantes = (dataFim) => {
-    if (!dataFim) return 999; 
+    if (!dataFim) return 999;
     const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
     const fim = new Date(dataFim);
+    fim.setHours(0, 0, 0, 0);
     const diffTime = fim - hoje;
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
@@ -125,16 +128,27 @@ const Home = ({ onLogout }) => {
                     <h3 className="section-title"><Bell size={24} /> NOTIFICAÇÕES:</h3>
                       <div className="notifications-container">
                         {notificacoesUrgentes.length > 0 ? (
-                            notificacoesUrgentes.map(n => (
-                                <div key={n.id_req} className="notification-item-home warning">
-                                    <div className="notification-content">
-                                        <p>
-                                            <strong>ATENÇÃO:</strong> O evento "{n.nome_evento}" acaba em 
-                                            <strong> {calcularDiasRestantes(n.data_fim)} </strong> dias.
-                                        </p>
+                            notificacoesUrgentes.map(n => {
+                                const diasRestantes = calcularDiasRestantes(n.data_fim);
+                                const classeUrgencia = diasRestantes <= 1 ? 'danger' : 'warning';
+
+                                return (
+                                    <div key={n.id_req} className={`notification-item-home ${classeUrgencia}`}>
+                                        <div className="notification-content">
+                                            <p>
+                                                <strong>ATENÇÃO:</strong> O evento "{n.nome_evento}" acaba 
+                                                {diasRestantes === 0 ? (
+                                                    <strong> HOJE!</strong>
+                                                ) : diasRestantes === 1 ? (
+                                                    <strong> AMANHÃ!</strong>
+                                                ) : (
+                                                    <span> em <strong>{diasRestantes}</strong> dias.</span>
+                                                )}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <p className="no-notifications">Não existem prazos críticos para os seus materiais.</p>
                         )}
@@ -142,7 +156,7 @@ const Home = ({ onLogout }) => {
                 </section>
                 
                 <section className="home-section">
-                    <h3 className="section-title">O TEU PAINEL DE ATIVIDADE:</h3>
+                    <h3 className="section-title">O SEU PAINEL DE ATIVIDADE:</h3>
                     <div className="activity-panel-container">
                         {activityMap.map(item => (
                             <button key={item.key} onClick={() => navigate('/perfil')} className={`activity-card ${item.cor}`}>
@@ -154,11 +168,34 @@ const Home = ({ onLogout }) => {
                     </div>
                 </section>
 
-                <section className="home-section">
-                    <h3 className="section-title">DICAS RÁPIDAS</h3>
-                    <div className="quick-guide-container">
-                        <p className="guide-instruction">Usa o <strong>CATÁLOGO</strong> para reservar materiais.</p>
-                        <p className="guide-instruction">Acompanha o estado dos pedidos no <strong>PERFIL</strong>.</p>
+               <section className="home-section">
+                    <h3 className="section-title">GUIA RÁPIDO</h3>
+                    <div className="quick-guide-grid">
+                        
+                        <div className="guide-card">
+                            <CalendarPlus className="guide-icon" size={28} />
+                            <p className="guide-step-title">1. CRIAR EVENTO</p>
+                            <p className="guide-step-desc">
+                                <strong>Passo obrigatório.</strong> Defina primeiro o nome e as datas do evento para poder associar materiais.
+                            </p>
+                        </div>
+
+                        <div className="guide-card">
+                            <Search className="guide-icon" size={28} />
+                            <p className="guide-step-title">2. REQUISITAR</p>
+                            <p className="guide-step-desc">
+                                Aceda ao <strong>Catálogo</strong>, adicione os materiais necessários ao carrinho e finalize o pedido.
+                            </p>
+                        </div>
+
+                        <div className="guide-card">
+                            <UserCheck className="guide-icon" size={28} />
+                            <p className="guide-step-title">3. APROVAÇÃO</p>
+                            <p className="guide-step-desc">
+                                O stock só fica <strong>reservado</strong> após aprovação do Gestor. Acompanha o estado no seu <strong>Perfil</strong>.
+                            </p>
+                        </div>
+
                     </div>
                 </section>
             </main>

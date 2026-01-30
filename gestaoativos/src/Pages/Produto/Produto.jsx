@@ -17,7 +17,6 @@ const Produto = () => {
 
     const user = JSON.parse(localStorage.getItem('user'));
     
-    // --- DEFINIÇÃO DA VARIÁVEL QUE ESTAVA A DAR ERRO ---
     const eventoRaw = localStorage.getItem('evento_trabalho');
     const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
     
@@ -35,13 +34,11 @@ const Produto = () => {
     useEffect(() => {
         const headers = getAuthHeaders();
 
-        // 1. Carregar Material
         fetch(`http://localhost:3002/api/materiais/${id}`, { headers })
             .then(res => res.json())
             .then(data => setMaterial(data))
             .catch(err => console.error(err));
 
-        // 2. Carregar Limites do Evento
         if (eventoAtivo?.id_req) {
             fetch(`http://localhost:3002/api/materiais/limites-evento/${eventoAtivo.id_req}`, { headers })
                 .then(res => {

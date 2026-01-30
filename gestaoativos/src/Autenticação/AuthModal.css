@@ -1,93 +1,148 @@
-/* Fundo do Modal (Overlay) */
 .modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    position: fixed; 
+    top: 0; left: 0; right: 0; bottom: 0;
     background-color: rgba(31, 58, 82, 0.9);
-    display: flex; justify-content: center; align-items: center; z-index: 2000;
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 2000;
     backdrop-filter: blur(5px);
-    padding: 20px;
+    padding: 15px; 
 }
 
-/* Janela do Modal */
 .auth-modal {
     background-color: white;
     padding: 40px 30px;
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    width: 100%; max-width: 400px;
-    text-align: center; position: relative;
+    width: 100%; 
+    max-width: 400px;
+    text-align: center; 
+    position: relative;
     animation: slideUp 0.3s ease-out;
+    box-sizing: border-box; 
 }
 
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes slideUp { 
+    from { transform: translateY(20px); opacity: 0; } 
+    to { transform: translateY(0); opacity: 1; } 
+}
 
 .auth-modal-title {
-    font-size: 1.6rem; font-weight: 800; color: #1f3a52; margin-bottom: 30px; letter-spacing: 1px;
+    font-size: 1.6rem; 
+    font-weight: 800; 
+    color: #1f3a52; 
+    margin-bottom: 30px; 
+    letter-spacing: 1px;
 }
 
-/* --- AQUI ESTÁ A CORREÇÃO DOS INPUTS --- */
+.auth-modal-close-btn {
+    position: absolute; 
+    top: 15px; right: 15px; 
+    background: none; border: none; 
+    color: #cbd5e0; 
+    cursor: pointer;
+    transition: transform 0.2s, color 0.2s;
+    padding: 5px;
+}
 
-/* 1. A Caixa Envolvente (É isto que parece o campo) */
+.auth-modal-close-btn:hover { 
+    color: #1f3a52; 
+    transform: scale(1.1); 
+}
+
+
 .input-group {
-    display: flex; 
-    align-items: center; /* Alinha icon e texto verticalmente */
-    height: 55px;
-    background-color: #f8fafc; /* Fundo cinza claro */
-    border: 1px solid #e2e8f0; /* Borda suave */
-    border-radius: 10px;
-    padding: 0 15px; /* Espaço nas laterais internas */
-    margin-bottom: 20px;
-    transition: all 0.2s ease;
+    position: relative; 
     width: 100%;
-    box-sizing: border-box; /* Garante que o padding não aumenta a largura total */
+    margin-bottom: 20px;
 }
 
-/* Quando clicas no input, a caixa à volta muda de cor */
-.input-group:focus-within {
+.input-icon {
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%); 
+    color: #94a3b8; 
+    z-index: 10; 
+    pointer-events: none; 
+    width: 20px; 
+    height: 20px;
+}
+
+.input-field {
+    width: 100%;
+    height: 55px;
+    background-color: #f8fafc; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 10px;
+    
+    padding: 0 15px 0 50px; 
+    
+    font-size: 15px; 
+    color: #334155; 
+    font-weight: 500;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box; 
+}
+
+.input-field::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+}
+
+.input-field:focus {
     border-color: #1f3a52;
     background-color: white;
     box-shadow: 0 0 0 4px rgba(31, 58, 82, 0.1);
 }
 
-/* 2. O Ícone (Fica fixo à esquerda) */
-.input-icon {
-    color: #94a3b8; 
-    margin-right: 12px; 
-    flex-shrink: 0; /* Impede que o icon seja esmagado */
+.input-group:focus-within .input-icon {
+    color: #1f3a52;
 }
 
-/* 3. O Input Real (Invisível visualmente, mas funcional) */
-.input-field {
-    flex: 1; /* Ocupa todo o espaço restante */
-    background: transparent !important; /* Remove fundo azul/branco nativo */
-    border: none !important; /* Remove borda nativa */
-    outline: none !important; /* Remove linha de foco nativa */
-    font-size: 15px; 
-    color: #334155; 
-    font-weight: 500;
-    height: 100%;
-    width: 100%;
-    padding: 0;
-    margin: 0;
-}
-
-/* Botão Entrar */
 .login-button {
-    width: 100%; height: 55px;
-    background-color: #1f3a52; color: white;
+    width: 100%; 
+    height: 55px;
+    background-color: #1f3a52; 
+    color: white;
     font-weight: 700; font-size: 15px; letter-spacing: 1px;
-    border: none; border-radius: 10px; cursor: pointer;
-    transition: 0.2s; margin-top: 10px;
+    border: none; border-radius: 10px; 
+    cursor: pointer;
+    transition: all 0.2s; 
+    margin-top: 10px;
     box-shadow: 0 4px 15px rgba(31, 58, 82, 0.2);
+    display: flex; justify-content: center; align-items: center;
 }
-.login-button:hover { background-color: #2c5270; transform: translateY(-2px); }
 
-/* Botão Fechar (X) */
-.auth-modal-close-btn {
-    position: absolute; top: 15px; right: 15px; background: none; border: none; color: #cbd5e0; cursor: pointer;
+.login-button:hover { 
+    background-color: #2c5270; 
+    transform: translateY(-2px); 
 }
-.auth-modal-close-btn:hover { color: #1f3a52; transform: scale(1.1); }
 
-/* Mensagem de Erro */
+.login-button:disabled {
+    background-color: #94a3b8; cursor: not-allowed; transform: none;
+}
+
 .alert-error-message {
     background-color: #fee2e2; color: #dc2626; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+    .auth-modal {
+        width: 85%; 
+        max-width: 350px;
+        margin: 0 auto; 
+        padding: 30px 30px;
+    }
+
+    .modal-overlay {
+        padding: 0;
+    }
+
+    .auth-modal-title {
+        font-size: 1.4rem;
+        margin-bottom: 25px;
+    }
 }

@@ -90,6 +90,7 @@ const Requisicao = () => {
                         <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                         <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
                         <Link to="/nova-requisicao" className="nav-item-esp active-tab-indicator">NOVA REQUISIÇÃO</Link> 
+                        <Link to="/novo-evento" className="nav-item-esp active-tab-indicator">NOVO EVENTO</Link>
                     </nav>
                     <div className="header-icons-esp">
                         <Link to="/carrinho"><ShoppingCart size={24} className="icon-esp" /></Link>

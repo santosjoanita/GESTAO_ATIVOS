@@ -48,7 +48,6 @@ const Carrinho = () => {
         }
 
         try {
-            // Rota correta: /submeter
             const res = await fetch(`http://localhost:3002/api/requisicoes/${eventoAtivo.id_req}/submeter`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
@@ -58,8 +57,7 @@ const Carrinho = () => {
             if (res.ok) {
                 setToast({ type: 'success', message: "Pedido submetido com sucesso!" });
                 
-                // CORREÇÃO DO BUG DO LOGIN:
-                // Só limpamos o localStorage e navegamos DEPOIS do delay.
+         
                 setTimeout(() => {
                     localStorage.removeItem('carrinho');
                     localStorage.removeItem('evento_trabalho');

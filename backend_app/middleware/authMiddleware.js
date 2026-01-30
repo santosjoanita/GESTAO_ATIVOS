@@ -31,7 +31,7 @@ exports.verifyToken = (req, res, next) => {
     }
 };
 
-// --- 2. CHECK PERMISSION (Verifica permissões específicas) ---
+// --- 2. CHECK PERMISSION  ---
 exports.checkPermission = (permission) => {
     return (req, res, next) => {
         if (!req.user) {

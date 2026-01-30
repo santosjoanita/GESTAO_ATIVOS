@@ -17,10 +17,9 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
     if (!event) return null;
     const estado = event.id_estado_req;
 
-    // Regras de visualização dos botões
-    const podeEditar = isRequisicao && (estado === 2 || estado === 4); // Aprovada ou Em Curso
-    const podeDevolver = isRequisicao && estado === 4; // Só Em Curso
-    const podeCancelar = isRequisicao && estado === 1; // Só Pendente
+    const podeEditar = isRequisicao && (estado === 2 || estado === 4);
+    const podeDevolver = isRequisicao && estado === 4;
+    const podeCancelar = isRequisicao && estado === 1;
 
     return (
         <div className={`event-card ${event.colorClass} ${isExpanded ? 'expanded' : ''}`}>
@@ -34,7 +33,6 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                 </div>
                 
                 <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()} style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
-                    
                     {podeEditar && (
                         <button className="edit-button-esp btn-pendente" onClick={() => onEditarClick(event)} title="Adicionar mais materiais">
                             <Briefcase size={14} style={{marginRight: '5px'}}/> EDITAR
@@ -52,7 +50,7 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                             <RotateCcw size={14} style={{marginRight: '5px'}} /> DEVOLVER
                         </button>
                     )}
-                    
+
                     <div className="event-arrow-container">{isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}</div>
                 </div>
             </div>
@@ -80,8 +78,6 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                                                 alignItems:'center'
                                             }}>
                                                 <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
-                                                
-                                                {/* ETIQUETA DE ESTADO DO ITEM */}
                                                 <span style={{
                                                     fontSize:'10px', 
                                                     fontWeight:'800', 
