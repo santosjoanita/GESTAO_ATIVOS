@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, CornerDownLeft, Bell, Calendar, Repeat, Search, CalendarPlus, UserCheck } from 'lucide-react';
+import { ShoppingCart, User, CornerDownLeft, Bell, Calendar, Repeat, Search, UserCheck } from 'lucide-react';
 import './Home.css'; 
 import logo from '../../assets/img/esposende.png';
 
@@ -30,52 +30,29 @@ const Home = ({ onLogout }) => {
 
     const fetchDashboardData = async () => {
         if (!userId || !token) return;
-        
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` 
-        };
-
+        const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
         try {
             const [resEv, resReq, resNotif] = await Promise.all([
                fetch(`http://localhost:3002/api/eventos/user/${userId}`, { headers }),
                fetch(`http://localhost:3002/api/requisicoes/user/${userId}`, { headers }),
                fetch(`http://localhost:3002/api/gestao/notificacoes/prazos/${userId}`, { headers })
             ]);
-
-            if (resEv.status === 401 || resReq.status === 401) {
-                localStorage.clear();
-                navigate('/');
-                return;
-            }
-
-            const dataEv = resEv.ok ? await resEv.json() : [];
-            const dataReq = resReq.ok ? await resReq.json() : [];
-            
-            let dataNotif = [];
-            if (resNotif.ok) {
-                try { dataNotif = await resNotif.json(); } catch(e){}
-            }
+            const dataEv = await resEv.json();
+            const dataReq = await resReq.json();
+            const dataNotif = await resNotif.json();
 
             setActivityCounts({
                 eventosCount: Array.isArray(dataEv) ? dataEv.length : 0,
                 requisicoesCount: Array.isArray(dataReq) ? dataReq.length : 0
             });
-
             setNotifications(Array.isArray(dataNotif) ? dataNotif : []);
-            
-            const itensCarrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
-            setCarrinhoCount(itensCarrinho.length);
-
-        } catch (error) {
-            console.error("Erro ao carregar dados da Home:", error);
-        }
+            const cart = JSON.parse(localStorage.getItem('carrinho')) || [];
+            setCarrinhoCount(cart.length);
+        } catch (error) { console.error(error); }
     };
 
     useEffect(() => {
         fetchDashboardData();
-        const interval = setInterval(fetchDashboardData, 30000); 
-        return () => clearInterval(interval);
     }, [userId]);
 
     const handleLogout = () => {
@@ -87,32 +64,18 @@ const Home = ({ onLogout }) => {
     const calcularDiasRestantes = (dataFim) => {
         if (!dataFim) return 999;
         const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-
         const fim = new Date(dataFim);
-        fim.setHours(0, 0, 0, 0);
-        const diffTime = fim - hoje;
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
     };
-
-    const notificacoesUrgentes = notifications.filter(n => {
-        const dias = calcularDiasRestantes(n.data_fim);
-        return dias >= 0 && dias <= 3;
-    });
 
     return (
         <div className="home-page-layout">
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
-                    <div className="logo-esp">
-                        <img src={logo} alt="Logo Esposende" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}} />
-                    </div>
-                    
+                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}} />
                     <nav className="header-nav-esp">
                         <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                         <Link to="/home" className="nav-item-esp active-tab-indicator">PÁGINA INICIAL</Link>
-                        <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
-                        <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
                     </nav>
 
                     <div className="header-icons-esp">
@@ -121,16 +84,14 @@ const Home = ({ onLogout }) => {
                             {carrinhoCount > 0 && <span className="cart-badge-count">{carrinhoCount}</span>}
                         </div>
                         
-                        <div className="user-profile-badge">
+                        <div className="user-profile-badge-esp">
                             <span className="user-name-text">{user?.nome?.split(' ')[0]}</span>
-                            <span className={`role-tag ${user?.id_cargo === 1 ? 'role-gestor' : 'role-func'}`}>
-                                {user?.id_cargo === 1 ? 'GESTOR' : 'FUNCIONÁRIO'}
+                            <span className={`role-tag ${user?.id_perfil === 2 ? 'role-gestor' : 'role-func'}`}>
+                                {user?.id_perfil === 2 ? 'GESTOR' : 'FUNCIONÁRIO'}
                             </span>
                         </div>
 
-                        <Link to="/perfil"> 
-                            <User size={24} className="icon-esp" /> 
-                        </Link>
+                        <Link to="/perfil"><User size={24} className="icon-esp" /></Link>
                         <button onClick={handleLogout} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>
@@ -141,37 +102,19 @@ const Home = ({ onLogout }) => {
             <main className="main-home-content">
                 <section className="home-section">
                     <h3 className="section-title"><Bell size={24} /> NOTIFICAÇÕES:</h3>
-                      <div className="notifications-container">
-                        {notificacoesUrgentes.length > 0 ? (
-                            notificacoesUrgentes.map(n => {
-                                const diasRestantes = calcularDiasRestantes(n.data_fim);
-                                const classeUrgencia = diasRestantes <= 1 ? 'danger' : 'warning';
-
-                                return (
-                                    <div key={n.id_req} className={`notification-item-home ${classeUrgencia}`}>
-                                        <div className="notification-content">
-                                            <p>
-                                                <strong>ATENÇÃO:</strong> O evento "{n.nome_evento}" acaba 
-                                                {diasRestantes === 0 ? (
-                                                    <strong> HOJE!</strong>
-                                                ) : diasRestantes === 1 ? (
-                                                    <strong> AMANHÃ!</strong>
-                                                ) : (
-                                                    <span> em <strong>{diasRestantes}</strong> dias ({formatarData(n.data_fim)}).</span>
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        ) : (
-                            <p className="no-notifications">Não existem prazos críticos para os seus materiais.</p>
-                        )}
+                    <div className="notifications-container">
+                        {notifications.length > 0 ? (
+                            notifications.slice(0, 3).map(n => (
+                                <div key={n.id_req} className="notification-item-home warning">
+                                    <p>O evento <strong>{n.nome_evento}</strong> termina em breve ({formatarData(n.data_fim)}).</p>
+                                </div>
+                            ))
+                        ) : <p className="no-notifications">Sem notificações.</p>}
                     </div>
                 </section>
                 
                 <section className="home-section">
-                    <h3 className="section-title">O SEU PAINEL DE ATIVIDADE:</h3>
+                    <h3 className="section-title">PAINEL DE ATIVIDADE:</h3>
                     <div className="activity-panel-container">
                         {activityMap.map(item => (
                             <button key={item.key} onClick={() => navigate('/perfil')} className={`activity-card ${item.cor}`}>
@@ -182,48 +125,7 @@ const Home = ({ onLogout }) => {
                         ))}
                     </div>
                 </section>
-
-                <section className="home-section">
-                    <h3 className="section-title">GUIA RÁPIDO</h3>
-                    <div className="quick-guide-grid">
-                        
-                        <div className="guide-card">
-                            <CalendarPlus className="guide-icon" size={28} />
-                            <p className="guide-step-title">1. CRIAR EVENTO</p>
-                            <p className="guide-step-desc">
-                                <strong>Passo obrigatório.</strong> Defina primeiro o nome e as datas do evento para poder associar materiais.
-                            </p>
-                        </div>
-
-                        <div className="guide-card">
-                            <Search className="guide-icon" size={28} />
-                            <p className="guide-step-title">2. REQUISITAR</p>
-                            <p className="guide-step-desc">
-                                Aceda ao <strong>Catálogo</strong>, adicione os materiais necessários ao carrinho e finalize o pedido.
-                            </p>
-                        </div>
-
-                        <div className="guide-card">
-                            <UserCheck className="guide-icon" size={28} />
-                            <p className="guide-step-title">3. APROVAÇÃO</p>
-                            <p className="guide-step-desc">
-                                O stock só fica <strong>reservado</strong> após aprovação do Gestor. Acompanha o estado no seu <strong>Perfil</strong>.
-                            </p>
-                        </div>
-
-                    </div>
-                </section>
             </main>
-
-            <footer className="fixed-footer-esp">
-                <div className="footer-content-esp centered-content">
-                    <div className="footer-items-wrapper"> 
-                        <span className="footer-project-esp">
-                            {eventoAtivo ? `REQUISIÇÃO ATIVA: ${eventoAtivo.nome.toUpperCase()}` : "MUNICÍPIO DE ESPOSENDE"}
-                        </span>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 };

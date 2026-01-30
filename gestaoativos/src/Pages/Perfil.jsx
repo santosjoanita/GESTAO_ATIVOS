@@ -34,19 +34,19 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                 
                 <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()} style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
                     {podeEditar && (
-                        <button className="edit-button-esp btn-pendente" onClick={() => onEditarClick(event)} title="Adicionar mais materiais">
+                        <button className="edit-button-esp btn-pendente" onClick={() => onEditarClick(event)}>
                             <Briefcase size={14} style={{marginRight: '5px'}}/> EDITAR
                         </button>
                     )}
 
                     {podeCancelar && (
-                        <button className="edit-button-esp btn-cancelar" onClick={() => onCancelarClick(event.id_orig)} style={{backgroundColor:'#e74c3c'}}>
+                        <button className="edit-button-esp btn-cancelar" onClick={() => onCancelarClick(event.id_orig)}>
                             <XCircle size={14} />
                         </button>
                     )}
 
                     {podeDevolver && (
-                        <button className="edit-button-esp btn-devolver" onClick={() => onDevolverClick(event.id_orig)} style={{backgroundColor:'#27ae60', color:'white', borderColor:'#219150'}}>
+                        <button className="edit-button-esp btn-devolver" onClick={() => onDevolverClick(event.id_orig)}>
                             <RotateCcw size={14} style={{marginRight: '5px'}} /> DEVOLVER
                         </button>
                     )}
@@ -62,33 +62,15 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                         
                         {isRequisicao && (
                             <div className="materiais-container-perfil" style={{marginTop:'15px'}}>
-                                <p style={{fontWeight:'800',fontSize:'13px',color:'var(--primary-blue)', marginBottom:'10px'}}>
-                                    <Package size={16} style={{verticalAlign:'middle'}}/> LISTA DE MATERIAIS:
+                                <p style={{fontWeight:'800',fontSize:'13px',color:'#1f3a52', marginBottom:'10px'}}>
+                                    <Package size={16} style={{verticalAlign:'middle'}}/> MATERIAIS:
                                 </p>
-                                
                                 {materiais?.length > 0 ? (
                                     <ul style={{listStyle:'none', padding:0}}>
                                         {materiais.map((m, idx) => (
-                                            <li key={idx} style={{
-                                                fontSize:'13px', 
-                                                borderBottom:'1px solid #eee', 
-                                                padding:'8px 0', 
-                                                display:'flex', 
-                                                justifyContent:'space-between',
-                                                alignItems:'center'
-                                            }}>
+                                            <li key={idx} style={{fontSize:'13px', borderBottom:'1px solid #eee', padding:'8px 0', display:'flex', justifyContent:'space-between'}}>
                                                 <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
-                                                <span style={{
-                                                    fontSize:'10px', 
-                                                    fontWeight:'800', 
-                                                    textTransform:'uppercase',
-                                                    padding: '2px 6px',
-                                                    borderRadius: '4px',
-                                                    backgroundColor: m.status_item === 'pendente' ? '#fef3c7' : '#dcfce7',
-                                                    color: m.status_item === 'pendente' ? '#d97706' : '#166534'
-                                                }}>
-                                                    {m.status_item || 'APROVADO'}
-                                                </span>
+                                                <span className="status-item-badge">{m.status_item || 'APROVADO'}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -106,157 +88,94 @@ const Perfil = () => {
     const navigate = useNavigate();
     const [eventsList, setEventsList] = useState([]);
     const [requisicoesList, setRequisicoesList] = useState([]);
-    const [activeTab, setActiveTab] = useState('todos'); 
+    const [activeTab, setActiveTab] = useState('requisições'); 
     const [expandedCardId, setExpandedCardId] = useState(null); 
     const [filtroEstado, setFiltroEstado] = useState('todos');
     const [materiaisCard, setMateriaisCard] = useState([]);
-    
     const [toast, setToast] = useState(null);
     const [modal, setModal] = useState({ isOpen: false, type: null, id: null });
 
-    const eventoRaw = localStorage.getItem('evento_trabalho');
-    const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
+    const user = JSON.parse(localStorage.getItem('user'));
 
-    const getAuthHeaders = useCallback(() => {
-        const u = localStorage.getItem('user');
-        const user = u ? JSON.parse(u) : null;
-        return { 'Content-Type': 'application/json', 'Authorization': user?.token ? `Bearer ${user.token}` : '' };
-    }, []);
+    const getAuthHeaders = useCallback(() => ({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user?.token}`
+    }), [user]);
 
     const fetchPerfilData = useCallback(async () => {
-        const u = localStorage.getItem('user');
-        const user = u ? JSON.parse(u) : null;
-        if (!user) { navigate('/'); return; }
-
+        if (!user) return;
         try {
             const [resReq, resEv] = await Promise.all([
-                fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user || user.id}`, { headers: getAuthHeaders() }),
-                fetch(`http://localhost:3002/api/eventos/user/${user.id_user || user.id}`, { headers: getAuthHeaders() })
+                fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user}`, { headers: getAuthHeaders() }),
+                fetch(`http://localhost:3002/api/eventos/user/${user.id_user}`, { headers: getAuthHeaders() })
             ]);
-
-            if (resReq.status === 401 || resEv.status === 401) {
-                localStorage.clear();
-                navigate('/');
-                return;
-            }
-
             const dataReq = await resReq.json();
             const dataEv = await resEv.json();
 
-            const getStatusColor = (s) => {
-                const st = (s || '').toLowerCase();
-                if (st.includes('aprov') || st.includes('agend')) return 'aprovado';
-                if (st.includes('em curso')) return 'em-curso';
-                if (st.includes('final') || st.includes('concl')) return 'finalizado';
-                if (st.includes('cancel')) return 'cancelada';  // Corrigido para separar
-                if (st.includes('rejeit') || st.includes('recus')) return 'rejeitado';
-                return 'pendente';
-            };
+            setRequisicoesList(dataReq.map(r => ({
+                id: `req-${r.id_req}`, id_orig: r.id_req, isRequisicao: true,
+                title: r.nome_evento || 'Requisição', status: r.estado_nome,
+                id_estado_req: r.id_estado_req, localizacao: r.localizacao,
+                data_fim: r.data_fim, colorClass: r.estado_nome?.toLowerCase().replace(' ', '-')
+            })));
 
-            const reqComNumeracao = Array.isArray(dataReq) ? dataReq.map((r, index, array) => {
-                const doMesmo = array.filter(i => i.id_evento === r.id_evento);
-                const ordem = doMesmo.sort((a,b) => a.id_req - b.id_req).findIndex(i => i.id_req === r.id_req) + 1;
-                return {
-                    id: `req-${r.id_req}`, id_orig: r.id_req, isRequisicao: true,
-                    title: `${r.nome_evento || 'Evento'} - Req. ${ordem}`,
-                    status: r.estado_nome || 'Pendente',
-                    id_estado_req: r.id_estado_req,
-                    localizacao: r.localizacao, data_fim: r.data_fim,
-                    colorClass: getStatusColor(r.estado_nome)
-                };
-            }) : [];
-            setRequisicoesList(reqComNumeracao);
-
-            const evFormatados = Array.isArray(dataEv) ? dataEv.map(e => ({
+            setEventsList(dataEv.map(e => ({
                 id: `ev-${e.id_evento}`, isRequisicao: false,
-                // CORREÇÃO AQUI: Mostra intervalo de datas
-                title: e.nome_evento, 
-                date: e.data_fim ? `${formatDate(e.data_inicio)} até ${formatDate(e.data_fim)}` : formatDate(e.data_inicio),
-                data_fim: e.data_fim,
-                status: e.estado_nome, localizacao: e.localizacao,
-                colorClass: getStatusColor(e.estado_nome)
-            })) : [];
-            setEventsList(evFormatados);
-
-        } catch (error) { console.error("Erro perfil:", error); }
-    }, [navigate, getAuthHeaders]);
+                title: e.nome_evento, date: `${formatDate(e.data_inicio)} até ${formatDate(e.data_fim)}`,
+                status: e.estado_nome, localizacao: e.localizacao, colorClass: e.estado_nome?.toLowerCase()
+            })));
+        } catch (error) { console.error(error); }
+    }, [user, getAuthHeaders]);
 
     useEffect(() => { fetchPerfilData(); }, [fetchPerfilData]);
 
-    const fetchMateriaisReq = async (idReq) => {
-        try {
-            const res = await fetch(`http://localhost:3002/api/requisicoes/${idReq}/materiais`, { headers: getAuthHeaders() });
-            if (res.ok) setMateriaisCard(await res.json());
-        } catch (err) { console.error(err); }
+    const handleToggle = async (item) => {
+        if (expandedCardId === item.id) {
+            setExpandedCardId(null);
+            setMateriaisCard([]);
+        } else {
+            setExpandedCardId(item.id);
+            if (item.isRequisicao) {
+                const res = await fetch(`http://localhost:3002/api/requisicoes/${item.id_orig}/materiais`, { headers: getAuthHeaders() });
+                if (res.ok) setMateriaisCard(await res.json());
+            }
+        }
     };
 
-    const handleEditar = async (item) => {
-        localStorage.setItem('evento_trabalho', JSON.stringify({ id_req: item.id_orig, nome: item.title }));
+    const confirmDevolver = (id) => setModal({ isOpen: true, type: 'devolver', id });
+    const confirmCancelar = (id) => setModal({ isOpen: true, type: 'cancelar', id });
 
+    const executeAcao = async () => {
+        const url = `http://localhost:3002/api/requisicoes/${modal.id}/${modal.type}`;
+        try {
+            const res = await fetch(url, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ id_user: user.id_user })
+            });
+            if(res.ok) {
+                setToast({ type: 'success', message: 'Operação concluída com sucesso!' });
+                fetchPerfilData();
+            }
+        } catch (e) { console.error(e); }
+        setModal({ isOpen: false, type: null, id: null });
+    };
+
+    const handleEditar = (item) => {
+        localStorage.setItem('evento_trabalho', JSON.stringify({id_req: item.id_orig, nome: item.title}));
         navigate('/explorar');
     };
 
-    const executeCancelar = async () => {
-        const u = localStorage.getItem('user');
-        const user = u ? JSON.parse(u) : null;
-        try {
-            const res = await fetch(`http://localhost:3002/api/requisicoes/${modal.id}/cancelar`, {
-                method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_user: user.id_user || user.id })
-            });
-            if(res.ok) { 
-                setToast({ type: 'success', message: "Cancelado com sucesso." });
-                fetchPerfilData(); 
-            } else { 
-                const err = await res.json(); 
-                setToast({ type: 'error', message: "Erro: " + (err.message || err.error) });
-            }
-        } catch (e) { setToast({ type: 'error', message: "Erro conexão" }); }
-        setModal({ isOpen: false, type: null, id: null });
-    };
-
-    const executeDevolver = async () => {
-        const u = localStorage.getItem('user');
-        const user = u ? JSON.parse(u) : null;
-        try {
-            const res = await fetch(`http://localhost:3002/api/requisicoes/${modal.id}/devolver`, {
-                method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_user: user.id_user || user.id })
-            });
-            if (res.ok) { 
-                setToast({ type: 'success', message: "Devolvido e stock reposto!" });
-                fetchPerfilData(); 
-            } else { 
-                const err = await res.json(); 
-                setToast({ type: 'error', message: "Erro: " + (err.message || err.error) });
-            }
-        } catch (e) { setToast({ type: 'error', message: "Erro conexão" }); }
-        setModal({ isOpen: false, type: null, id: null });
-    };
-
-    const confirmCancelar = (id) => setModal({ isOpen: true, type: 'cancelar', id });
-    const confirmDevolver = (id) => setModal({ isOpen: true, type: 'devolver', id });
-
-    const handleToggle = (item) => {
-        if (expandedCardId === item.id) { setExpandedCardId(null); setMateriaisCard([]); }
-        else { setExpandedCardId(item.id); if (item.isRequisicao) fetchMateriaisReq(item.id_orig); }
-    };
-
     const displayItems = (() => {
-        let list = activeTab === 'eventos' ? eventsList : activeTab === 'requisicoes' ? requisicoesList : [...eventsList, ...requisicoesList];
-        if (filtroEstado !== 'todos') {
-            list = list.filter(item => {
-                const s = (item.status || '').toLowerCase();
-                if (filtroEstado === 'aprovada') return s.includes('aprov') || s.includes('agend');
-                if (filtroEstado === 'cancelada') return s.includes('cancel');
-                if (filtroEstado === 'rejeitada') return s.includes('rejeit') || s.includes('recus');
-                return s.includes(filtroEstado);
-            });
-        }
-        return list;
+        const list = activeTab === 'eventos' ? eventsList : requisicoesList;
+        if (filtroEstado === 'todos') return list;
+        return list.filter(item => {
+            const s = (item.status || '').toLowerCase();
+            if (filtroEstado === 'aprovada') return s.includes('aprov') || s.includes('agend');
+            return s.includes(filtroEstado);
+        });
     })();
 
-    const u = localStorage.getItem('user');
-    const user = u ? JSON.parse(u) : null;
-    const isGestor = user?.id_perfil === 2;
     const filtrosSimples = ['todos', 'pendente', 'aprovada', 'em curso', 'finalizada', 'cancelada', 'rejeitada'];
 
     return (
@@ -264,24 +183,19 @@ const Perfil = () => {
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             
             <ModalConfirmacao 
-                isOpen={modal.isOpen}
-                onCancel={() => setModal({ isOpen: false, type: null, id: null })}
-                onConfirm={modal.type === 'cancelar' ? executeCancelar : executeDevolver}
-                title={modal.type === 'cancelar' ? "Cancelar Requisição" : "Devolver Materiais"}
-                message={modal.type === 'cancelar' 
-                    ? "Tem a certeza que quer cancelar o pedido?"
-                    : "Confirma a entrega de todos os materiais desta requisição? O stock será reposto."
-                }
-                confirmText={modal.type === 'cancelar' ? "Sim, Cancelar" : "Sim, Devolver"}
-                confirmColor={modal.type === 'cancelar' ? "#e74c3c" : "#27ae60"}
+                isOpen={modal.isOpen} 
+                onConfirm={executeAcao} 
+                onCancel={() => setModal({isOpen:false})} 
+                title={modal.type === 'cancelar' ? "Anular Requisição" : "Devolver Materiais"} 
+                message="Deseja prosseguir com esta ação?" 
             />
-
+            
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}}/>
                     <nav className="header-nav-esp">
-                        {isGestor ? <><Link to="/gestao" className="nav-item-esp">GESTÃO</Link><Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link></> : 
-                                    <><Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link><Link to="/home" className="nav-item-esp">INÍCIO</Link></>}
+                        <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
+                        <Link to="/home" className="nav-item-esp">INÍCIO</Link>
                     </nav>
                     <div className="header-icons-esp">
                         <Link to="/carrinho"><ShoppingCart size={24} className="icon-esp" /></Link>
@@ -294,15 +208,34 @@ const Perfil = () => {
             <main className="main-content-esp">
                 <div className="user-panel-esp">
                     <div className="user-avatar-esp"></div>
-                    <div><h2 className="user-title-esp">Olá, {user?.nome || 'Utilizador'}.</h2><p className="user-email-esp">{user?.email}</p></div>
+                    <div>
+                        <h2 className="user-title-esp">Olá, {user?.nome}.</h2>
+                        <p className="user-email-esp">{user?.email}</p>
+                    </div>
                 </div>
 
                 <div className="tabs-container-esp">
-                    {['todos', 'eventos', 'requisições'].map(t => (<button key={t} className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} onClick={() => setActiveTab(t)}>{t.toUpperCase()}</button>))}
+                    {['requisições', 'eventos'].map(t => (
+                        <button 
+                            key={t} 
+                            className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} 
+                            onClick={() => { setActiveTab(t); setFiltroEstado('todos'); }}
+                        >
+                            {t.toUpperCase()}
+                        </button>
+                    ))}
                 </div>
 
                 <div className="status-filter-bar-esp">
-                    {filtrosSimples.map(f => (<button key={f} className={`status-filter-btn ${filtroEstado === f ? 'active-status' : ''}`} onClick={() => setFiltroEstado(f)}>{f.toUpperCase()}</button>))}
+                    {filtrosSimples.map(f => (
+                        <button 
+                            key={f} 
+                            className={`status-filter-btn ${filtroEstado === f ? 'active-status' : ''}`} 
+                            onClick={() => setFiltroEstado(f)}
+                        >
+                            {f.toUpperCase()}
+                        </button>
+                    ))}
                 </div>
 
                 <div className="list-items-container-esp">
@@ -316,15 +249,6 @@ const Perfil = () => {
                     )) : <p className="no-items-msg">Nenhum item encontrado.</p>}
                 </div>
             </main>
-            <footer className="fixed-footer-esp">
-                <div className="footer-content-esp centered-content">
-                    <div className="footer-items-wrapper"> 
-                        <span className="footer-project-esp">
-                            {eventoAtivo ? `REQUISIÇÃO ATIVA: ${eventoAtivo.nome.toUpperCase()}` : "MUNICÍPIO DE ESPOSENDE"}
-                        </span>
-                    </div>
-                </div>
-            </footer>
         </div>
     );
 };

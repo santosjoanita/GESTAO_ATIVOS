@@ -80,7 +80,7 @@
     background: var(--primary-blue);
 }
 
-/* --- FILTROS DE ESTADO --- */
+/* --- FILTROS --- */
 .status-filter-bar-esp {
     display: flex;
     gap: 8px;
@@ -97,104 +97,60 @@
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s;
-    text-transform: uppercase;
 }
-
-.status-filter-btn:hover { background: #f8fafc; }
 
 .status-filter-btn.active-status {
     background: var(--primary-blue);
     color: white;
-    border-color: var(--primary-blue);
 }
 
-/* --- LISTA DE CARTÕES --- */
-.list-items-container-esp {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
+/* --- CARDS --- */
 .event-card {
     background: white;
     border-radius: 12px;
     padding: 20px;
     border: 1px solid #e2e8f0;
-    transition: all 0.2s;
+    margin-bottom: 15px;
 }
 
-/* Faixa lateral colorida consoante o estado */
-.event-card.pendente { border-left: 5px solid #eab308; }
-.event-card.aprovado { border-left: 5px solid #22c55e; }
-.event-card.rejeitado { border-left: 5px solid #ef4444; }
-.event-card.cancelada { border-left: 5px solid #64748b; opacity: 0.8; }
-.event-card.finalizado { border-left: 5px solid #475569; }
+.event-card.pendente { border-left: 5px solid #ffc000; }
+.event-card.aprovada { border-left: 5px solid #92d050; }
+.event-card.rejeitada { border-left: 5px solid #f4b084; }
 .event-card.em-curso { border-left: 5px solid #3b82f6; }
+.event-card.finalizada { border-left: 5px solid #7f8c8d; }
+.event-card.cancelada { border-left: 5px solid #333; opacity: 0.7; }
+
+/* REMOVER RISCO NO TEXTO */
+.event-card.cancelada .event-title,
+.event-card.cancelada .status-tag,
+.status-cancelada {
+    text-decoration: none !important;
+}
 
 .event-header-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    cursor: pointer;
 }
 
 .event-title {
-    margin: 0;
     font-weight: 700;
     color: #333;
-    font-size: 1.1rem;
 }
 
 .status-tag {
     font-size: 0.8rem;
-    font-weight: 600;
     color: #64748b;
-    margin-left: 8px;
     text-transform: uppercase;
 }
 
-.event-date {
-    margin: 5px 0 0 0;
-    font-size: 0.85rem;
-    color: #94a3b8;
-}
-
-/* Botões dentro do Card */
-.edit-button-esp {
-    padding: 6px 12px;
+.event-actions-wrapper button {
+    padding: 5px 12px;
     border-radius: 6px;
     border: none;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
     color: white;
+    cursor: pointer;
+    font-size: 11px;
 }
 
-.btn-pendente { background: #eab308; color: white; }
-.btn-cancelar { background: #ef4444; color: white; }
-.btn-devolver { background: #22c55e; color: white; }
-
-.event-arrow-container {
-    color: #cbd5e0;
-}
-
-.event-details {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #f1f5f9;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-
-.no-items-msg {
-    text-align: center;
-    padding: 40px;
-    color: #94a3b8;
-    background: white;
-    border-radius: 12px;
-    border: 2px dashed #e2e8f0;
-}
+.btn-pendente { background: #ffc000; }
+.btn-devolver { background: #27ae60; }

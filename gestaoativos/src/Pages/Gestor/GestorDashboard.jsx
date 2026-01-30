@@ -21,7 +21,6 @@ const GestorDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('pendente');
-    
     const [carrinhoCount, setCarrinhoCount] = useState(0);
 
     const [toast, setToast] = useState(null);
@@ -152,14 +151,6 @@ const GestorDashboard = () => {
         setModal({ isOpen: false, action: null, id: null, novoEstado: null });
     };
 
-    const modalContent = (() => {
-        const st = modal.novoEstado;
-        if (st === 5) return { title: "Finalizar & Devolver", msg: "Confirma a devolução? O stock será reposto.", color: "#2ecc71" };
-        if (st === 6) return { title: "Cancelar Requisição", msg: "Tem a certeza? Se houver stock reservado, será libertado.", color: "#e74c3c" };
-        if (st === 3) return { title: "Rejeitar Pedido", msg: "Deseja rejeitar este pedido?", color: "#e74c3c" };
-        return { title: "Confirmação", msg: "Prosseguir?", color: "#1f3a52" };
-    })();
-
     const filteredItems = items.filter(item => {
         const searchLower = searchTerm.toLowerCase();
         let matchesSearch = false;
@@ -184,6 +175,14 @@ const GestorDashboard = () => {
         return matchesSearch && matchesStatus;
     });
 
+    const modalContent = (() => {
+        const st = modal.novoEstado;
+        if (st === 5) return { title: "Finalizar & Devolver", msg: "Confirma a devolução? O stock será reposto.", color: "#2ecc71" };
+        if (st === 6) return { title: "Cancelar Requisição", msg: "Tem a certeza? Se houver stock reservado, será libertado.", color: "#e74c3c" };
+        if (st === 3) return { title: "Rejeitar Pedido", msg: "Deseja rejeitar este pedido?", color: "#e74c3c" };
+        return { title: "Confirmação", msg: "Prosseguir?", color: "#1f3a52" };
+    })();
+
     if (!user || user.id_perfil !== 2) return null;
 
     return (
@@ -195,9 +194,7 @@ const GestorDashboard = () => {
                 <div className="header-content-esp">
                     <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor: 'pointer'}} />
                     <nav className="header-nav-esp">
-                        {/* NOVO: Link para o Catálogo */}
-                        <Link to="/explorar" className="nav-item-esp" style={{fontWeight:'700', color:'#fff', textDecoration:'none', borderBottom: '2px solid rgba(255,255,255,0.3)', paddingBottom:'2px'}}>CATÁLOGO</Link>
-                        
+                        <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                         <button onClick={() => setTab('requisicoes')} className={`nav-item-esp ${tab === 'requisicoes' ? 'active-tab-indicator' : ''}`}>REQUISIÇÕES</button>
                         <button onClick={() => setTab('eventos')} className={`nav-item-esp ${tab === 'eventos' ? 'active-tab-indicator' : ''}`}>EVENTOS</button>
                         <button onClick={() => setTab('historico_req')} className={`nav-item-esp ${tab === 'historico_req' ? 'active-tab-indicator' : ''}`}>HISTÓRICO REQ.</button>
@@ -205,12 +202,10 @@ const GestorDashboard = () => {
                         <button className="nav-item-esp" onClick={() => navigate('/stock')} >STOCK ATUAL</button>
                     </nav>
                     <div className="header-icons-esp">
-                        {/* NOVO: Ícone do Carrinho */}
                         <div style={{position: 'relative', cursor: 'pointer', marginRight:'15px'}} onClick={() => navigate('/carrinho')}>
                             <ShoppingCart size={22} className="icon-esp" />
-                            {carrinhoCount > 0 && <span className="cart-badge-count" style={{top:'-5px', right:'-8px', width:'16px', height:'16px', fontSize:'10px'}}>{carrinhoCount}</span>}
+                            {carrinhoCount > 0 && <span className="cart-badge-count">{carrinhoCount}</span>}
                         </div>
-
                         <Link to="/perfil"><User size={22} className="icon-esp" /></Link>
                         <button onClick={() => { localStorage.clear(); navigate('/'); }} className="logout-btn"><CornerDownLeft size={24} className="icon-esp" /></button>
                     </div>
@@ -220,11 +215,9 @@ const GestorDashboard = () => {
             <main className="gestao-main">
                 <div className="page-header-container">
                     <h2 className="gestao-title">{tab === 'requisicoes' ? 'GERIR REQUISIÇÕES' : tab === 'eventos' ? 'GERIR EVENTOS' : tab === 'stock' ? 'AUDITORIA DE STOCK' : 'AUDITORIA'}</h2>
-                    
                     <div className="filters-container">
                         <div className="search-input-wrapper">
-                            <Search size={20} className="search-icon"/>
-                            <input type="text" placeholder="Pesquisar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                            <Search size={20} className="search-icon"/><input type="text" placeholder="Pesquisar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                         </div>
                         {tab !== 'stock' && tab !== 'historico_req' && (
                             <div className="filter-chips-container" style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
@@ -238,14 +231,14 @@ const GestorDashboard = () => {
 
                 <div className="gestao-grid">
                     {loading ? <p>Carregando...</p> : filteredItems.length > 0 ? filteredItems.map(item => (
-                        <div key={item.id_req || item.id_evento || Math.random()} className="gestao-card" onClick={() => handleVerDetalhes(item)}>
+                        <div key={item.id_req || item.id_evento || item.id_hist || Math.random()} className="gestao-card" onClick={() => handleVerDetalhes(item)} style={{ cursor: (tab === 'stock' || tab === 'historico_req') ? 'default' : 'pointer' }}>
                              <div className="card-info">
                                 {tab === 'requisicoes' ? (
                                     <><strong>{item.nome_evento}</strong><p>{item.requerente}</p><span className={`status-badge ${item.estado_nome?.toLowerCase().replace(' ', '-')}`}>{item.estado_nome}</span></>
                                 ) : tab === 'stock' ? (
-                                    <><strong>{item.item_nome}</strong><p>{item.tipo_movimento} ({item.quantidade_alt})</p><p>{formatarData(item.data_movimento)}</p></>
+                                    <><strong><Package size={16} /> {item.item_nome}</strong><p><User size={14} /> {item.nome_utilizador}</p><p><Activity size={14} /> {item.tipo_movimento} ({item.quantidade_alt})</p><p style={{fontSize:'0.8em', color:'#888'}}>{new Date(item.data_movimento).toLocaleString('pt-PT')}</p></>
                                 ) : tab === 'historico_req' ? (
-                                    <><strong>{item.acao}</strong><p>{item.nome_responsavel}</p><p>{formatarData(item.data_acao)}</p></>
+                                    <><strong><FileClock size={16} /> Req #{item.id_req} - {item.acao}</strong><p><User size={14} /> Por: {item.nome_responsavel}</p><p style={{fontSize:'0.8em', color:'#888'}}>{new Date(item.data_acao).toLocaleString('pt-PT')}</p></>
                                 ) : (
                                     <><strong>{item.nome_evento}</strong><p>{item.localizacao}</p><span className={`status-badge ${item.estado_nome?.toLowerCase()}`}>{item.estado_nome}</span></>
                                 )}
@@ -279,7 +272,14 @@ const GestorDashboard = () => {
                                 )}
                             </div>
                             
-                            {/* LISTA DE MATERIAIS */}
+                            {tab === 'eventos' && selectedItem.descricao && (
+                                <div className="section-block"><h4><FileText size={16}/> DESCRIÇÃO</h4><p className="description-text">{selectedItem.descricao}</p></div>
+                            )}
+
+                            {tab === 'eventos' && anexos.length > 0 && (
+                                <div className="section-block"><h4>ANEXOS</h4><ul className="attachments-list">{anexos.map(a => (<li key={a.id_anexo}><a href={`http://localhost:3002/uploads/${a.caminho_ficheiro}`} target="_blank" rel="noreferrer"><Download size={14}/> {a.nome_ficheiro}</a></li>))}</ul></div>
+                            )}
+
                             {tab === 'requisicoes' && materiais.length > 0 && (
                                 <div className="section-block">
                                     <h4><Package size={16}/> MATERIAIS REQUISITADOS</h4>
@@ -293,9 +293,7 @@ const GestorDashboard = () => {
 
                         <div className="modal-footer-actions">
                             {tab === 'requisicoes' && (selectedItem.estado_nome?.toLowerCase().includes('aprov') || selectedItem.estado_nome?.toLowerCase().includes('pendente')) && (
-                                <button onClick={handleEditarComoGestor} className="btn-action-outline" style={{borderColor: '#3b82f6', color:'#3b82f6'}}>
-                                    <Edit size={16} style={{marginRight:5}}/> EDITAR MATERIAIS
-                                </button>
+                                <button onClick={handleEditarComoGestor} className="btn-action-outline" style={{borderColor: '#3b82f6', color:'#3b82f6'}}><Edit size={16} style={{marginRight:5}}/> EDITAR MATERIAIS</button>
                             )}
 
                             {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
