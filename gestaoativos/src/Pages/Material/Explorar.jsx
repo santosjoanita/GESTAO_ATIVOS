@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; 
-import { Search, X, ChevronRight } from 'lucide-react';
+import { Search, X, ChevronRight, ShoppingCart, User, CornerDownLeft } from 'lucide-react';
 import './Explorar.css';
 import logo from '../../assets/img/esposende.png';
 
@@ -13,6 +13,7 @@ const Explorar = () => {
     const [categoriasSelecionadas, setCategoriasSelecionadas] = useState([]);
     const [armazensSelecionados, setArmazensSelecionados] = useState([]);
     const [pagina, setPagina] = useState(0);
+    const [carrinhoCount, setCarrinhoCount] = useState(0);
 
     const eventoRaw = localStorage.getItem('evento_trabalho');
     const eventoAtivo = eventoRaw ? JSON.parse(eventoRaw) : null;
@@ -42,6 +43,10 @@ const Explorar = () => {
                 
                 setMateriais(Array.isArray(dataMat) ? dataMat : []);
                 setCategorias(Array.isArray(dataCat) ? dataCat : []);
+                
+                const cart = JSON.parse(localStorage.getItem('carrinho')) || [];
+                setCarrinhoCount(cart.length);
+
             } catch (err) {
                 console.error("Erro ao carregar dados do catálogo", err);
             }
@@ -78,14 +83,35 @@ const Explorar = () => {
         <div className="explorar-container">
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
-                    <img src={logo} alt="Logo" className="logo-img-large" />
+                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}} />
+                    
                     <nav className="header-nav-esp">
+                        <Link to="/explorar" className="nav-item-esp active-tab-indicator">CATÁLOGO</Link>
                         {user?.id_perfil === 2 ? (
                             <Link to="/gestao" className="nav-item-esp">PAINEL DE GESTÃO</Link>
                         ) : (
                             <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
                         )}
                     </nav>
+
+                    <div className="header-icons-esp">
+                        <div style={{position: 'relative', cursor: 'pointer', marginRight:'15px'}} onClick={() => navigate('/carrinho')}>
+                            <ShoppingCart size={22} className="icon-esp" />
+                            {carrinhoCount > 0 && <span className="cart-badge-count">{carrinhoCount}</span>}
+                        </div>
+
+                        <div className="user-profile-badge" style={{marginRight:'10px', textAlign:'right'}}>
+                            <span className="user-name-text" style={{fontSize:'12px', fontWeight:'bold', color:'#1f4e79', display:'block'}}>{user?.nome?.split(' ')[0]}</span>
+                            <span className="role-tag" style={{fontSize:'9px', padding:'2px 5px', borderRadius:'3px', color:'white', background: user?.id_perfil === 2 ? '#f39c12' : '#3498db'}}>
+                                {user?.id_perfil === 2 ? 'GESTOR' : 'FUNCIONÁRIO'}
+                            </span>
+                        </div>
+
+                        <Link to="/perfil"><User size={22} className="icon-esp" /></Link>
+                        <button onClick={() => {localStorage.clear(); navigate('/');}} className="logout-btn">
+                            <CornerDownLeft size={24} className="icon-esp" />
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -156,13 +182,11 @@ const Explorar = () => {
                                 key={m.id_material} 
                                 className={`card-visual ${m.quantidade_disp <= 0 ? 'esgotado' : ''} ${!eventoAtivo ? 'only-view' : ''}`}
                                 onClick={() => eventoAtivo && m.quantidade_disp > 0 && navigate(`/requisitar/${m.id_material}`)}
+                                style={{cursor: (!eventoAtivo || m.quantidade_disp <= 0) ? 'not-allowed' : 'pointer'}}
                             >
                                 <div className="img-box">
                                     <img 
-                                        src={m.imagem_url 
-                                            ? `http://localhost:3002/uploads/${m.imagem_url}` 
-                                            : logo 
-                                        } 
+                                        src={m.imagem_url ? `http://localhost:3002/uploads/${m.imagem_url}` : logo} 
                                         alt={m.nome} 
                                         className={m.imagem_url ? "img-material-catalogo" : "logo-watermark"}
                                         onError={(e) => { e.target.src = logo; }}

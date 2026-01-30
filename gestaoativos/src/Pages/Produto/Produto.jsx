@@ -66,7 +66,7 @@ const Produto = () => {
             setToast({ type: 'warning', message: "Atenção: Seleciona 'Editar' numa requisição no Perfil primeiro!" });
             return;
         }
-        
+        // bucar todas as rewuisições 
         if (datas.levantamento < limitesEvento.min || datas.devolucao > limitesEvento.max) {
             setToast({ type: 'error', message: "As datas têm de estar dentro do período do evento." });
             return;

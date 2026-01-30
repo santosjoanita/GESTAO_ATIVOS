@@ -148,7 +148,8 @@ const Perfil = () => {
                 if (st.includes('aprov') || st.includes('agend')) return 'aprovado';
                 if (st.includes('em curso')) return 'em-curso';
                 if (st.includes('final') || st.includes('concl')) return 'finalizado';
-                if (st.includes('cancel') || st.includes('rejeit') || st.includes('recus')) return 'rejeitado';
+                if (st.includes('cancel')) return 'cancelada';  // Corrigido para separar
+                if (st.includes('rejeit') || st.includes('recus')) return 'rejeitado';
                 return 'pendente';
             };
 
@@ -168,7 +169,10 @@ const Perfil = () => {
 
             const evFormatados = Array.isArray(dataEv) ? dataEv.map(e => ({
                 id: `ev-${e.id_evento}`, isRequisicao: false,
-                title: e.nome_evento, date: formatDate(e.data_inicio), data_fim: e.data_fim,
+                // CORREÇÃO AQUI: Mostra intervalo de datas
+                title: e.nome_evento, 
+                date: e.data_fim ? `${formatDate(e.data_inicio)} até ${formatDate(e.data_fim)}` : formatDate(e.data_inicio),
+                data_fim: e.data_fim,
                 status: e.estado_nome, localizacao: e.localizacao,
                 colorClass: getStatusColor(e.estado_nome)
             })) : [];
@@ -242,7 +246,8 @@ const Perfil = () => {
             list = list.filter(item => {
                 const s = (item.status || '').toLowerCase();
                 if (filtroEstado === 'aprovada') return s.includes('aprov') || s.includes('agend');
-                if (filtroEstado === 'cancelada') return s.includes('cancel') || s.includes('recus');
+                if (filtroEstado === 'cancelada') return s.includes('cancel');
+                if (filtroEstado === 'rejeitada') return s.includes('rejeit') || s.includes('recus');
                 return s.includes(filtroEstado);
             });
         }
@@ -252,7 +257,7 @@ const Perfil = () => {
     const u = localStorage.getItem('user');
     const user = u ? JSON.parse(u) : null;
     const isGestor = user?.id_perfil === 2;
-    const filtrosSimples = ['todos', 'pendente', 'aprovada', 'em curso', 'finalizada', 'cancelada'];
+    const filtrosSimples = ['todos', 'pendente', 'aprovada', 'em curso', 'finalizada', 'cancelada', 'rejeitada'];
 
     return (
         <div className="perfil-page-app">

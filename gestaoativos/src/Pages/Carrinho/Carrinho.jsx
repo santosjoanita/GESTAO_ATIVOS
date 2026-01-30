@@ -32,7 +32,9 @@ const Carrinho = () => {
         localStorage.removeItem('carrinho');
         localStorage.removeItem('evento_trabalho');
         setShowModal(false);
-        navigate('/perfil');
+        
+        if (user?.id_perfil === 2) navigate('/gestao');
+        else navigate('/perfil');
     };
 
     const handleSubmeter = async () => {
@@ -43,26 +45,36 @@ const Carrinho = () => {
 
         const itensInvalidos = itens.filter(i => !i.levantamento || !i.devolucao);
         if (itensInvalidos.length > 0) {
-            setToast({ type: 'error', message: "Preencha as datas de todos os itens." });
+            setToast({ type: 'error', message: "Erro: Itens com datas em falta." });
             return;
         }
+
+        const payload = { 
+            materiais: itens,
+            id_user_action: user.id_user 
+        };
 
         try {
             const res = await fetch(`http://localhost:3002/api/requisicoes/${eventoAtivo.id_req}/submeter`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
-                body: JSON.stringify({ materiais: itens })
+                body: JSON.stringify(payload)
             });
 
             if (res.ok) {
-                setToast({ type: 'success', message: "Pedido submetido com sucesso!" });
+                localStorage.removeItem('carrinho');
+                localStorage.removeItem('evento_trabalho');
                 
-         
-                setTimeout(() => {
-                    localStorage.removeItem('carrinho');
-                    localStorage.removeItem('evento_trabalho');
-                    navigate('/perfil');
-                }, 2000);
+                const isGestor = user.id_perfil === 2 || user.id_cargo === 1;
+
+                if (isGestor) {
+                    setToast({ type: 'success', message: "Materiais adicionados! A voltar à gestão..." });
+                    setTimeout(() => navigate('/gestao'), 1500);
+                } else {
+                    setToast({ type: 'success', message: "Pedido submetido com sucesso!" });
+                    setTimeout(() => navigate('/perfil'), 2000);
+                }
+
             } else {
                 const err = await res.json();
                 setToast({ type: 'error', message: "Erro: " + (err.message || "Falha ao submeter") });
@@ -87,6 +99,8 @@ const Carrinho = () => {
         localStorage.setItem('carrinho', JSON.stringify(novos));
     };
 
+    const formatarData = (d) => d ? new Date(d).toLocaleDateString('pt-PT') : '-';
+
     return (
         <div className="layout-padrao-carrinho">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
@@ -106,10 +120,16 @@ const Carrinho = () => {
                     <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}} />
                     <nav className="header-nav-esp">
                         <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
-                        <Link to="/perfil" className="nav-item-esp">PERFIL</Link>
+                        {user?.id_perfil === 2 
+                            ? <Link to="/gestao" className="nav-item-esp">GESTÃO</Link>
+                            : <Link to="/perfil" className="nav-item-esp">PERFIL</Link>
+                        }
                     </nav>
                     <div className="header-icons-esp">
-                        <User size={24} className="icon-esp" />
+                        <Link to="/perfil"><User size={24} className="icon-esp" /></Link>
+                        <button onClick={() => {localStorage.clear(); navigate('/');}} className="logout-btn">
+                            <CornerDownLeft size={24} className="icon-esp" />
+                        </button>
                     </div>
                 </div>
             </header>
@@ -150,7 +170,7 @@ const Carrinho = () => {
                                             </div>
                                         </td>
                                         <td style={{textAlign:'center'}}>
-                                            <Trash2 size={18} className="remover-btn-esp" onClick={() => removerItem(idx)} />
+                                            <Trash2 size={18} className="remover-btn-esp" onClick={() => removerItem(idx)} style={{cursor:'pointer', color:'#e74c3c'}} />
                                         </td>
                                     </tr>
                                 ))

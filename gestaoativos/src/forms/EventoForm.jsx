@@ -38,6 +38,22 @@ const EventoForm = ({ onLogout }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        // --- NOVA VALIDAÇÃO DE DATAS ---
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const inicio = new Date(formData.data_inicio);
+        const fim = new Date(formData.data_fim || formData.data_inicio);
+
+        if (inicio < hoje) {
+            setToast({ type: 'error', message: "A data de início não pode ser no passado." });
+            return;
+        }
+
+        if (fim < inicio) {
+            setToast({ type: 'error', message: "A data de fim deve ser posterior à data de início." });
+            return;
+        }
+
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || (!user.id && !user.id_user)) {
             setToast({ type: 'error', message: "Sessão expirada. Faça login novamente." });
@@ -143,9 +159,9 @@ const EventoForm = ({ onLogout }) => {
 
                         <div className="date-time-row-layout">
                             <div className="form-group date-time-group"><label>Data de início *</label><input type="date" name="data_inicio" value={formData.data_inicio} onChange={handleChange} required /></div>
-                            <div className="form-group date-time-group"><label>Hora de início</label><input type="time" name="hora_inicio" value={formData.hora_inicio} onChange={handleChange} /></div>
-                            <div className="form-group date-time-group"><label>Data de fim</label><input type="date" name="data_fim" value={formData.data_fim} onChange={handleChange} /></div>
-                            <div className="form-group date-time-group"><label>Hora de fim</label><input type="time" name="hora_fim" value={formData.hora_fim} onChange={handleChange} /></div>
+                            <div className="form-group date-time-group"><label>Hora de início*</label><input type="time" name="hora_inicio" value={formData.hora_inicio} onChange={handleChange}required /></div>
+                            <div className="form-group date-time-group"><label>Data de fim*</label><input type="date" name="data_fim" value={formData.data_fim} onChange={handleChange}required /></div>
+                            <div className="form-group date-time-group"><label>Hora de fim*</label><input type="time" name="hora_fim" value={formData.hora_fim} onChange={handleChange}required /></div>
                         </div>
 
                         <div className="form-group full-width attachments-row-layout">

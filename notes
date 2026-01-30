@@ -1,2 +1,0 @@
-Cada vez que clica a primeira vez em editar muda o estado para "em curso" até devolver.
-Só aparece  o botão de devolver se uma requisição estiver em curso.

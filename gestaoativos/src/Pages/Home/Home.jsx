@@ -9,6 +9,12 @@ const activityMap = [
     { key: 'requisicoesCount', titulo: "REQUISIÇÕES EFETUADAS", cor: 'pending', icone: Repeat },
 ];
 
+const formatarData = (dataISO) => {
+    if (!dataISO) return '---';
+    const data = new Date(dataISO);
+    return data.toLocaleDateString('pt-PT');
+};
+
 const Home = ({ onLogout }) => {
     const [notifications, setNotifications] = useState([]);
     const [activityCounts, setActivityCounts] = useState({ eventosCount: 0, requisicoesCount: 0 });
@@ -77,15 +83,16 @@ const Home = ({ onLogout }) => {
         if (onLogout) onLogout();
         navigate('/');
     };
-    const calcularDiasRestantes = (dataFim) => {
-    if (!dataFim) return 999;
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
 
-    const fim = new Date(dataFim);
-    fim.setHours(0, 0, 0, 0);
-    const diffTime = fim - hoje;
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const calcularDiasRestantes = (dataFim) => {
+        if (!dataFim) return 999;
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+
+        const fim = new Date(dataFim);
+        fim.setHours(0, 0, 0, 0);
+        const diffTime = fim - hoje;
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
 
     const notificacoesUrgentes = notifications.filter(n => {
@@ -113,6 +120,14 @@ const Home = ({ onLogout }) => {
                             <ShoppingCart size={24} className="icon-esp" />
                             {carrinhoCount > 0 && <span className="cart-badge-count">{carrinhoCount}</span>}
                         </div>
+                        
+                        <div className="user-profile-badge">
+                            <span className="user-name-text">{user?.nome?.split(' ')[0]}</span>
+                            <span className={`role-tag ${user?.id_cargo === 1 ? 'role-gestor' : 'role-func'}`}>
+                                {user?.id_cargo === 1 ? 'GESTOR' : 'FUNCIONÁRIO'}
+                            </span>
+                        </div>
+
                         <Link to="/perfil"> 
                             <User size={24} className="icon-esp" /> 
                         </Link>
@@ -142,7 +157,7 @@ const Home = ({ onLogout }) => {
                                                 ) : diasRestantes === 1 ? (
                                                     <strong> AMANHÃ!</strong>
                                                 ) : (
-                                                    <span> em <strong>{diasRestantes}</strong> dias.</span>
+                                                    <span> em <strong>{diasRestantes}</strong> dias ({formatarData(n.data_fim)}).</span>
                                                 )}
                                             </p>
                                         </div>
@@ -168,7 +183,7 @@ const Home = ({ onLogout }) => {
                     </div>
                 </section>
 
-               <section className="home-section">
+                <section className="home-section">
                     <h3 className="section-title">GUIA RÁPIDO</h3>
                     <div className="quick-guide-grid">
                         
