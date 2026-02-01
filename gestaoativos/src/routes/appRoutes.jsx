@@ -49,10 +49,9 @@ export const appRoutes = [
     permission: Permissions.VIEW_STOCK 
   },
   {
-    path: "/requisitar/:id",
+    path: "/produto/:id",
     element: <Produto />,
     auth: true,
-    permission: Permissions.CREATE_REQUISICAO 
   },
   {
     path: "/carrinho",

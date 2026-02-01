@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { CornerDownLeft, User, Plus, Save, Upload, X, Search, Filter } from 'lucide-react';
+import { ShoppingCart, CornerDownLeft, User, Plus, Save, Upload, X, Search, Filter } from 'lucide-react';
 import './Stock.css';
 import logo from '../../assets/img/esposende.png';
 import ModalConfirmacao from '../../components/ModalConfirmacao';
@@ -99,6 +99,12 @@ const Stock = () => {
         return matchesSearch && matchesCategory;
     });
 
+    const handleLogout = () => {
+        localStorage.clear();
+        if (onLogout) onLogout();
+        navigate('/');
+
+    };
     return (
         <div className="gestao-layout">
             
@@ -120,8 +126,26 @@ const Stock = () => {
                         <button className="nav-item-esp active-tab-indicator">STOCK</button>
                     </nav>
                     <div className="header-icons-esp">
-                        <Link to="/perfil"><User size={22} className="icon-esp" /></Link>
-                        <button onClick={() => { localStorage.clear(); navigate('/'); }} className="logout-btn"><CornerDownLeft size={24} className="icon-esp" /></button>
+                        <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
+                            <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>
+                                {user?.nome?.split(' ')[0]}
+                            </span>
+                            <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
+                                {user?.id_perfil === 2 ? 'GESTOR' : 'FUNCIONÁRIO'}
+                            </span>
+                        </div>
+
+                        <Link to="/carrinho">
+                            <ShoppingCart size={24} className="icon-esp" />
+                        </Link>
+                        
+                        <Link to="/perfil">
+                            <User size={24} className="icon-esp active-icon-indicator" />
+                        </Link>
+
+                        <button onClick={handleLogout} className="logout-btn">
+                            <CornerDownLeft size={24} className="icon-esp" />
+                        </button>
                     </div>
                 </div>
             </header>

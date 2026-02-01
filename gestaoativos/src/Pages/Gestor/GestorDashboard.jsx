@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { CornerDownLeft, User, X, Calendar, Download, Package, Activity, Search, Filter, MapPin, CheckCircle, XCircle, Truck, RotateCcw, FileClock, Ban, FileText, ShoppingCart, Edit } from 'lucide-react';
+import { CornerDownLeft, User, X, Calendar, Download, Package, Activity, Filter, MapPin, CheckCircle, XCircle, Truck, RotateCcw, FileClock, Ban, FileText, ShoppingCart, Edit} from 'lucide-react';
 import './GestorDashboard.css';
 import logo from '../../assets/img/esposende.png';
 import Toast from '../../components/Toast';
@@ -20,7 +20,8 @@ const GestorDashboard = () => {
     
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('pendente');
+    const [statusFilter, setStatusFilter] = useState('pendente'); 
+    
     const [carrinhoCount, setCarrinhoCount] = useState(0);
 
     const [toast, setToast] = useState(null);
@@ -28,6 +29,7 @@ const GestorDashboard = () => {
 
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
+    const isGestor = user?.id_perfil === 2;
 
     useEffect(() => {
         if (!user || user.id_perfil !== 2) {
@@ -37,7 +39,6 @@ const GestorDashboard = () => {
         setItems([]); 
         loadData();
         setSearchTerm('');
-        setStatusFilter('pendente');
         
         const cart = JSON.parse(localStorage.getItem('carrinho')) || [];
         setCarrinhoCount(cart.length);
@@ -163,32 +164,22 @@ const GestorDashboard = () => {
              matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) || (item.requerente || '').toLowerCase().includes(searchLower) || (item.id_req && item.id_req.toString().includes(searchLower));
         }
 
-        let matchesStatus = true;
-        if (tab !== 'stock' && tab !== 'historico_req' && statusFilter !== 'todos') {
-            const st = (item.estado_nome || '').toLowerCase();
-            if (statusFilter === 'aprovada') matchesStatus = st.includes('aprov') || st.includes('agend');
-            else if (statusFilter === 'finalizada') matchesStatus = st.includes('final') || st.includes('concl');
-            else if (statusFilter === 'cancelada') matchesStatus = st.includes('cancel');
-            else if (statusFilter === 'recusada') matchesStatus = st.includes('rejeit') || st.includes('recus');
-            else matchesStatus = st.includes(statusFilter);
-        }
+        if (tab === 'stock' || tab === 'historico_req') return matchesSearch;
+
+        let matchesStatus = statusFilter === 'todos' ? true : (item.estado_nome || '').toLowerCase().includes(statusFilter);
         return matchesSearch && matchesStatus;
     });
 
-    const modalContent = (() => {
-        const st = modal.novoEstado;
-        if (st === 5) return { title: "Finalizar & Devolver", msg: "Confirma a devolução? O stock será reposto.", color: "#2ecc71" };
-        if (st === 6) return { title: "Cancelar Requisição", msg: "Tem a certeza? Se houver stock reservado, será libertado.", color: "#e74c3c" };
-        if (st === 3) return { title: "Rejeitar Pedido", msg: "Deseja rejeitar este pedido?", color: "#e74c3c" };
-        return { title: "Confirmação", msg: "Prosseguir?", color: "#1f3a52" };
-    })();
-
-    if (!user || user.id_perfil !== 2) return null;
+    const handleLogout = () => {
+        localStorage.clear();
+        if (user?.onLogout) user.onLogout();
+        navigate('/');
+    };
 
     return (
         <div className="gestao-layout">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-            <ModalConfirmacao isOpen={modal.isOpen} title={modalContent.title} message={modalContent.msg} confirmText="Confirmar" confirmColor={modalContent.color} onConfirm={() => executarAcao()} onCancel={() => setModal({ isOpen: false, action: null, id: null, novoEstado: null })} />
+            <ModalConfirmacao isOpen={modal.isOpen} title="Confirmação" message="Prosseguir com a ação?" confirmText="Confirmar" onConfirm={() => executarAcao()} onCancel={() => setModal({ isOpen: false, action: null, id: null, novoEstado: null })} />
 
             <header className="fixed-header-esp">
                 <div className="header-content-esp">
@@ -202,12 +193,17 @@ const GestorDashboard = () => {
                         <button className="nav-item-esp" onClick={() => navigate('/stock')} >STOCK ATUAL</button>
                     </nav>
                     <div className="header-icons-esp">
-                        <div style={{position: 'relative', cursor: 'pointer', marginRight:'15px'}} onClick={() => navigate('/carrinho')}>
-                            <ShoppingCart size={22} className="icon-esp" />
-                            {carrinhoCount > 0 && <span className="cart-badge-count">{carrinhoCount}</span>}
+                        <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
+                            <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>
+                                {user?.nome?.split(' ')[0]}
+                            </span>
+                            <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
+                                {user?.id_perfil === 2 ? 'GESTOR' : 'FUNCIONÁRIO'}
+                            </span>
                         </div>
-                        <Link to="/perfil"><User size={22} className="icon-esp" /></Link>
-                        <button onClick={() => { localStorage.clear(); navigate('/'); }} className="logout-btn"><CornerDownLeft size={24} className="icon-esp" /></button>
+                        <Link to="/carrinho"><ShoppingCart size={24} className="icon-esp" /></Link>
+                        <Link to="/perfil"><User size={24} className="icon-esp active-icon-indicator" /></Link>
+                        <button onClick={handleLogout} className="logout-btn"><CornerDownLeft size={24} className="icon-esp" /></button>
                     </div>
                 </div>
             </header>
@@ -217,38 +213,70 @@ const GestorDashboard = () => {
                     <h2 className="gestao-title">{tab === 'requisicoes' ? 'GERIR REQUISIÇÕES' : tab === 'eventos' ? 'GERIR EVENTOS' : tab === 'stock' ? 'AUDITORIA DE STOCK' : 'AUDITORIA'}</h2>
                     <div className="filters-container">
                         <div className="search-input-wrapper">
-                            <Search size={20} className="search-icon"/><input type="text" placeholder="Pesquisar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                            <input type="text" placeholder="Pesquisar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                         </div>
                         {tab !== 'stock' && tab !== 'historico_req' && (
-                            <div className="filter-chips-container" style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
-                                {['todos', 'pendente', 'aprovada', 'em curso', 'recusada', 'finalizada', 'cancelada'].map(f => (
-                                    <button key={f} className={`filter-chip ${statusFilter === f ? 'active' : ''} status-${f.replace(' ', '')}`} onClick={() => setStatusFilter(f)}>{f.toUpperCase()}</button>
-                                ))}
+                            <div className="filter-select-wrapper">
+                                <Filter size={20} className="filter-icon" />
+                                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                                    <option value="todos">Todos os Estados</option>
+                                    <option value="pendente">Pendente</option>
+                                    <option value="aprovada">Aprovada</option>
+                                    <option value="em curso">Em Curso</option>
+                                    <option value="finalizada">Finalizada</option>
+                                    <option value="cancelada">Cancelada</option>
+                                    <option value="recusada">Recusada</option>
+                                </select>
                             </div>
                         )}
                     </div>
                 </div>
 
                 <div className="gestao-grid">
-                    {loading ? <p>Carregando...</p> : filteredItems.length > 0 ? filteredItems.map(item => (
-                        <div key={item.id_req || item.id_evento || item.id_hist || Math.random()} className="gestao-card" onClick={() => handleVerDetalhes(item)} style={{ cursor: (tab === 'stock' || tab === 'historico_req') ? 'default' : 'pointer' }}>
-                             <div className="card-info">
-                                {tab === 'requisicoes' ? (
-                                    <><strong>{item.nome_evento}</strong><p>{item.requerente}</p><span className={`status-badge ${item.estado_nome?.toLowerCase().replace(' ', '-')}`}>{item.estado_nome}</span></>
-                                ) : tab === 'stock' ? (
-                                    <><strong><Package size={16} /> {item.item_nome}</strong><p><User size={14} /> {item.nome_utilizador}</p><p><Activity size={14} /> {item.tipo_movimento} ({item.quantidade_alt})</p><p style={{fontSize:'0.8em', color:'#888'}}>{new Date(item.data_movimento).toLocaleString('pt-PT')}</p></>
-                                ) : tab === 'historico_req' ? (
-                                    <><strong><FileClock size={16} /> Req #{item.id_req} - {item.acao}</strong><p><User size={14} /> Por: {item.nome_responsavel}</p><p style={{fontSize:'0.8em', color:'#888'}}>{new Date(item.data_acao).toLocaleString('pt-PT')}</p></>
-                                ) : (
-                                    <><strong>{item.nome_evento}</strong><p>{item.localizacao}</p><span className={`status-badge ${item.estado_nome?.toLowerCase()}`}>{item.estado_nome}</span></>
-                                )}
-                             </div>
-                        </div>
-                    )) : <p>Sem resultados.</p>}
+                    {loading ? (
+                        <div className="loading-state"><Activity className="spin-animation" size={32}/><p>A carregar dados...</p></div>
+                    ) : filteredItems.length > 0 ? (
+                        filteredItems.map((item) => (
+                            <div 
+                                key={item.id_req || item.id_evento || item.id_hist || Math.random()} 
+                                className="gestao-card" 
+                                onClick={() => handleVerDetalhes(item)}
+                                style={{ cursor: (tab === 'stock' || tab === 'historico_req') ? 'default' : 'pointer' }}
+                            >
+                                <div className="card-info">
+                                    {tab === 'stock' ? (
+                                        <>
+                                            <strong><Package size={16} /> {item.item_nome}</strong>
+                                            <p><User size={14} /> {item.nome_utilizador}</p>
+                                            <p><Activity size={14} /> {item.tipo_movimento} ({item.quantidade_alt} un.)</p>
+                                            <p style={{fontSize: '0.8em', color: '#888'}}>{formatarData(item.data_movimento)}</p>
+                                        </>
+                                    ) : tab === 'historico_req' ? (
+                                        <>
+                                            <strong><FileClock size={16} /> Req #{item.id_req} - {item.acao}</strong>
+                                            <p><User size={14} /> Por: {item.nome_responsavel}</p>
+                                            <p style={{fontStyle: 'italic', fontSize: '0.9em', color: '#555'}}>{item.detalhes}</p>
+                                            <p style={{fontSize: '0.8em', color: '#888'}}>{formatarData(item.data_acao)}</p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <strong>{item.nome_evento || `Requisição #${item.id_req}`}</strong>
+                                            <p>{item.requerente || item.localizacao}</p>
+                                            <span className={`status-badge ${item.estado_nome?.toLowerCase().replace(' ', '-')}`}>
+                                                {item.estado_nome}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p className="no-results">Nenhum resultado encontrado.</p>
+                    )}
                 </div>
             </main>
 
-            {selectedItem && tab !== 'stock' && tab !== 'historico_req' && (
+            {selectedItem && (
                 <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
                     <div className="modal-content new-gestor-modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
@@ -256,63 +284,85 @@ const GestorDashboard = () => {
                             <button onClick={() => setSelectedItem(null)} className="close-btn"><X size={24} /></button>
                         </div>
                         <div className="modal-body-scrollable">
-                            <h2 className="modal-main-title">{selectedItem.nome_evento || `Req #${selectedItem.id_req}`}</h2>
+                            <h2 className="modal-main-title">{selectedItem.nome_evento || `Requisição #${selectedItem.id_req}`}</h2>
                             <div className="detail-grid">
-                                <div className="detail-item"><span className="label">Requerente</span><span className="value"><User size={14}/> {selectedItem.requerente}</span></div>
-                                <div className="detail-item"><span className="label">Data</span><span className="value"><Calendar size={14}/> {selectedItem.data_inicio ? formatarData(selectedItem.data_inicio) : formatarData(selectedItem.data_pedido)}</span></div>
-                                <div className="detail-item"><span className="label">Estado</span><span className={`status-badge-large ${selectedItem.estado_nome?.toLowerCase().replace(' ', '-')}`}>{selectedItem.estado_nome}</span></div>
-                                {tab === 'eventos' && (
-                                    <div className="detail-item full-width">
-                                        <span className="label">Localização</span>
-                                        <span className="value">
-                                            <MapPin size={14}/> 
-                                            {selectedItem.latitude ? <a href={`https://www.google.com/maps?q=${selectedItem.latitude},${selectedItem.longitude}`} target="_blank" rel="noreferrer" style={{color:'#1f3a52', textDecoration:'underline'}}>Ver no Mapa</a> : (selectedItem.localizacao || 'N/A')}
-                                        </span>
-                                    </div>
-                                )}
+                                <div className="detail-item">
+                                    <span className="label">Requerente</span>
+                                    <span className="value"><User size={14}/> {selectedItem.requerente || selectedItem.nome_utilizador}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span className="label">Data</span>
+                                    <span className="value"><Calendar size={14}/> {selectedItem.data_inicio ? formatarData(selectedItem.data_inicio) : formatarData(selectedItem.data_pedido)}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span className="label">Estado Atual</span>
+                                    <span className={`status-badge-large ${selectedItem.estado_nome?.toLowerCase().replace(' ', '-')}`}>
+                                        {selectedItem.estado_nome}
+                                    </span>
+                                </div>
+                                <div className="detail-item full-width">
+                                    <span className="label">Localização</span>
+                                    <span className="value">
+                                        <MapPin size={14}/> 
+                                        {selectedItem.latitude ? 
+                                            <a href={`https://www.google.com/maps?q=${selectedItem.latitude},${selectedItem.longitude}`} target="_blank" rel="noreferrer" className="map-link">Ver no Mapa</a> 
+                                            : (selectedItem.localizacao || 'N/A')}
+                                    </span>
+                                </div>
                             </div>
-                            
-                            {tab === 'eventos' && selectedItem.descricao && (
-                                <div className="section-block"><h4><FileText size={16}/> DESCRIÇÃO</h4><p className="description-text">{selectedItem.descricao}</p></div>
-                            )}
-
-                            {tab === 'eventos' && anexos.length > 0 && (
-                                <div className="section-block"><h4>ANEXOS</h4><ul className="attachments-list">{anexos.map(a => (<li key={a.id_anexo}><a href={`http://localhost:3002/uploads/${a.caminho_ficheiro}`} target="_blank" rel="noreferrer"><Download size={14}/> {a.nome_ficheiro}</a></li>))}</ul></div>
-                            )}
 
                             {tab === 'requisicoes' && materiais.length > 0 && (
                                 <div className="section-block">
-                                    <h4><Package size={16}/> MATERIAIS REQUISITADOS</h4>
-                                    <table className="materials-table-clean">
-                                        <thead><tr><th>Material</th><th>Qtd</th></tr></thead>
-                                        <tbody>{materiais.map((m,i) => <tr key={i}><td>{m.nome}</td><td>{m.quantidade}</td></tr>)}</tbody>
-                                    </table>
+                                    <h4><Package size={16}/> LISTA DE MATERIAIS</h4>
+                                    <div className="materials-list-gestor">
+                                        {materiais.map((m, i) => (
+                                            <div key={i} className="material-item-row">
+                                                <div className="mat-info">
+                                                    <span className="mat-name">{m.nome}</span>
+                                                    <span className="mat-qty">{m.quantidade} un.</span>
+                                                </div>
+                                                <span className={`item-status-tag ${m.status_item?.toLowerCase() || 'aprovado'}`}>
+                                                    {m.status_item || 'APROVADO'}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {tab === 'eventos' && anexos.length > 0 && (
+                                <div className="section-block">
+                                    <h4><FileText size={16}/> ANEXOS DO EVENTO</h4>
+                                    <div className="anexos-grid">
+                                        {anexos.map((file, i) => (
+                                            <a key={i} href={`http://localhost:3002/uploads/${file.url}`} target="_blank" rel="noreferrer" className="anexo-link">
+                                                <Download size={14} /> {file.nome_original || 'Documento'}
+                                            </a>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
-
                         <div className="modal-footer-actions">
-                            {tab === 'requisicoes' && (selectedItem.estado_nome?.toLowerCase().includes('aprov') || selectedItem.estado_nome?.toLowerCase().includes('pendente')) && (
-                                <button onClick={handleEditarComoGestor} className="btn-action-outline" style={{borderColor: '#3b82f6', color:'#3b82f6'}}><Edit size={16} style={{marginRight:5}}/> EDITAR MATERIAIS</button>
+                            {tab === 'requisicoes' && (
+                                <button onClick={handleEditarComoGestor} className="btn-action-outline" style={{borderColor: '#3b82f6', color:'#3b82f6'}}><Edit size={16}/> EDITAR</button>
                             )}
-
                             {selectedItem.estado_nome?.toLowerCase() === 'pendente' && (
-                                <><button onClick={() => prepararAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-action-outline danger">REJEITAR</button>
-                                <button onClick={() => prepararAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-action-solid success">APROVAR</button></>
+                                <><button onClick={() => executarAcao(selectedItem.id_req || selectedItem.id_evento, 3)} className="btn-action-outline danger">REJEITAR</button>
+                                <button onClick={() => executarAcao(selectedItem.id_req || selectedItem.id_evento, 2)} className="btn-action-solid success">APROVAR</button></>
                             )}
-                            
-                            {tab === 'requisicoes' && (selectedItem.estado_nome?.toLowerCase().includes('aprov')) && (
-                                <button onClick={() => prepararAcao(selectedItem.id_req, 6)} className="btn-action-outline danger">CANCELAR</button>
-                            )}
-
                             {tab === 'requisicoes' && selectedItem.estado_nome?.toLowerCase().includes('em curso') && (
-                                <button onClick={() => prepararAcao(selectedItem.id_req, 5)} className="btn-action-solid success full-width"><RotateCcw size={16} style={{marginRight:5}}/> DEVOLVER</button>
+                                <button onClick={() => prepararAcao(selectedItem.id_req, 5)} className="btn-action-solid success"><RotateCcw size={16}/> DEVOLVER</button>
                             )}
                         </div>
                     </div>
                 </div>
             )}
-            <footer className="fixed-footer-esp"><div className="footer-items-wrapper"><span className="footer-project-esp">Gestão de Ativos - Município de Esposende</span></div></footer>
+            <footer className="fixed-footer-esp">
+                <div className="footer-items-wrapper">
+                    <span className="footer-project-esp">Gestão de Ativos - Município de Esposende</span>
+                </div>
+            </footer>
         </div>
     );
 };

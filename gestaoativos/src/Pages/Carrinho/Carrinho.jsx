@@ -6,7 +6,7 @@ import logo from '../../assets/img/esposende.png';
 import Toast from '../../components/Toast';
 import ModalConfirmacao from '../../components/ModalConfirmacao';
 
-const Carrinho = () => {
+const Carrinho = ({ onLogout}) => {
     const navigate = useNavigate();
     const [itens, setItens] = useState(JSON.parse(localStorage.getItem('carrinho')) || []);
     const user = JSON.parse(localStorage.getItem('user'));
@@ -93,13 +93,19 @@ const Carrinho = () => {
     };
 
     const atualizarData = (index, campo, valor) => {
-        const novos = [...itens];
-        novos[index][campo] = valor;
-        setItens(novos);
-        localStorage.setItem('carrinho', JSON.stringify(novos));
+    const novos = [...itens];
+    novos[index][campo] = valor;
+    setItens(novos);
+    localStorage.setItem('carrinho', JSON.stringify(novos));
+};
+
+        const handleLogout = () => {
+        localStorage.clear();
+        if (onLogout) onLogout();
+        navigate('/');
+
     };
 
-    const formatarData = (d) => d ? new Date(d).toLocaleDateString('pt-PT') : '-';
 
     return (
         <div className="layout-padrao-carrinho">
@@ -117,7 +123,8 @@ const Carrinho = () => {
 
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
-                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}} />
+                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate(user?.id_perfil === 2 ? '/gestao' : '/home')} 
+    style={{cursor:'pointer'}} />
                     <nav className="header-nav-esp">
                         <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                         {user?.id_perfil === 2 
@@ -126,8 +133,24 @@ const Carrinho = () => {
                         }
                     </nav>
                     <div className="header-icons-esp">
-                        <Link to="/perfil"><User size={24} className="icon-esp" /></Link>
-                        <button onClick={() => {localStorage.clear(); navigate('/');}} className="logout-btn">
+                        <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
+                            <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>
+                                {user?.nome?.split(' ')[0]}
+                            </span>
+                            <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
+                                {user?.id_perfil === 2 ? 'GESTOR' : 'FUNCIONÁRIO'}
+                            </span>
+                        </div>
+
+                        <Link to="/carrinho">
+                            <ShoppingCart size={24} className="icon-esp" />
+                        </Link>
+                        
+                        <Link to="/perfil">
+                            <User size={24} className="icon-esp active-icon-indicator" />
+                        </Link>
+
+                        <button onClick={handleLogout} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>
                     </div>
@@ -137,7 +160,7 @@ const Carrinho = () => {
             <main className="carrinho-main">
                 <div className="carrinho-info-topo">
                     <h2>O TEU CARRINHO</h2>
-                    <p>Confirma os itens e as datas antes de submeter.</p>
+                    <p>Confirme os seus itens e as datas antes de submeter.</p>
                 </div>
 
                 <div className="tabela-container-esp">

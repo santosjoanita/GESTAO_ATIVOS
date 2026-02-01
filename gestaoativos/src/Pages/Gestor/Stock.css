@@ -29,6 +29,42 @@
     margin: 0;
     font-size: 1.5rem;
 }
+.header-icons-esp {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-icons-esp a,
+.header-icons-esp button {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: none !important;
+    outline: none !important;
+    transition: transform 0.2s ease;
+}
+
+.header-icons-esp .icon-esp {
+    color: white !important;
+    stroke: white !important;
+}
+
+.header-icons-esp a:hover,
+.header-icons-esp button:hover {
+    transform: scale(1.1);
+    background: transparent !important; 
+
+
+.header-icons-esp .active-icon-indicator {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); 
+}
+}
 
 .btn-new {
     background-color: #27ae60;

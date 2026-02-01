@@ -4,6 +4,71 @@
     display: flex; flex-direction: column;
     padding-top: 120px;
 }
+.header-icons-esp {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-icons-esp a,
+.header-icons-esp button {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: none !important;
+    outline: none !important;
+    transition: transform 0.2s ease;
+}
+
+.header-icons-esp .icon-esp {
+    color: white !important;
+    stroke: white !important;
+}
+
+.header-icons-esp a:hover,
+.header-icons-esp button:hover {
+    transform: scale(1.1);
+    background: transparent !important; 
+
+
+.header-icons-esp .active-icon-indicator {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); 
+}
+}
+.user-profile-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    line-height: 1.1;
+    margin-right: 10px;
+}
+
+.user-name-text {
+    font-size: 13px;
+    font-weight: bold;
+    color: white;
+}
+.role-tag {
+    font-size: 9px;
+    font-weight: 800;
+    color: #3498db;
+    text-transform: uppercase;
+}
+
+.icon-esp {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.icon-esp:hover {
+    transform: scale(1.1);
+    color: var(--color-secondary-light);
+}
 
 .requisicao-main-centered {
     display: flex; justify-content: center; width: 100%;
@@ -36,9 +101,8 @@
 }
 .btn-cancelar:hover { border-color: #999; color: #333; }
 
-/* BOTÃO GRANDE E BONITO */
 .btn-submeter {
-    flex: 2; /* Ocupa mais espaço que o cancelar */
+    flex: 2; 
     padding: 16px;
     background-color: #1f3a52;
     color: white;

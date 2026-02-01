@@ -5,7 +5,7 @@ import './Produto.css';
 import logo from '../../assets/img/esposende.png';
 import Toast from '../../components/Toast';
 
-const Produto = () => {
+const Produto = ({ onLogout }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     
@@ -61,6 +61,12 @@ const Produto = () => {
         }
     }, [id, eventoAtivo?.id_req]);
 
+    const handleLogout = () => {
+        localStorage.clear();
+        if (onLogout) onLogout();
+        navigate('/');
+
+    };
     const handleAdicionar = () => {
         if (!eventoAtivo) {
             setToast({ type: 'warning', message: "Atenção: Seleciona 'Editar' numa requisição no Perfil primeiro!" });
@@ -92,6 +98,7 @@ const Produto = () => {
         setToast({ type: 'success', message: `${material.nome} adicionado ao carrinho!` });
         setTimeout(() => navigate('/explorar'), 1000);
     };
+    
 
     if (!material) return <div className="loading-state">A carregar...</div>;
 
@@ -101,18 +108,34 @@ const Produto = () => {
 
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
-                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}}/>
+                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate(isGestor ? '/gestao' : '/home')} 
+    style={{cursor:'pointer'}}/>
                     <nav className="header-nav-esp">
                         <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
-                        <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
+                        {user?.id_perfil === 2 ? (
+                                    <Link to="/gestao" className="nav-item-esp">PAINEL DE GESTÃO</Link>
+                                 ) : (
+                                    <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
+                        )}
                     </nav>
                     <div className="header-icons-esp">
-                        <div style={{position: 'relative', cursor: 'pointer'}} onClick={() => navigate('/carrinho')}>
-                            <ShoppingCart size={24} className="icon-esp" />
-                            {itensCarrinho.length > 0 && <span className="cart-badge-count">{itensCarrinho.length}</span>}
+                        <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
+                            <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>
+                                {user?.nome?.split(' ')[0]}
+                            </span>
+                            <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
+                                {user?.id_perfil === 2 ? 'GESTOR' : 'FUNCIONÁRIO'}
+                            </span>
                         </div>
-                        <Link to="/perfil"><User size={24} className="icon-esp" /></Link>
-                        <button onClick={() => {localStorage.clear(); navigate('/');}} className="logout-btn">
+                        <Link to="/carrinho">
+                            <ShoppingCart size={24} className="icon-esp" />
+                        </Link>
+                        
+                        <Link to="/perfil">
+                            <User size={24} className="icon-esp active-icon-indicator" />
+                        </Link>
+
+                        <button onClick={handleLogout} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>
                     </div>

@@ -5,25 +5,29 @@ import './Requisicao.css';
 import logo from '../../assets/img/esposende.png'; 
 import Toast from '../../components/Toast';
 
-const Requisicao = () => {
+const Requisicao = ({ onLogout }) => {
+    const navigate = useNavigate();
     const [eventos, setEventos] = useState([]);
     const [formData, setFormData] = useState({ id_evento: '' });
     const [toast, setToast] = useState(null);
-    const navigate = useNavigate();
     
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user?.id_user || user?.id;
+    const isGestor = user?.id_perfil === 2;
 
     const getAuthHeaders = () => {
-        const storedData = localStorage.getItem('user');
-        const userData = storedData ? JSON.parse(storedData) : null;
         return {
             'Content-Type': 'application/json',
-            'Authorization': userData && userData.token ? `Bearer ${userData.token}` : ''
+            'Authorization': user?.token ? `Bearer ${user.token}` : ''
         };
     };
 
     useEffect(() => {
+        if (!user) {
+            navigate('/');
+            return;
+        }
+
         fetch('http://localhost:3002/api/requisicoes/eventos-disponiveis', { headers: getAuthHeaders() })
             .then(res => {
                 if (!res.ok) throw new Error("Erro de permissão ou rede");
@@ -62,10 +66,8 @@ const Requisicao = () => {
                 throw new Error(errData.detalhes || errData.erro || "Erro no servidor");
             }
             
-            // SUCESSO!
             setToast({ type: 'success', message: "Requisição criada com sucesso!" });
 
-            // Redireciona para o Perfil passados 1.5s para o user ver o Toast
             setTimeout(() => {
                 navigate('/perfil');
             }, 1500);
@@ -76,9 +78,18 @@ const Requisicao = () => {
         }
     };
 
+    const handleLogout = () => {
+
+        localStorage.clear();
+
+        if (onLogout) onLogout();
+
+        navigate('/');
+
+    };
+
     return (
         <div className="requisicao-page-layout">
-            {/* O TOAST APARECE AQUI */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
             <header className="fixed-header-esp">
@@ -90,12 +101,28 @@ const Requisicao = () => {
                         <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                         <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
                         <Link to="/nova-requisicao" className="nav-item-esp active-tab-indicator">NOVA REQUISIÇÃO</Link> 
-                        <Link to="/novo-evento" className="nav-item-esp active-tab-indicator">NOVO EVENTO</Link>
+                        <Link to="/novo-evento" className="nav-item-esp">NOVO EVENTO</Link>
                     </nav>
                     <div className="header-icons-esp">
-                        <Link to="/carrinho"><ShoppingCart size={24} className="icon-esp" /></Link>
-                        <Link to="/perfil"><User size={24} className="icon-esp" /></Link>
-                        <button onClick={() => { localStorage.clear(); navigate('/'); }} className="logout-btn">
+                        <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
+                            <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>
+                                {user?.nome?.split(' ')[0]}
+                            </span>
+                            <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
+                                {user?.id_perfil === 2 ? 'GESTOR' : 'FUNCIONÁRIO'}
+                            </span>
+                        </div>
+
+                        {/* Ícones de Navegação */}
+                        <Link to="/carrinho">
+                            <ShoppingCart size={24} className="icon-esp" />
+                        </Link>
+                        
+                        <Link to="/perfil">
+                            <User size={24} className="icon-esp active-icon-indicator" />
+                        </Link>
+
+                        <button onClick={handleLogout} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>
                     </div>

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; 
-import { Search, X, ChevronRight, ShoppingCart, User, CornerDownLeft } from 'lucide-react';
+import { X, ChevronRight, ShoppingCart, User, CornerDownLeft, LogOut } from 'lucide-react';
 import './Explorar.css';
 import logo from '../../assets/img/esposende.png';
 
-const Explorar = () => {
+const Explorar = ({ onLogout }) => { 
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
+    const isGestor = user?.id_perfil === 2;
+    
     const [materiais, setMateriais] = useState([]);
     const [categorias, setCategorias] = useState([]);
     const [filtroTexto, setFiltroTexto] = useState('');
@@ -27,6 +29,7 @@ const Explorar = () => {
     ];
 
     const getAuthHeaders = () => ({
+        'Authorization': `Bearer ${user?.token}`,
         'x-user-profile': user?.id_perfil?.toString(),
         'x-user-name': user?.nome
     });
@@ -54,20 +57,18 @@ const Explorar = () => {
         fetchData();
     }, []);
 
-    const handleCheckCategoria = (nome) => {
-        setCategoriasSelecionadas(prev => 
-            prev.includes(nome) ? prev.filter(c => c !== nome) : [...prev, nome]
-        );
-        setPagina(0);
+    const handleSairEdicao = () => {
+        localStorage.removeItem('evento_trabalho');
+        window.location.reload(); // Recarrega para limpar o estado visual
     };
 
-    const handleCheckArmazem = (nome) => {
-        setArmazensSelecionados(prev => 
-            prev.includes(nome) ? prev.filter(a => a !== nome) : [...prev, nome]
-        );
-        setPagina(0);
+    const handleLogout = () => {
+        localStorage.clear();
+        if (onLogout) onLogout();
+        navigate('/');
     };
-    
+
+    // Filtros
     const materiaisFiltrados = materiais.filter(m => {
         const nomeMaterial = m.nome || ""; 
         const matchTexto = nomeMaterial.toLowerCase().includes(filtroTexto.toLowerCase());
@@ -83,32 +84,47 @@ const Explorar = () => {
         <div className="explorar-container">
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
-                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}} />
+                    <img 
+                        src={logo} 
+                        alt="Logo" 
+                        className="logo-img" 
+                        onClick={() => navigate(isGestor ? '/gestao' : '/home')} 
+                        style={{cursor:'pointer'}} 
+                    />
                     
                     <nav className="header-nav-esp">
                         <Link to="/explorar" className="nav-item-esp active-tab-indicator">CATÁLOGO</Link>
-                        {user?.id_perfil === 2 ? (
-                            <Link to="/gestao" className="nav-item-esp">PAINEL DE GESTÃO</Link>
+                        {isGestor ? (
+                            <Link to="/gestao" className="nav-item-esp">GESTÃO</Link>
                         ) : (
-                            <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
+                            <Link to="/home" className="nav-item-esp">INÍCIO</Link>
+                        )}
+                        {eventoAtivo && (
+                            <button onClick={handleSairEdicao} className="btn-sair-edicao">
+                                <X size={14} /> PARAR EDIÇÃO
+                            </button>
                         )}
                     </nav>
 
                     <div className="header-icons-esp">
-                        <div style={{position: 'relative', cursor: 'pointer', marginRight:'15px'}} onClick={() => navigate('/carrinho')}>
-                            <ShoppingCart size={22} className="icon-esp" />
-                            {carrinhoCount > 0 && <span className="cart-badge-count">{carrinhoCount}</span>}
-                        </div>
-
-                        <div className="user-profile-badge" style={{marginRight:'10px', textAlign:'right'}}>
-                            <span className="user-name-text" style={{fontSize:'12px', fontWeight:'bold', color:'#1f4e79', display:'block'}}>{user?.nome?.split(' ')[0]}</span>
-                            <span className="role-tag" style={{fontSize:'9px', padding:'2px 5px', borderRadius:'3px', color:'white', background: user?.id_perfil === 2 ? '#f39c12' : '#3498db'}}>
-                                {user?.id_perfil === 2 ? 'GESTOR' : 'FUNCIONÁRIO'}
+                        <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
+                            <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>
+                                {user?.nome?.split(' ')[0]}
+                            </span>
+                            <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
+                                {isGestor ? 'GESTOR' : 'FUNCIONÁRIO'}
                             </span>
                         </div>
 
-                        <Link to="/perfil"><User size={22} className="icon-esp" /></Link>
-                        <button onClick={() => {localStorage.clear(); navigate('/');}} className="logout-btn">
+                        <Link to="/carrinho">
+                            <ShoppingCart size={24} className="icon-esp" />
+                        </Link>
+                        
+                        <Link to="/perfil">
+                            <User size={24} className="icon-esp" />
+                        </Link>
+
+                        <button onClick={handleLogout} className="logout-btn">
                             <CornerDownLeft size={24} className="icon-esp" />
                         </button>
                     </div>
@@ -123,7 +139,6 @@ const Explorar = () => {
                             placeholder="Pesquisar..." 
                             onChange={(e) => { setFiltroTexto(e.target.value); setPagina(0); }}
                         />
-                        <Search size={18} className="search-icon" />
                     </div>
 
                     <div className="filtros-secao">
@@ -181,7 +196,7 @@ const Explorar = () => {
                             <div 
                                 key={m.id_material} 
                                 className={`card-visual ${m.quantidade_disp <= 0 ? 'esgotado' : ''} ${!eventoAtivo ? 'only-view' : ''}`}
-                                onClick={() => eventoAtivo && m.quantidade_disp > 0 && navigate(`/requisitar/${m.id_material}`)}
+                                onClick={() => eventoAtivo && m.quantidade_disp > 0 && navigate(`/produto/${m.id_item}`)}
                                 style={{cursor: (!eventoAtivo || m.quantidade_disp <= 0) ? 'not-allowed' : 'pointer'}}
                             >
                                 <div className="img-box">
@@ -211,8 +226,8 @@ const Explorar = () => {
                 <div className="footer-inner">
                     <span className="status-text">
                         {eventoAtivo 
-                            ? `ATUALMENTE A TRABALHAR EM: ${eventoAtivo.nome.toUpperCase()}` 
-                            : "MODO DE CONSULTA (SELECIONE UMA REQUISIÇÃO NO PERFIL)"}
+                            ? `A EDITAR REQUISIÇÃO: ${eventoAtivo.nome.toUpperCase()}` 
+                            : "MODO DE CONSULTA (SELECIONE UMA REQUISIÇÃO NO PERFIL PARA ADICIONAR ITENS)"}
                     </span>
                 </div>
             </footer>
