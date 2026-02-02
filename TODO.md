@@ -35,17 +35,3 @@ NOTAS:
 Criar admin apenas para registar utilizadores.
 Criar convidado que apenas vê o catálogo, só.
 
-este erro no carrinho do gestor ao tentar submeter: 
-﻿
-:3002/api/materiais/undefined:1 
- Failed to load resource: the server responded with a status of 404 (Not Found)
-:3002/api/requisicoes/6/submeter:1 
- Failed to load resource: the server responded with a status of 400 (Bad Request)
-:3002/api/requisicoes/6/submeter:1 
- Failed to load resource: the server responded with a status of 400 (Bad Request)
-:3002/api/requisicoes/6/submeter:1 
- Failed to load resource: the server responded with a status of 400 (Bad Request)
-
- A página de produto aparece sem detalhes nenhum da parte do gestor
- O botão parar edição sem css
- Meter os toast dnv a avisar de confirmações e erros.

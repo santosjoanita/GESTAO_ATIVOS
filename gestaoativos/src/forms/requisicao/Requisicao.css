@@ -121,3 +121,58 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(31, 58, 82, 0.3);
 }
+/* --- RESPONSIVIDADE PÁGINA REQUISIÇÃO --- */
+
+@media (max-width: 768px) {
+    .requisicao-page-layout {
+        padding-top: 160px; 
+    }
+
+    .header-content-esp {
+        flex-direction: column;
+        height: auto;
+        padding: 10px 0;
+    }
+
+    .requisicao-white-card {
+        width: 95%;
+        padding: 25px 20px;
+        margin-bottom: 30px;
+    }
+
+    .requisicao-card-title {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+    }
+
+    .req-button-row {
+        flex-direction: column-reverse;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    .btn-cancelar, .btn-submeter {
+        width: 100%;
+        flex: none; 
+        padding: 14px;
+    }
+
+    .user-profile-badge {
+        display: none; 
+    }
+}
+
+@media (max-width: 480px) {
+    .requisicao-white-card {
+        padding: 20px 15px;
+    }
+
+    .req-field-group label {
+        font-size: 11px;
+    }
+
+    .req-field-group select, .req-field-group input {
+        padding: 12px;
+        font-size: 14px;
+    }
+}

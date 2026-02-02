@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HomeLayout from '../HomeLayout'; 
 import AuthModal from '../Autenticação/AuthModal.jsx'; 
+import Toast from '../components/Toast';
 
 const Login = ({ onLoginSuccess }) => {
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate(); 
+    const [toast, setToast] = useState(null);
 
     const handleLoginSubmit = async (username, password) => {
         setIsLoading(true);
@@ -29,6 +31,12 @@ const Login = ({ onLoginSuccess }) => {
                     ...serverResponse.user,   
                     token: serverResponse.token 
                 };
+                setToast({ type: 'success', message: "Login efetuado com sucesso!" });
+
+            setTimeout(() => {
+                if (userToSave.id_perfil === 2) navigate('/gestao'); 
+                else navigate('/home'); 
+            }, 1000);
                 
                 localStorage.clear();
                 localStorage.setItem('user', JSON.stringify(userToSave));
@@ -44,6 +52,7 @@ const Login = ({ onLoginSuccess }) => {
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 setError(errorData.erro || 'Utilizador ou palavra-passe incorretos.');
+                setToast({ type: 'error', message: "Credenciais inválidas." });
             }
         } catch (err) {
             console.error("Erro no login:", err);
@@ -52,9 +61,17 @@ const Login = ({ onLoginSuccess }) => {
             setIsLoading(false);
         }
     };
+    useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.token) {
+        // Se já houver user, manda para a home ou gestao
+        navigate(user.id_perfil === 2 ? '/gestao' : '/home');
+    }
+}, [navigate]);
 
     return (
         <>
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             <HomeLayout onLoginButtonClick={() => setShowAuthModal(true)} />
             {showAuthModal && (
                 <AuthModal 

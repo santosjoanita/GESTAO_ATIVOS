@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { HelpCircle,ChevronDown, ChevronUp, ShoppingCart, User, CornerDownLeft, Package, RotateCcw, XCircle, Briefcase } from 'lucide-react';
+import { HelpCircle,ChevronDown, ChevronUp, ChevronRight, ShoppingCart, User, CornerDownLeft, Package, RotateCcw, XCircle, Briefcase, Download } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
@@ -14,7 +14,7 @@ const formatDate = (dateString) => {
 };
 
 const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick, onCancelarClick, isRequisicao, materiais }) => {
-    if (!event) return null;
+        if (!event) return null;
     const estado = event.id_estado_req;
 
     const podeEditar = isRequisicao && (estado === 2 || estado === 4);
@@ -25,7 +25,7 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
         <div className={`event-card ${event.colorClass} ${isExpanded ? 'expanded' : ''}`}>
             <div className="event-header-row" onClick={onToggle}>
                 <div>
-                    <p className="event-title">{event.title} <span className="status-tag">({event.status})</span></p>
+                    <p className="event-title">{event.title}</p>
                     <p className="event-date">
                         {isRequisicao && event.data_fim 
                             ? `Duração: ${formatDate(event.data_inicio)} até ${formatDate(event.data_fim)}` 
@@ -53,31 +53,78 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                 </div>
             </div>
             {isExpanded && (
-                <div className="event-details">
-                    <div className="details-info-grid">
-                        <p><strong>Local:</strong> {event.localizacao || 'N/A'}</p>
-                        {isRequisicao && (
-                            <div className="materiais-container-perfil" style={{marginTop:'15px'}}>
-                                <p style={{fontWeight:'800',fontSize:'13px',color:'var(--primary-blue)', marginBottom:'10px'}}>
-                                    <Package size={16} style={{verticalAlign:'middle'}}/> LISTA DE MATERIAIS:
-                                </p>
-                                {materiais?.length > 0 ? (
-                                    <ul style={{listStyle:'none', padding:0}}>
-                                        {materiais.map((m, idx) => (
-                                            <li key={idx} style={{fontSize:'13px', borderBottom:'1px solid #eee', padding:'8px 0', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                                                <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
-                                                <span style={{fontSize:'10px', fontWeight:'800', textTransform:'uppercase', padding: '2px 6px', borderRadius: '4px', backgroundColor: m.status_item === 'pendente' ? '#fef3c7' : '#dcfce7', color: m.status_item === 'pendente' ? '#d97706' : '#166534'}}>
-                                                    {m.status_item || 'APROVADO'}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : <p style={{fontSize:'12px',color:'#777'}}>Sem materiais listados.</p>}
-                            </div>
+    <div className="event-details">
+        <div className="details-info-grid">
+            <p><strong>Local:</strong> {event.localizacao || 'N/A'}</p>
+            <p><strong>Início:</strong> {formatDate(event.data_inicio)}</p>
+            <p><strong>Fim:</strong> {formatDate(event.data_fim)}</p>
+
+                {isRequisicao ? (
+                    <div className="materiais-container-perfil" style={{ marginTop: '15px' }}>
+                        <p style={{ fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', marginBottom: '10px' }}>
+                            <Package size={16} style={{ verticalAlign: 'middle' }} /> LISTA DE MATERIAIS:
+                        </p>
+                        {materiais?.length > 0 ? (
+                            <ul style={{ listStyle: 'none', padding: 0 }}>
+                                {materiais.map((m, idx) => (
+                                    <li key={idx} style={{ fontSize: '13px', borderBottom: '1px solid #eee', padding: '8px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
+                                        <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', padding: '2px 6px', borderRadius: '4px', backgroundColor: m.status_item === 'pendente' ? '#fef3c7' : '#dcfce7', color: m.status_item === 'pendente' ? '#d97706' : '#166534' }}>
+                                            {m.status_item || 'APROVADO'}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p style={{ fontSize: '12px', color: '#777' }}>Sem materiais listados.</p>
                         )}
                     </div>
-                </div>
-            )}
+                ) : (
+                    <div className="evento-info-extra" style={{ marginTop: '15px' }}>
+                        <div className="requisicoes-associadas" style={{ marginBottom: '15px' }}>
+                            <p style={{ fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', marginBottom: '10px' }}>
+                                PEDIDOS DE MATERIAL:
+                            </p>
+                            {materiais?.length > 0 ? (
+                                <ul style={{ listStyle: 'none', padding: 0 }}>
+                                    {materiais.map((r, idx) => (
+                                        <li key={idx} style={{ fontSize: '13px', padding: '5px 0', color: '#555' }}>
+                                            <ChevronRight size={14} style={{verticalAlign: 'middle'}}/> Requisição #{r.id_req} — <strong>{r.estado_nome}</strong>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p style={{ fontSize: '12px', color: '#777' }}>Nenhuma requisição associada a este evento.</p>
+                            )}
+                        </div>
+
+                        <div className="anexos-container-perfil">
+                            <p style={{ fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', marginBottom: '10px' }}>
+                                DOCUMENTOS ANEXADOS:
+                            </p>
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                {event.anexos?.length > 0 ? (
+                                    event.anexos.map((file, idx) => (
+                                        <a 
+                                            key={idx} 
+                                            href={`http://localhost:3002/uploads/${file.url}`} 
+                                            target="_blank" 
+                                            rel="noreferrer"
+                                            style={{ fontSize: '12px', color: '#3498db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', background: '#f0f7ff', padding: '5px 10px', borderRadius: '5px' }}
+                                        >
+                                            <Download size={14} /> {file.nome_original || 'Documento'}
+                                        </a>
+                                    ))
+                                ) : (
+                                    <p style={{ fontSize: '12px', color: '#777' }}>Sem anexos disponíveis.</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    )}
         </div>
     );
 };
@@ -86,12 +133,12 @@ const Perfil = () => {
     const navigate = useNavigate();
     const [eventsList, setEventsList] = useState([]);
     const [requisicoesList, setRequisicoesList] = useState([]);
-    const [activeTab, setActiveTab] = useState('todos'); 
-    const [expandedCardId, setExpandedCardId] = useState(null); 
+    const [activeTab, setActiveTab] = useState('eventos');
     const [filtroEstado, setFiltroEstado] = useState('todos');
     const [materiaisCard, setMateriaisCard] = useState([]);
     const [toast, setToast] = useState(null);
     const [modal, setModal] = useState({ isOpen: false, type: null, id: null });
+    const [expandedCardId, setExpandedCardId] = useState(null);
 
     const user = JSON.parse(localStorage.getItem('user'));
     const isGestor = user?.id_perfil === 2;
@@ -123,15 +170,21 @@ const Perfil = () => {
 
             setRequisicoesList(Array.isArray(dataReq) ? dataReq.map(r => ({
                 id: `req-${r.id_req}`, id_orig: r.id_req, isRequisicao: true,
-                title: r.nome_evento, status: r.estado_nome, id_estado_req: r.id_estado_req,
+                title: `${r.nome_evento} | Requisição #${r.id_req}`, status: r.estado_nome, id_estado_req: r.id_estado_req,
                 localizacao: r.localizacao, data_inicio: r.data_inicio, data_fim: r.data_fim,
                 colorClass: getStatusColor(r.estado_nome)
             })) : []);
 
             setEventsList(Array.isArray(dataEv) ? dataEv.map(e => ({
-                id: `ev-${e.id_evento}`, isRequisicao: false,
-                title: e.nome_evento, date: `${formatDate(e.data_inicio)} até ${formatDate(e.data_fim)}`,
-                status: e.estado_nome, localizacao: e.localizacao,
+                id: `ev-${e.id_evento}`, 
+                id_orig: e.id_evento,
+                isRequisicao: false,
+                title: e.nome_evento, 
+                date: `${formatDate(e.data_inicio)} até ${formatDate(e.data_fim)}`,
+                data_inicio: e.data_inicio, 
+                data_fim: e.data_fim,
+                localizacao: e.localizacao,
+                anexos: [], 
                 colorClass: getStatusColor(e.estado_nome)
             })) : []);
         } catch (error) { console.error(error); }
@@ -145,33 +198,54 @@ const Perfil = () => {
             if (res.ok) setMateriaisCard(await res.json());
         } catch (err) { console.error(err); }
     };
+    const fetchRequisicoesDoEvento = async (idEvento) => {
+    try {
+        const res = await fetch(`http://localhost:3002/api/eventos/${idEvento}/requisicoes`, { headers: getAuthHeaders() });
+        if (res.ok) {
+            const data = await res.json();
+            setMateriaisCard(data); 
+        }
+    } catch (err) { console.error(err); }
+};
 
     const handleToggle = (item) => {
-        if (expandedCardId === item.id) { setExpandedCardId(null); setMateriaisCard([]); }
-        else { setExpandedCardId(item.id); if (item.isRequisicao) fetchMateriaisReq(item.id_orig); }
-    };
-
+    if (expandedCardId === item.id) { 
+        setExpandedCardId(null); 
+        setMateriaisCard([]); 
+    } else { 
+        setExpandedCardId(item.id); 
+        if (item.isRequisicao) fetchMateriaisReq(item.id_orig);
+        else fetchRequisicoesDoEvento(item.id_orig);
+            }
+        };
+        
     const displayItems = (() => {
-        let list = activeTab === 'eventos' ? eventsList : activeTab === 'requisições' ? requisicoesList : [...eventsList, ...requisicoesList];
-        if (filtroEstado !== 'todos') {
-            list = list.filter(item => {
-                const s = (item.status || '').toLowerCase();
-                if (filtroEstado === 'aprovada') return s.includes('aprov') || s.includes('agend');
-                if (filtroEstado === 'cancelada') return s.includes('cancel');
-                if (filtroEstado === 'rejeitada') return s.includes('rejeit') || s.includes('recus');
-                return s.includes(filtroEstado);
-            });
-        }
-        return list;
-    })();
+    let list = activeTab === 'eventos' ? eventsList : requisicoesList;
+    
+    if (filtroEstado !== 'todos') {
+        list = list.filter(item => {
+            const s = (item.status || '').toLowerCase();
+            if (filtroEstado === 'aprovada') return s.includes('aprov') || s.includes('agend');
+            if (filtroEstado === 'cancelada') return s.includes('cancel');
+            if (filtroEstado === 'rejeitada') return s.includes('rejeit') || s.includes('recus');
+            return s.includes(filtroEstado);
+        });
+    }
+    return list;
+})();
 
     const executeCancelar = async () => {
         try {
             const res = await fetch(`http://localhost:3002/api/requisicoes/${modal.id}/cancelar`, {
                 method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_user: user.id_user })
             });
-            if(res.ok) { setToast({ type: 'success', message: "Cancelado com sucesso." }); fetchPerfilData(); }
-        } catch (e) { setToast({ type: 'error', message: "Erro conexão" }); }
+            if(res.ok) { 
+                setToast({ type: 'success', message: "Requisição cancelada." }); 
+                fetchPerfilData(); 
+            } else {
+                setToast({ type: 'error', message: "Não foi possível cancelar." });
+            }
+        } catch (e) { setToast({ type: 'error', message: "Erro de ligação ao servidor." }); }
         setModal({ isOpen: false, type: null, id: null });
     };
 
@@ -180,17 +254,39 @@ const Perfil = () => {
             const res = await fetch(`http://localhost:3002/api/requisicoes/${modal.id}/devolver`, {
                 method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_user: user.id_user })
             });
-            if (res.ok) { setToast({ type: 'success', message: "Devolvido com sucesso!" }); fetchPerfilData(); }
-        } catch (e) { setToast({ type: 'error', message: "Erro conexão" }); }
+            if (res.ok) { 
+                setToast({ type: 'success', message: "Processo de devolução registado!" }); 
+                fetchPerfilData(); 
+            } else {
+                setToast({ type: 'error', message: "Erro ao processar devolução." });
+            }
+        } catch (e) { setToast({ type: 'error', message: "Erro de ligação." }); }
         setModal({ isOpen: false, type: null, id: null });
     };
 
     const confirmCancelar = (id) => setModal({ isOpen: true, type: 'cancelar', id });
     const confirmDevolver = (id) => setModal({ isOpen: true, type: 'devolver', id });
-    const handleEditar = (item) => {
-        localStorage.setItem('evento_trabalho', JSON.stringify({ id_req: item.id_orig, nome: item.title }));
-        navigate('/explorar');
-    };
+    const handleEditar = async (item) => {
+            localStorage.setItem('evento_trabalho', JSON.stringify({ 
+                id_req: item.id_orig, 
+                nome: item.title 
+            }));
+
+           
+            if (item.id_estado_req === 1 || item.id_estado_req === 2) {
+                try {
+                    await fetch(`http://localhost:3002/api/requisicoes/${item.id_orig}/estado`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify({ id_estado: 4 }) // 4 = Em Curso
+                    });
+                } catch (e) {
+                    console.error("Erro ao atualizar para Em Curso:", e);
+                }
+            }
+
+            navigate('/explorar');
+        };
 
     return (
         <div className="perfil-page-app">
@@ -255,6 +351,7 @@ const Perfil = () => {
                         <HelpCircle size={20} className="help-icon-perfil" />
                         <div className="tooltip-popup">
                             <h4>Legenda de Estados:</h4>
+                            <p style={{fontSize: '10px', color: '#666', marginBottom: '10px'}}>Estados alterados pelo <strong>Gestor </strong> conforme validação técnica.</p>
                             <ul>
                                 <li><span className="dot pendente"></span> <strong>Pendente:</strong> Aguarda validação do gestor.</li>
                                 <li><span className="dot aprovada"></span> <strong>Aprovada:</strong> Pedido aceite, aguarda levantamento.</li>
@@ -267,11 +364,14 @@ const Perfil = () => {
                 </div>
 
                 <div className="tabs-container-esp">
-                    {['todos', 'eventos', 'requisições'].map(t => (
+                    {['eventos', 'requisições'].map(t => ( 
                         <button 
                             key={t} 
                             className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} 
-                            onClick={() => setActiveTab(t)}
+                            onClick={() => {
+                                setActiveTab(t);
+                                setExpandedCardId(null); 
+                            }}
                         >
                             {t.toUpperCase()}
                         </button>
@@ -297,7 +397,7 @@ const Perfil = () => {
                                 key={item.id} 
                                 event={item} 
                                 isRequisicao={item.isRequisicao} 
-                                isExpanded={expandedCardId === item.id} 
+                                isExpanded={expandedCardId === item.id}
                                 materiais={materiaisCard} 
                                 onToggle={() => handleToggle(item)} 
                                 onDevolverClick={confirmDevolver} 

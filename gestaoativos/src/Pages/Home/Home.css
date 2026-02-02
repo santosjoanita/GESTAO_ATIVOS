@@ -152,3 +152,67 @@
     display: flex; justify-content: center; align-items: center;
     font-weight: 700; letter-spacing: 1px; color: #fff; font-size: 12px; height: 100%;
 }
+
+/* --- RESPONSIVIDADE HOME PAGE --- */
+
+@media (max-width: 992px) {
+    .main-home-content {
+        padding: 20px;
+    }
+    
+    .logo-img {
+        height: 80px !important; 
+    }
+}
+
+@media (max-width: 768px) {
+    .home-page-layout {
+        padding-top: 160px; 
+    }
+
+    .header-content-esp {
+        flex-direction: column; 
+        height: auto;
+        padding: 15px 0;
+    }
+
+    .header-nav-esp {
+        margin: 15px 0;
+        gap: 15px;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .activity-panel-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .notification-item-home {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .user-profile-badge {
+        display: none; 
+    }
+}
+
+@media (max-width: 480px) {
+    .section-title {
+        font-size: 1.1em;
+    }
+
+    .activity-card {
+        padding: 25px 15px;
+    }
+
+    .guide-card {
+        padding: 15px 10px;
+    }
+    
+    .quick-guide-grid {
+        grid-template-columns: 1fr;
+    }
+}

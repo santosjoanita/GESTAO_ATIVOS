@@ -38,51 +38,48 @@ const Carrinho = ({ onLogout}) => {
     };
 
     const handleSubmeter = async () => {
-        if (itens.length === 0) {
-            setToast({ type: 'warning', message: "O carrinho está vazio!" });
-            return;
-        }
+    if (itens.length === 0) {
+        setToast({ type: 'warning', message: "O carrinho está vazio!" });
+        return;
+    }
 
-        const itensInvalidos = itens.filter(i => !i.levantamento || !i.devolucao);
-        if (itensInvalidos.length > 0) {
-            setToast({ type: 'error', message: "Erro: Itens com datas em falta." });
-            return;
-        }
+    const itensInvalidos = itens.filter(i => !i.levantamento || !i.devolucao);
+    if (itensInvalidos.length > 0) {
+        setToast({ type: 'error', message: "Erro: Itens com datas em falta." });
+        return;
+    }
 
-        const payload = { 
-            materiais: itens,
-            id_user_action: user.id_user 
-        };
-
-        try {
-            const res = await fetch(`http://localhost:3002/api/requisicoes/${eventoAtivo.id_req}/submeter`, {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                localStorage.removeItem('carrinho');
-                localStorage.removeItem('evento_trabalho');
-                
-                const isGestor = user.id_perfil === 2 || user.id_cargo === 1;
-
-                if (isGestor) {
-                    setToast({ type: 'success', message: "Materiais adicionados! A voltar à gestão..." });
-                    setTimeout(() => navigate('/gestao'), 1500);
-                } else {
-                    setToast({ type: 'success', message: "Pedido submetido com sucesso!" });
-                    setTimeout(() => navigate('/perfil'), 2000);
-                }
-
-            } else {
-                const err = await res.json();
-                setToast({ type: 'error', message: "Erro: " + (err.message || "Falha ao submeter") });
-            }
-        } catch (e) {
-            setToast({ type: 'error', message: "Erro de conexão ao servidor." });
-        }
+    const payload = { 
+        materiais: itens,
+        id_user_action: user.id_user 
     };
+
+    try {
+        const res = await fetch(`http://localhost:3002/api/requisicoes/${eventoAtivo.id_req}/submeter`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json().catch(() => ({})); 
+
+        if (res.ok) {
+            setToast({ type: 'success', message: "Requisição submetida com sucesso!" });
+            localStorage.removeItem('carrinho');
+            localStorage.removeItem('evento_trabalho');
+            setTimeout(() => {
+                navigate(user?.id_perfil === 2 ? '/gestao' : '/perfil');
+            }, 2000);
+        } else {
+            setToast({ 
+                type: 'error', 
+                message: data.message || "Conflito de stock para as datas selecionadas." 
+            });
+        }
+    } catch (e) {
+        setToast({ type: 'error', message: "Erro de conexão ao servidor." });
+    }
+};
 
     const removerItem = (index) => {
         const novos = [...itens];

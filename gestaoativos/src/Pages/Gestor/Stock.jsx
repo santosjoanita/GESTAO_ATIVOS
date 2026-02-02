@@ -100,11 +100,13 @@ const Stock = () => {
     });
 
     const handleLogout = () => {
-        localStorage.clear();
-        if (onLogout) onLogout();
+    localStorage.clear();
+    if (typeof onLogout === 'function') {
+        onLogout();
+    } else {
         navigate('/');
-
-    };
+    }
+};
     return (
         <div className="gestao-layout">
             

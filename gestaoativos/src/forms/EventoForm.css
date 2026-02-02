@@ -191,3 +191,122 @@ input[name="localizacao"] {
     font-weight: 600;
     color: #1f4e79;
 }
+/* --- CORREÇÃO DO HEADER E MAPA (Z-INDEX) --- */
+.fixed-header-esp {
+    z-index: 9999 !important; /* Header sempre no topo absoluto */
+}
+
+/* Garante que os controlos do mapa ficam abaixo do header */
+.leaflet-top, .leaflet-bottom {
+    z-index: 500 !important;
+}
+
+/* --- BOTÃO EXPANDIR MAPA --- */
+.btn-expand-map {
+    background-color: #1f3a52;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.btn-expand-map:hover {
+    background-color: #2c5270;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* --- GRELHA DE DATAS --- */
+.date-time-row-layout {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 15px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* --- MODAL DO MAPA EXPANDIDO --- */
+.expanded-map-modal {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    animation: slideUp 0.3s ease-out;
+}
+
+.expanded-map-modal .modal-body {
+    position: relative;
+    background-color: #f8fafc;
+}
+
+.expanded-map-modal .leaflet-container {
+    height: 100% !important;
+    width: 100% !important;
+    z-index: 1;
+}
+
+/* --- CORREÇÃO DO CONTROLO DE CAMADAS DO LEAFLET --- */
+
+.leaflet-control-layers-list input[type="radio"],
+.leaflet-control-layers-list input[type="checkbox"] {
+    width: 14px !important;
+    height: 14px !important;
+    margin: 0 5px 0 0 !important;
+    padding: 0 !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    appearance: auto !important;
+    -webkit-appearance: radio !important;
+    cursor: pointer !important;
+}
+
+.leaflet-control-layers-label {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 5px !important;
+    cursor: pointer !important;
+    font-size: 12px !important;
+    color: #333 !important;
+    font-weight: 500 !important;
+}
+
+.leaflet-control-layers-list input {
+    background: none !important;
+    border: none !important;
+}
+
+@media (max-width: 768px) {
+    .date-time-row-layout {
+        grid-template-columns: repeat(2, 1fr) !important; 
+    }
+    
+    .input-map-container-layout {
+        flex-direction: column;
+    }
+    
+    .input-column-layout, .map-column-layout {
+        flex: 100%;
+    }
+    
+    .expanded-map-modal {
+        width: 95% !important;
+    }
+}
+
+/* --- ESTILO EXTRA PARA ANEXOS --- */
+.attachments-row-layout p {
+    background: #f1f5f9;
+    padding: 8px;
+    border-radius: 6px;
+    border-left: 3px solid #1f3a52;
+}

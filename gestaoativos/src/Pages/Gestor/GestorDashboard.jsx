@@ -39,7 +39,10 @@ const GestorDashboard = () => {
         setItems([]); 
         loadData();
         setSearchTerm('');
-        
+
+        if (tab === 'requisicoes' || tab === 'eventos') {
+        setStatusFilter('pendente');
+        }
         const cart = JSON.parse(localStorage.getItem('carrinho')) || [];
         setCarrinhoCount(cart.length);
         
@@ -77,23 +80,24 @@ const GestorDashboard = () => {
     };
 
     const handleVerDetalhes = async (item) => {
-        if (tab === 'stock' || tab === 'historico_req') return; 
+        if (!item || tab === 'stock' || tab === 'historico_req') return; 
+        
         setSelectedItem(item);
         setAnexos([]);
         setMateriais([]); 
 
-        if (tab === 'eventos') {
+        if (tab === 'eventos' && item.id_evento) {
             try {
                 const res = await fetch(`http://localhost:3002/api/eventos/${item.id_evento}/anexos`, { headers: getAuthHeaders() });
                 if(res.ok) setAnexos(await res.json());
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Erro anexos:", err); }
         }
 
-        if (tab === 'requisicoes') {
+        if (tab === 'requisicoes' && item.id_req) {
             try {
                 const res = await fetch(`http://localhost:3002/api/requisicoes/${item.id_req}/materiais`, { headers: getAuthHeaders() });
                 if(res.ok) setMateriais(await res.json());
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Erro materiais:", err); }
         }
     };
 
@@ -114,7 +118,7 @@ const GestorDashboard = () => {
         }
     };
 
-    const executarAcao = async (id = modal.id, id_estado_novo = modal.novoEstado) => {
+        const executarAcao = async (id = modal.id, id_estado_novo = modal.novoEstado) => {
         let url = '';
         let body = { id_estado: id_estado_novo };
 
@@ -140,14 +144,22 @@ const GestorDashboard = () => {
             });
 
             if (res.ok) {
-                setToast({ type: 'success', message: "Ação realizada com sucesso!" });
+                const acaoNome = id_estado_novo === 2 ? "Aprovada" : 
+                                id_estado_novo === 3 ? "Rejeitada" : 
+                                id_estado_novo === 5 ? "Devolvida" : 
+                                id_estado_novo === 6 ? "Cancelada" : "Atualizada";
+                
+                setToast({ type: 'success', message: `${tab === 'eventos' ? 'Evento' : 'Requisição'} ${acaoNome} com sucesso!` });
+                
                 setSelectedItem(null);
-                loadData();
+                loadData(); 
             } else {
                 const err = await res.json();
-                setToast({ type: 'error', message: "Erro: " + (err.message || err.error) });
+                setToast({ type: 'error', message: "Erro: " + (err.message || "Não foi possível concluir a ação.") });
             }
-        } catch (err) { setToast({ type: 'error', message: "Erro de conexão." }); }
+        } catch (err) { 
+            setToast({ type: 'error', message: "Erro de conexão ao servidor." }); 
+        }
         
         setModal({ isOpen: false, action: null, id: null, novoEstado: null });
     };
@@ -157,16 +169,35 @@ const GestorDashboard = () => {
         let matchesSearch = false;
         
         if (tab === 'stock') {
-             matchesSearch = (item.item_nome || '').toLowerCase().includes(searchLower) || (item.nome_utilizador || '').toLowerCase().includes(searchLower);
+            matchesSearch = (item.item_nome || '').toLowerCase().includes(searchLower) || 
+                            (item.nome_utilizador || '').toLowerCase().includes(searchLower);
         } else if (tab === 'historico_req') {
-             matchesSearch = (item.acao || '').toLowerCase().includes(searchLower) || (item.nome_responsavel || '').toLowerCase().includes(searchLower) || (item.id_req && item.id_req.toString().includes(searchLower));
+            matchesSearch = (item.acao || '').toLowerCase().includes(searchLower) || 
+                            (item.nome_responsavel || '').toLowerCase().includes(searchLower) || 
+                            (item.id_req && item.id_req.toString().includes(searchLower));
         } else {
-             matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) || (item.requerente || '').toLowerCase().includes(searchLower) || (item.id_req && item.id_req.toString().includes(searchLower));
+            matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) || 
+                            (item.requerente || '').toLowerCase().includes(searchLower) || 
+                            (item.id_req && item.id_req.toString().includes(searchLower));
         }
 
         if (tab === 'stock' || tab === 'historico_req') return matchesSearch;
 
-        let matchesStatus = statusFilter === 'todos' ? true : (item.estado_nome || '').toLowerCase().includes(statusFilter);
+        const statusNoItem = (item.estado_nome || item.status || '').toLowerCase();
+        const filtro = statusFilter.toLowerCase();
+
+        let matchesStatus = false;
+
+        if (filtro === 'todos') {
+            matchesStatus = true;
+        } else if (filtro === 'aprovada') {
+            matchesStatus = statusNoItem.includes('aprov') || statusNoItem.includes('agend');
+        } else if (filtro === 'cancelada') {
+            matchesStatus = statusNoItem.includes('cancel') || statusNoItem.includes('recus') || statusNoItem.includes('rejeit');
+        } else {
+            matchesStatus = statusNoItem.includes(filtro.substring(0, 4)); 
+        }
+
         return matchesSearch && matchesStatus;
     });
 
@@ -213,19 +244,24 @@ const GestorDashboard = () => {
                     <h2 className="gestao-title">{tab === 'requisicoes' ? 'GERIR REQUISIÇÕES' : tab === 'eventos' ? 'GERIR EVENTOS' : tab === 'stock' ? 'AUDITORIA DE STOCK' : 'AUDITORIA'}</h2>
                     <div className="filters-container">
                         <div className="search-input-wrapper">
-                            <input type="text" placeholder="Pesquisar..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                            <input 
+                                type="text" 
+                                placeholder={tab === 'stock' ? "Procurar material..." : "Procurar por ID ou nome..."} 
+                                value={searchTerm} 
+                                onChange={(e) => setSearchTerm(e.target.value)} 
+                            />
                         </div>
+
                         {tab !== 'stock' && tab !== 'historico_req' && (
                             <div className="filter-select-wrapper">
                                 <Filter size={20} className="filter-icon" />
                                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                                    <option value="todos">Todos os Estados</option>
-                                    <option value="pendente">Pendente</option>
-                                    <option value="aprovada">Aprovada</option>
+                                    <option value="pendente">Pendentes (Urgente)</option>
+                                    <option value="aprovada">Aprovadas / Agendadas</option>
                                     <option value="em curso">Em Curso</option>
-                                    <option value="finalizada">Finalizada</option>
-                                    <option value="cancelada">Cancelada</option>
-                                    <option value="recusada">Recusada</option>
+                                    <option value="todos">Todos os Estados</option>
+                                    <option value="finalizada">Finalizadas</option>
+                                    <option value="cancelada">Canceladas</option>
                                 </select>
                             </div>
                         )}
@@ -292,7 +328,14 @@ const GestorDashboard = () => {
                                 </div>
                                 <div className="detail-item">
                                     <span className="label">Data</span>
-                                    <span className="value"><Calendar size={14}/> {selectedItem.data_inicio ? formatarData(selectedItem.data_inicio) : formatarData(selectedItem.data_pedido)}</span>
+                                    <span className="value">
+                                        <Calendar size={14}/> 
+                                            {selectedItem.data_inicio ? (
+                                                <> {formatarData(selectedItem.data_inicio)} {selectedItem.data_fim && ` até ${formatarData(selectedItem.data_fim)}`} </>
+                                            ) : (
+                                                formatarData(selectedItem.data_pedido)
+                                            )}
+                                        </span>
                                 </div>
                                 <div className="detail-item">
                                     <span className="label">Estado Atual</span>
@@ -304,9 +347,18 @@ const GestorDashboard = () => {
                                     <span className="label">Localização</span>
                                     <span className="value">
                                         <MapPin size={14}/> 
-                                        {selectedItem.latitude ? 
-                                            <a href={`https://www.google.com/maps?q=${selectedItem.latitude},${selectedItem.longitude}`} target="_blank" rel="noreferrer" className="map-link">Ver no Mapa</a> 
-                                            : (selectedItem.localizacao || 'N/A')}
+                                            {selectedItem.localizacao || 'N/A'}
+                                            {selectedItem.localizacao && (
+                                                <a 
+                                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedItem.localizacao)}`} 
+                                                    target="_blank" 
+                                                    rel="noreferrer" 
+                                                    className="map-link"
+                                                    style={{marginLeft: '15px'}}
+                                                >
+                                                    VER NO MAPA
+                                                </a>
+                                            )}
                                     </span>
                                 </div>
                             </div>

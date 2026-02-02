@@ -97,3 +97,24 @@ exports.listarSimples = async (req, res) => {
         res.status(500).json([]);
     }
 };
+exports.listarRequisicoesDoEvento = async (req, res) => {
+    try {
+        const idEvento = req.params.id;
+        const [rows] = await db.execute(`
+            SELECT 
+                r.id_req, 
+                r.id_estado_req,
+                er.nome_estado as estado_nome,
+                r.data_pedido
+            FROM Requisicao r
+            LEFT JOIN Estado_Requisicao er ON r.id_estado_req = er.id_estado_req
+            WHERE r.id_evento = ?
+            ORDER BY r.id_req DESC
+        `, [idEvento]);
+        
+        res.json(rows);
+    } catch (e) {
+        console.error("Erro SQL no Backend:", e.message);
+        res.status(500).json({ error: "Erro interno no servidor" });
+    }
+};

@@ -14,7 +14,7 @@ router.get('/historico', verifyToken, requisicoesController.getHistoricoGeral);
 
 // Rotas de Escrita
 router.post('/', verifyToken, requisicoesController.criar); 
-router.post('/:id/submeter', verifyToken, requisicoesController.submeterMateriais); 
+router.post('/:id/submeter', verifyToken, requisicoesController.submeterMateriais);
 
 // Rota para mudar estado (Devolver / Cancelar / Aprovar)
 router.put('/:id/estado', verifyToken, requisicoesController.atualizarEstado);

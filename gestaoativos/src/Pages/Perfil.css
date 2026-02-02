@@ -489,3 +489,115 @@ a {
 .dot.em-curso { background-color: var(--color-secondary-light); }
 .dot.finalizada { background-color: #64748b; }
 .dot.cancelada { background-color: #e74c3c; }
+.details-info-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Coluna única em mobile */
+    gap: 10px;
+}
+
+/* --- RESPONSIVIDADE (MOBILE & TABLET) --- */
+
+@media (max-width: 1024px) {
+    .main-content-esp {
+        padding: 20px 10px;
+    }
+    
+    .centered-content {
+        width: 95%;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Ajuste do Header */
+    .fixed-header-esp {
+        height: auto;
+        padding: 10px 0;
+    }
+
+    .header-content-esp {
+        flex-direction: column; /* Logo em cima, icons em baixo */
+        gap: 10px;
+    }
+
+    .logo-img {
+        height: 50px !important; /* Logo menor em mobile */
+    }
+
+    .perfil-page-app {
+        padding-top: 140px; /* Aumenta o espaço para o header duplo em mobile */
+    }
+
+    /* Painel do Utilizador */
+    .user-panel-esp {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .user-avatar-esp {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+
+    /* Tabs e Filtros */
+    .tabs-container-esp {
+        justify-content: center;
+    }
+
+    .tab-button-esp {
+        padding: 10px 15px;
+        font-size: 12px;
+    }
+
+    .status-filter-bar-esp {
+        justify-content: center;
+    }
+
+    /* Card de Evento */
+    .event-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .event-actions-wrapper {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* Grelha de Detalhes (Forçar 1 coluna) */
+    .details-info-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px;
+    }
+
+    /* Tooltip (Ajuste para não sair do ecrã) */
+    .tooltip-popup {
+        width: 220px;
+        left: 0;
+        transform: translateX(0);
+    }
+    
+    .tooltip-popup::after {
+        left: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .user-title-esp {
+        font-size: 1.4rem;
+    }
+
+    .event-title {
+        font-size: 1rem;
+    }
+
+    .edit-button-esp {
+        padding: 5px 10px;
+        font-size: 10px;
+    }
+    
+    .status-tag {
+        font-size: 0.65rem;
+    }
+}

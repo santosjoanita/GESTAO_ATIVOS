@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; 
-import { X, ChevronRight, ShoppingCart, User, CornerDownLeft, LogOut } from 'lucide-react';
+import { X, ChevronRight, ShoppingCart, User, CornerDownLeft } from 'lucide-react';
 import './Explorar.css';
 import logo from '../../assets/img/esposende.png';
+import Toast from '../../components/Toast'; 
 
 const Explorar = ({ onLogout }) => { 
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
     const isGestor = user?.id_perfil === 2;
+    const [toast, setToast] = useState(null); 
     
     const [materiais, setMateriais] = useState([]);
     const [categorias, setCategorias] = useState([]);
@@ -52,6 +54,7 @@ const Explorar = ({ onLogout }) => {
 
             } catch (err) {
                 console.error("Erro ao carregar dados do catálogo", err);
+                setToast({ type: 'error', message: "Erro ao ligar ao servidor." });
             }
         };
         fetchData();
@@ -59,15 +62,52 @@ const Explorar = ({ onLogout }) => {
 
     const handleSairEdicao = () => {
         localStorage.removeItem('evento_trabalho');
-        window.location.reload(); // Recarrega para limpar o estado visual
+        setToast({ type: 'info', message: "Saiu do modo de edição." });
+        setTimeout(() => window.location.reload(), 1000);
     };
 
     const handleLogout = () => {
         localStorage.clear();
-        if (onLogout) onLogout();
+        if (typeof onLogout === 'function') onLogout(); 
         navigate('/');
     };
 
+    const handleMaterialClick = (m) => {
+        if (!eventoAtivo) {
+            setToast({ 
+                type: 'warning', 
+                message: "Atenção: Selecione primeiro uma requisição no Perfil para poder adicionar materiais!" 
+            });
+            return;
+        }
+        if (m.quantidade_disp <= 0) {
+            setToast({ type: 'error', message: "Este material não tem stock disponível." });
+            return;
+        }
+        navigate(`/produto/${m.id_material}`);
+    };
+
+    const handleCheckCategoria = (nome) => {
+        setCategoriasSelecionadas(prev => {
+            if (prev.includes(nome)) {
+                return prev.filter(c => c !== nome); // Remove se já estiver selecionada
+            } else {
+                return [...prev, nome]; // Adiciona se não estiver
+            }
+        });
+        setPagina(0); 
+    };
+
+    const handleCheckArmazem = (nome) => {
+        setArmazensSelecionados(prev => {
+            if (prev.includes(nome)) {
+                return prev.filter(a => a !== nome); // Remove se já estiver selecionada
+            } else {
+                return [...prev, nome]; // Adiciona se não estiver
+            }
+        });
+        setPagina(0); 
+    };
     // Filtros
     const materiaisFiltrados = materiais.filter(m => {
         const nomeMaterial = m.nome || ""; 
@@ -82,6 +122,8 @@ const Explorar = ({ onLogout }) => {
 
     return (
         <div className="explorar-container">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <img 
@@ -196,7 +238,7 @@ const Explorar = ({ onLogout }) => {
                             <div 
                                 key={m.id_material} 
                                 className={`card-visual ${m.quantidade_disp <= 0 ? 'esgotado' : ''} ${!eventoAtivo ? 'only-view' : ''}`}
-                                onClick={() => eventoAtivo && m.quantidade_disp > 0 && navigate(`/produto/${m.id_item}`)}
+                                onClick={() => handleMaterialClick(m)}
                                 style={{cursor: (!eventoAtivo || m.quantidade_disp <= 0) ? 'not-allowed' : 'pointer'}}
                             >
                                 <div className="img-box">

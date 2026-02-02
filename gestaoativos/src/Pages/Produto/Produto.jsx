@@ -31,35 +31,36 @@ const Produto = ({ onLogout }) => {
         };
     };
 
-    useEffect(() => {
-        const headers = getAuthHeaders();
+            useEffect(() => {
+            const headers = getAuthHeaders();
 
-        fetch(`http://localhost:3002/api/materiais/${id}`, { headers })
-            .then(res => res.json())
-            .then(data => setMaterial(data))
-            .catch(err => console.error(err));
-
-        if (eventoAtivo?.id_req) {
-            fetch(`http://localhost:3002/api/materiais/limites-evento/${eventoAtivo.id_req}`, { headers })
-                .then(res => {
-                    if (res.ok) return res.json();
-                    return null;
-                })
+            fetch(`http://localhost:3002/api/materiais/${id}`, { headers })
+                .then(res => res.json())
                 .then(data => {
-                    if (data) {
-                        setLimitesEvento({
-                            min: data.data_inicio ? data.data_inicio.split('T')[0] : '',
-                            max: data.data_fim ? data.data_fim.split('T')[0] : ''
-                        });
-                        setDatas({
-                            levantamento: data.data_inicio ? data.data_inicio.split('T')[0] : '',
-                            devolucao: data.data_fim ? data.data_fim.split('T')[0] : ''
-                        });
-                    }
+                    console.log("Dados do Material:", data); // debug
+                    setMaterial(data);
                 })
-                .catch(err => console.error("Erro limites:", err));
-        }
-    }, [id, eventoAtivo?.id_req]);
+                .catch(err => console.error("Erro material:", err));
+
+            // Carrega limites apenas se houver uma edição ativa
+            if (eventoAtivo?.id_req) {
+                fetch(`http://localhost:3002/api/materiais/limites-evento/${eventoAtivo.id_req}`, { headers })
+                    .then(res => res.ok ? res.json() : null)
+                    .then(data => {
+                        if (data) {
+                            setLimitesEvento({
+                                min: data.data_inicio ? data.data_inicio.split('T')[0] : '',
+                                max: data.data_fim ? data.data_fim.split('T')[0] : ''
+                            });
+                            setDatas({
+                                levantamento: data.data_inicio ? data.data_inicio.split('T')[0] : '',
+                                devolucao: data.data_fim ? data.data_fim.split('T')[0] : ''
+                            });
+                        }
+                    })
+                    .catch(err => console.error("Erro limites:", err));
+            }
+        }, [id]);
 
     const handleLogout = () => {
         localStorage.clear();
@@ -72,7 +73,6 @@ const Produto = ({ onLogout }) => {
             setToast({ type: 'warning', message: "Atenção: Seleciona 'Editar' numa requisição no Perfil primeiro!" });
             return;
         }
-        // bucar todas as rewuisições 
         if (datas.levantamento < limitesEvento.min || datas.devolucao > limitesEvento.max) {
             setToast({ type: 'error', message: "As datas têm de estar dentro do período do evento." });
             return;
@@ -95,8 +95,8 @@ const Produto = ({ onLogout }) => {
         const novoCarrinho = [...itensCarrinho, novoItem];
         localStorage.setItem('carrinho', JSON.stringify(novoCarrinho));
         
-        setToast({ type: 'success', message: `${material.nome} adicionado ao carrinho!` });
-        setTimeout(() => navigate('/explorar'), 1000);
+        setToast({ type: 'success', message: "Material adicionado ao carrinho!" });
+        setTimeout(() => navigate('/explorar'), 1500);
     };
     
 

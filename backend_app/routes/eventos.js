@@ -22,6 +22,7 @@ router.get('/todos', verifyToken, eventosController.listarTodos);
 router.get('/lista-simples', verifyToken, eventosController.listarSimples);
 router.get('/summary/:id', verifyToken, eventosController.obterDetalhes); 
 router.get('/:id/anexos', verifyToken, eventosController.listarAnexos);
+router.get('/:id/requisicoes', verifyToken, eventosController.listarRequisicoesDoEvento);
 
 // Rota de mudança de estado
 router.put('/:id/estado', verifyToken, async (req, res) => {

@@ -18,18 +18,7 @@ const NotFound = () => {
         <div style={{ padding: '100px', textAlign: 'center' }}>
             <h1 style={{fontSize: '60px', color: '#1f3a52'}}>404</h1>
             <p>Página não encontrada.</p>
-            <button 
-                onClick={handleBack}
-                style={{
-                    padding: '10px 20px',
-                    background: '#1f3a52',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    marginTop: '20px'
-                }}
-            >
+            <button onClick={handleBack} style={{ padding: '10px 20px', background: '#1f3a52', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', marginTop: '20px' }}>
                 Voltar à página principal
             </button>
         </div>
@@ -37,6 +26,11 @@ const NotFound = () => {
 };
 
 const App = () => {
+    const handleLogoutAction = () => {
+        localStorage.clear();
+        window.location.href = "/";
+    };
+
     return (
         <BrowserRouter>
             <Routes>
@@ -46,7 +40,7 @@ const App = () => {
                         path={r.path}
                         element={
                             <ProtectedRoute auth={r.auth} permission={r.permission}>
-                                {r.element}
+                                {React.cloneElement(r.element, { onLogout: handleLogoutAction })}
                             </ProtectedRoute>
                         }
                     />

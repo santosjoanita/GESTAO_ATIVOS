@@ -21,7 +21,7 @@
     width: 100%; 
     height: 90px;
     background-color: var(--primary-blue); 
-    z-index: 1000;
+    z-index: 9999 !important;
     display: flex; 
     justify-content: center; 
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -169,6 +169,14 @@
     border: none;
     transition: transform 0.2s, box-shadow 0.2s;
 }
+.filter-select-wrapper::after {
+    content: "▼";
+    font-size: 10px;
+    position: absolute;
+    right: 20px;
+    color: var(--primary-blue);
+    pointer-events: none;
+}
 
 .search-input-wrapper { flex: 3; }
 .filter-select-wrapper { flex: 1; min-width: 250px; }
@@ -277,11 +285,11 @@
     text-decoration: none !important;
 }
 
-.pendente { background: #fef9c3; color: #854d0e; }
-.aprovada, .aprovado { background: #dcfce7; color: #166534; }
-.recusada, .rejeitada, .cancelada { background: #fee2e2; color: #991b1b; text-decoration: none !important; }
-.em-curso { background: #dbeafe; color: #1e40af; }
-.finalizada { background: #f1f5f9; color: #475569; }
+.status-badge.pendente { background-color: #fef3c7 !important; color: #d97706 !important; }
+.status-badge.aprovada, .status-badge.aprovado { background-color: #dcfce7 !important; color: #166534 !important; }
+.status-badge.em-curso { background-color: #dbeafe !important; color: #1e40af !important; }
+.status-badge.finalizada { background-color: #f1f5f9 !important; color: #475569 !important; }
+.status-badge.cancelada, .status-badge.recusada, .status-badge.rejeitada { background-color: #fee2e2 !important; color: #991b1b !important; }
 
 /* --- MODAIS PROFISSIONAIS (BLUR & SOMBRA) --- */
 .modal-overlay { 
@@ -304,7 +312,7 @@
     overflow: hidden; 
     display: flex; 
     flex-direction: column; 
-    max-height: 90vh; 
+    max-height: 80vh !important;
     box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     animation: slideUp 0.3s ease-out;
 }
@@ -321,11 +329,14 @@
     justify-content: space-between; 
     align-items: center; 
     color: white; 
+    flex-shrink: 0;
 }
 
-.modal-body-scrollable { 
-    padding: 30px; 
-    overflow-y: auto; 
+.modal-body-scrollable {
+    max-height: 60vh !important; 
+    overflow-y: auto !important;
+    padding: 25px;
+    flex: 1;
 }
 
 .modal-main-title {
@@ -342,6 +353,7 @@
     display: flex; 
     justify-content: flex-end; 
     gap: 15px;
+    flex-shrink: 0;
 }
 
 .btn-action-solid { 
@@ -374,12 +386,14 @@
 
 /* Link Google Maps */
 .map-link {
-    color: var(--primary-blue);
-    text-decoration: underline;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    display: inline-block;
+    background-color: var(--primary-blue);
+    color: white !important;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none !important;
+    font-weight: 700;
+    margin-top: 10px;
 }
 
 .fixed-footer-esp {
@@ -554,7 +568,85 @@
     text-transform: uppercase;
 }
 
+/* --- RESPONSIVIDADE DASHBOARD GESTOR --- */
+
+@media (max-width: 1024px) {
+    .gestao-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+}
+
 @media (max-width: 768px) {
-    .filters-container { flex-direction: column; }
-    .search-input-wrapper, .filter-select-wrapper { width: 100%; flex: auto; }
+    .gestao-main {
+        padding-top: 160px; 
+    }
+
+    .header-content-esp {
+        flex-direction: column;
+        padding: 10px 0;
+    }
+
+    .header-nav-esp {
+        margin: 10px 0;
+        gap: 10px;
+    }
+
+    .filters-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-input-wrapper, .filter-select-wrapper {
+        width: 100%;
+        flex: none;
+    }
+
+    .gestao-title {
+        font-size: 22px;
+        text-align: center;
+        border-left: none;
+        padding-left: 0;
+    }
+
+    .new-gestor-modal {
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .detail-item.full-width {
+        grid-column: span 1;
+    }
+
+    .modal-footer-actions {
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .btn-action-solid, .btn-action-outline {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .user-profile-badge {
+        display: none; 
+    }
+}
+
+@media (max-width: 480px) {
+    .gestao-card {
+        padding: 20px;
+    }
+
+    .card-info strong {
+        font-size: 16px;
+    }
+
+    .status-badge {
+        font-size: 10px;
+    }
 }

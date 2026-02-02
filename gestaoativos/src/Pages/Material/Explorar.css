@@ -296,14 +296,123 @@
     display: flex; align-items: center; z-index: 1000;
 }
 
+.btn-sair-edicao {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 10px;
+    text-transform: uppercase;
+}
+
+.btn-sair-edicao:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+}
+
+.editing-label {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 11px;
+    color: #f1c40f;
+}
+
 .footer-inner { width: 100%; padding: 0 40px; text-align: center; }
 .status-text { font-weight: 700; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
 
-@media (max-width: 1024px) { .grid-10-itens { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1200px) {
+    .grid-10-itens {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .grid-10-itens {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .sidebar-filtros {
+        width: 240px;
+    }
+}
 
 @media (max-width: 768px) {
-    .explorar-content-wrapper { flex-direction: column; }
-    .sidebar-filtros { width: 100%; height: auto; position: relative; top: 0; }
-    .grid-10-itens { grid-template-columns: repeat(2, 1fr); padding: 10px; }
-    .logo-img-large { height: 45px; }
+    .explorar-container {
+        padding-top: 140px; 
+    }
+
+    .header-content-esp {
+        flex-direction: column;
+        height: auto;
+        padding: 15px 0;
+    }
+
+    .header-nav-esp {
+        margin: 10px 0;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .explorar-content-wrapper {
+        flex-direction: column; 
+    }
+
+    .sidebar-filtros {
+        width: 100%;
+        height: auto;
+        position: relative;
+        top: 0;
+        border-right: none;
+        border-bottom: 2px solid #ccc;
+        padding: 20px;
+    }
+
+    .catalogo-main {
+        padding: 20px;
+    }
+
+    .grid-10-itens {
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 15px;
+    }
+
+    .user-profile-badge-esp {
+        display: none; 
+    }
+
+    .seta-paginacao {
+        display: none;
+    }
+    
+    .footer-trabalho {
+        height: auto;
+        padding: 10px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .grid-10-itens {
+        grid-template-columns: 1fr; 
+    }
+
+    .card-visual h3 {
+        font-size: 12px;
+    }
+
+    .status-text {
+        font-size: 11px;
+    }
 }

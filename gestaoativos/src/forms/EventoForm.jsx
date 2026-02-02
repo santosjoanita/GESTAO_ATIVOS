@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShoppingCart, User, CornerDownLeft } from 'lucide-react'; 
+import { ShoppingCart, User, CornerDownLeft, Search, X } from 'lucide-react'; 
 import MapPicker from './MapPicker'; 
 import './EventoForm.css'; 
 import '../Pages/Perfil.css'; 
@@ -10,8 +10,8 @@ import Toast from '../components/Toast';
 const EventoForm = ({ onLogout }) => {
     const navigate = useNavigate();
     const [toast, setToast] = useState(null); 
+    const [isMapExpanded, setIsMapExpanded] = useState(false); // Estado para o modal do mapa
     
-    // --- CORREÇÃO: Definir user e isGestor no topo para evitar ReferenceError ---
     const user = JSON.parse(localStorage.getItem('user'));
     const isGestor = user?.id_perfil === 2;
 
@@ -91,50 +91,56 @@ const EventoForm = ({ onLogout }) => {
         if (onLogout) onLogout();
         navigate('/'); 
     };
+
     const getMinDate = () => {
-    const d = new Date();
-    d.setDate(d.getDate() - 2);
-    return d.toISOString().split('T')[0]; 
-};
+        const d = new Date();
+        d.setDate(d.getDate() - 2);
+        return d.toISOString().split('T')[0]; 
+    };
 
     return (
         <div className="form-page-layout">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+            {/* MODAL DO MAPA EXPANDIDO */}
+            {isMapExpanded && (
+                <div className="modal-overlay" style={{zIndex: 10001}}>
+                    <div className="modal-content expanded-map-modal" style={{width: '90%', maxWidth: '1100px'}}>
+                        <div className="modal-header">
+                            <h3>Selecionar Localização</h3>
+                            <button onClick={() => setIsMapExpanded(false)} className="close-btn"><X size={24} /></button>
+                        </div>
+                        <div className="modal-body" style={{height: '70vh', padding: '0'}}>
+                            <MapPicker onLocationSelect={handleLocationSelect} />
+                        </div>
+                        <div className="modal-footer-actions">
+                            <button type="button" className="btn-action-solid success" onClick={() => setIsMapExpanded(false)}>
+                                CONFIRMAR LOCALIZAÇÃO
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
                     <div className="logo-esp" onClick={() => navigate('/home')} style={{cursor:'pointer'}}>
                         <img src={logo} alt="Logo Esposende" className="logo-img" />
                     </div>
-                    
                     <nav className="header-nav-esp">
                         <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
                         <Link to="/home" className="nav-item-esp">PÁGINA INICIAL</Link>
                         <Link to="/nova-requisicao" className="nav-item-esp">NOVA REQUISIÇÃO</Link>
                         <Link to="/novo-evento" className="nav-item-esp active-tab-indicator">NOVO EVENTO</Link> 
                     </nav>
-
                     <div className="header-icons-esp">
                         <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
-                            <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>
-                                {user?.nome?.split(' ')[0]}
-                            </span>
-                            <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
-                                {user?.id_perfil === 2 ? 'GESTOR' : 'FUNCIONÁRIO'}
-                            </span>
+                            <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>{user?.nome?.split(' ')[0]}</span>
+                            <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>{isGestor ? 'GESTOR' : 'FUNCIONÁRIO'}</span>
                         </div>
-
-                        <Link to="/carrinho">
-                            <ShoppingCart size={24} className="icon-esp" />
-                        </Link>
-                        
-                        <Link to="/perfil">
-                            <User size={24} className="icon-esp active-icon-indicator" />
-                        </Link>
-
-                        <button onClick={handleLogout} className="logout-btn">
-                            <CornerDownLeft size={24} className="icon-esp" />
-                        </button>
+                        <Link to="/carrinho"><ShoppingCart size={24} className="icon-esp" /></Link>
+                        <Link to="/perfil"><User size={24} className="icon-esp active-icon-indicator" /></Link>
+                        <button onClick={handleLogout} className="logout-btn"><CornerDownLeft size={24} className="icon-esp" /></button>
                     </div>
                 </div>
             </header>
@@ -155,61 +161,46 @@ const EventoForm = ({ onLogout }) => {
                                     <textarea name="descricao" value={formData.descricao} onChange={handleChange} required></textarea>
                                 </div>
                                 <div className="form-group full-width">
-                                    <label>Localização (Clique no mapa) *</label>
-                                    <input 
-                                        type="text" 
-                                        name="localizacao" 
-                                        value={formData.localizacao} 
-                                        readOnly 
-                                        placeholder="Selecione no mapa ao lado..."
-                                        required 
-                                    />
+                                    <label>Localização (Selecionada no mapa) *</label>
+                                    <input type="text" name="localizacao" value={formData.localizacao} readOnly placeholder="Clique no mapa para definir..." required />
                                 </div>
                             </div>
 
                             <div className="map-column-layout">
-                                <div className="map-image-placeholder-layout">
+                                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                                    <button type="button" onClick={() => setIsMapExpanded(true)} className="btn-expand-map" style={{fontSize: '10px', background: '#1f3a52', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer'}}>
+                                        <Search size={12} /> EXPANDIR
+                                    </button>
+                                </div>
+                                <div className="map-image-placeholder-layout" style={{height: '250px'}}>
                                     <MapPicker onLocationSelect={handleLocationSelect} />
                                 </div>
                             </div>
                         </div>
 
                         <div className="date-time-row-layout">
-                            <div className="form-group date-time-group"><label>Data de início *</label>
-                            <input 
-                                type="date" 
-                                lang="pt-PT"
-                                name="data_inicio" 
-                                min={getMinDate()}
-                                value={formData.data_inicio} 
-                                onChange={handleChange} 
-                                required 
-                            />
+                            <div className="form-group date-time-group">
+                                <label>Data de início *</label>
+                                <input type="date" name="data_inicio" min={getMinDate()} value={formData.data_inicio} onChange={handleChange} required />
                             </div>
-                            <div className="form-group date-time-group"><label>Hora de início *</label>
-                            <input 
-                                    type="date" 
-                                    lang="pt-PT"
-                                    name="data_fim" 
-                                    min={formData.data_inicio || getMinDate()} 
-                                    value={formData.data_fim} 
-                                    onChange={handleChange} 
-                                    required 
-                                />
+                            <div className="form-group date-time-group">
+                                <label>Hora de início *</label>
+                                <input type="time" name="hora_inicio" value={formData.hora_inicio} onChange={handleChange} required />
                             </div>
-                            <div className="form-group date-time-group"><label>Data de fim *</label><input type="date" name="data_fim" value={formData.data_fim} onChange={handleChange} required /></div>
-                            <div className="form-group date-time-group"><label>Hora de fim *</label><input type="time" name="hora_fim" value={formData.hora_fim} onChange={handleChange} required /></div>
+                            <div className="form-group date-time-group">
+                                <label>Data de fim *</label>
+                                <input type="date" name="data_fim" min={formData.data_inicio || getMinDate()} value={formData.data_fim} onChange={handleChange} required />
+                            </div>
+                            <div className="form-group date-time-group">
+                                <label>Hora de fim *</label>
+                                <input type="time" name="hora_fim" value={formData.hora_fim} onChange={handleChange} required />
+                            </div>
                         </div>
 
                         <div className="form-group full-width attachments-row-layout">
-                            <label>Anexos / Documentos de Apoio (Plantas, Licenças)</label>
-                            <input 
-                                type="file" 
-                                name="anexos" 
-                                multiple 
-                                onChange={handleFileChange} 
-                                className="file-input-field"
-                            />
+                            <label>Anexos / Documentos de Apoio</label>
+                            <p style={{fontSize: '11px', color: '#666', marginBottom: '5px'}}>Formatos: PDF, JPG, PNG (Máx: 5MB)</p>
+                            <input type="file" name="anexos" multiple onChange={handleFileChange} className="file-input-field" accept=".pdf,.jpg,.jpeg,.png" />
                         </div>
 
                         <div className="form-actions-layout">
