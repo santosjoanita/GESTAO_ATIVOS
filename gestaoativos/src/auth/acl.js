@@ -1,18 +1,18 @@
-// src/auth/acl.js
 
 export const Profiles = {
   ADMIN: 1,
   GESTOR: 2,
-  OPERADOR: 3, // Funcionário comum
+  OPERADOR: 3, 
+  CONVIDADO: 4, 
 };
 
 export const Permissions = {
-  VIEW_DASHBOARD: "view:dashboard",     // Painel de controlo (Gestor)
-  VIEW_STOCK: "view:stock",             // Gestão de Inventário (Gestor)
-  VIEW_EXPLORAR: "view:explorar",       // Ver catálogo (Todos)
-  CREATE_EVENTO: "create:evento",       // Criar novo evento (Funcionário/Gestor)
-  CREATE_REQUISICAO: "create:requisicao", // Criar nova requisição (Funcionário/Gestor)
-  MANAGE_SISTEMA: "manage:sistema",     // Aprovar/Rejeitar e Editar Materiais (Gestor)
+  VIEW_DASHBOARD: "view:dashboard",
+  VIEW_STOCK: "view:stock",
+  VIEW_EXPLORAR: "view:explorar",
+  CREATE_EVENTO: "create:evento",
+  CREATE_REQUISICAO: "create:requisicao",
+  MANAGE_SISTEMA: "manage:sistema",
 };
 
 export const permissionsByProfile = {
@@ -31,6 +31,10 @@ export const permissionsByProfile = {
     Permissions.VIEW_EXPLORAR,     
     Permissions.CREATE_EVENTO,     
     Permissions.CREATE_REQUISICAO, 
+  ]),
+
+  [Profiles.CONVIDADO]: new Set([
+    Permissions.VIEW_EXPLORAR, 
   ]),
 };
 

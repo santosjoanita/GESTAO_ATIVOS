@@ -9,6 +9,7 @@ const Explorar = ({ onLogout }) => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
     const isGestor = user?.id_perfil === 2;
+    const isConvidado = user?.id_perfil === 4;
     const [toast, setToast] = useState(null); 
     
     const [materiais, setMateriais] = useState([]);
@@ -126,24 +127,46 @@ const Explorar = ({ onLogout }) => {
                     />
                     
                     <nav className="header-nav-esp">
-                        <Link to="/explorar" className="nav-item-esp active-tab-indicator">CATÁLOGO</Link>
-                        {isGestor ? <Link to="/gestao" className="nav-item-esp">GESTÃO</Link> : <Link to="/home" className="nav-item-esp">INÍCIO</Link>}
-                        {eventoAtivo && (
-                            <button onClick={handleSairEdicao} className="btn-sair-edicao">
-                                <X size={14} /> PARAR EDIÇÃO
-                            </button>
-                        )}
-                    </nav>
+                            <Link to="/explorar" className="nav-item-esp active-tab-indicator">CATÁLOGO</Link>
+                            
+                            {!isConvidado && (
+                                <>
+                                    {isGestor ? (
+                                        <Link to="/gestao" className="nav-item-esp">GESTÃO</Link>
+                                    ) : (
+                                        <Link to="/home" className="nav-item-esp">INÍCIO</Link>
+                                    )}
+                                    {eventoAtivo && (
+                                        <button onClick={handleSairEdicao} className="btn-sair-edicao">
+                                            <X size={14} /> PARAR EDIÇÃO
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </nav>
 
-                    <div className="header-icons-esp">
-                        <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
-                            <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>{user?.nome?.split(' ')[0]}</span>
-                            <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>{isGestor ? 'GESTOR' : 'FUNCIONÁRIO'}</span>
+                        <div className="header-icons-esp">
+                            <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
+                                <span style={{ color: 'white', display: 'block', fontSize: '12px', fontWeight: 'bold' }}>
+                                    {user?.nome?.split(' ')[0]}
+                                </span>
+                                <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
+                                    {isConvidado ? 'CONVIDADO' : (isGestor ? 'GESTOR' : 'FUNCIONÁRIO')}
+                                </span>
+                            </div>
+
+                            {!isConvidado && (
+                                <Link to="/carrinho">
+                                    <ShoppingCart size={24} className="icon-esp" />
+                                    {carrinhoCount > 0 && <span className="cart-badge">{carrinhoCount}</span>}
+                                </Link>
+                            )}
+                            
+                            <Link to="/perfil"><User size={24} className="icon-esp" /></Link>
+                            <button onClick={handleLogout} className="logout-btn">
+                                <CornerDownLeft size={24} className="icon-esp" />
+                            </button>
                         </div>
-                        <Link to="/carrinho"><ShoppingCart size={24} className="icon-esp" />{carrinhoCount > 0 && <span className="cart-badge">{carrinhoCount}</span>}</Link>
-                        <Link to="/perfil"><User size={24} className="icon-esp" /></Link>
-                        <button onClick={handleLogout} className="logout-btn"><CornerDownLeft size={24} className="icon-esp" /></button>
-                    </div>
                 </div>
             </header>
 
@@ -191,9 +214,9 @@ const Explorar = ({ onLogout }) => {
                         {materiaisExibidos.map(m => (
                             <div 
                                 key={m.id_material} 
-                                className={`card-visual ${m.quantidade_total <= 0 ? 'esgotado' : ''} ${!eventoAtivo ? 'only-view' : ''}`}
-                                onClick={() => handleMaterialClick(m)}
-                                style={{cursor: !eventoAtivo ? 'not-allowed' : 'pointer'}}
+                                className={`card-visual ${m.quantidade_total <= 0 ? 'esgotado' : ''} ${(!eventoAtivo || isConvidado) ? 'only-view' : ''}`}
+                                onClick={() => !isConvidado && handleMaterialClick(m)} // Bloqueia clique se for convidado
+                                style={{cursor: (!eventoAtivo || isConvidado) ? 'not-allowed' : 'pointer'}}
                             >
                                 <div className="img-box">
                                     <img 
@@ -221,9 +244,12 @@ const Explorar = ({ onLogout }) => {
             <footer className="footer-trabalho">
                 <div className="footer-inner">
                     <span className="status-text">
-                        {eventoAtivo 
-                            ? `A EDITAR REQUISIÇÃO: ${eventoAtivo.nome.toUpperCase()}` 
-                            : "MODO DE CONSULTA (SELECIONE UMA REQUISIÇÃO NO PERFIL PARA ADICIONAR ITENS)"}
+                        {isConvidado 
+                            ? "🔹 MODO CONSULTA (APENAS VISUALIZAÇÃO)" 
+                            : (eventoAtivo 
+                                ? `A EDITAR REQUISIÇÃO: ${eventoAtivo.nome.toUpperCase()}` 
+                                : "MODO DE CONSULTA (SELECIONE UMA REQUISIÇÃO NO PERFIL PARA ADICIONAR ITENS)")
+                        }
                     </span>
                 </div>
             </footer>

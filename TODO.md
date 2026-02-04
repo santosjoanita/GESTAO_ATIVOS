@@ -11,6 +11,8 @@
 [x] Filtros Unificados: Lógica "Bilingue" sincronizada (Agendado/Aprovada) no Perfil e Gestor.
 
 [x] Expanded UI: Separação visual de detalhes entre Requisições (só materiais) e Eventos (logística completa).
+[x] Perfil Convidado: Configurar acesso "Read-Only" ao catálogo para utilizadores não autenticados.
+
 
 🎨 Interface & UX
 [x] Badges & Cores: Reposição do CSS de estados nos materiais e separação visual Pendente/Aprovado/Cancelado.
@@ -25,5 +27,4 @@
 🔴 PRÓXIMOS PASSOS (FINALIZAÇÃO)
 [ ] Painel Administrativo: Criar interface para registo e gestão de utilizadores (Admin).
 
-[ ] Perfil Convidado: Configurar acesso "Read-Only" ao catálogo para utilizadores não autenticados.
 

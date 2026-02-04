@@ -7,7 +7,6 @@ import Stock from "../Pages/Gestor/Stock.jsx";
 import Explorar from "../Pages/Material/Explorar.jsx";
 import EventoForm from "../forms/EventoForm.jsx"; 
 import Requisicao from "../forms/requisicao/Requisicao.jsx"; 
-
 import Produto from "../Pages/Produto/Produto.jsx";
 import Carrinho from "../Pages/Carrinho/Carrinho.jsx";
 
@@ -15,44 +14,65 @@ import { Permissions } from "../auth/acl.js";
 
 export const appRoutes = [
   { path: "/", element: <Login />, auth: false },
-  { path: "/home", element: <Home />, auth: true },
-  { path: "/perfil", element: <Perfil />, auth: true },
+  
+  { 
+    path: "/home", 
+    element: <Home />, 
+    auth: true, 
+    permission: Permissions.CREATE_REQUISICAO 
+  },
+  
+  { 
+    path: "/perfil", 
+    element: <Perfil />, 
+    auth: true, 
+    permission: Permissions.VIEW_EXPLORAR 
+  },
+  
   { path: "/sem-permissao", element: <SemPermissao />, auth: true },
+  
   { 
     path: "/explorar", 
     element: <Explorar />, 
     auth: true, 
     permission: Permissions.VIEW_EXPLORAR 
   },
+  
   { 
     path: "/novo-evento", 
     element: <EventoForm />, 
     auth: true, 
     permission: Permissions.CREATE_EVENTO 
   },
+  
   { 
     path: "/nova-requisicao", 
     element: <Requisicao />, 
     auth: true, 
     permission: Permissions.CREATE_REQUISICAO 
   },
+  
   { 
     path: "/gestao", 
     element: <GestorDashboard />, 
     auth: true, 
     permission: Permissions.VIEW_DASHBOARD 
   },
+  
   { 
     path: "/stock", 
     element: <Stock />, 
     auth: true, 
     permission: Permissions.VIEW_STOCK 
   },
+  
   {
     path: "/produto/:id",
     element: <Produto />,
     auth: true,
+    permission: Permissions.CREATE_REQUISICAO
   },
+  
   {
     path: "/carrinho",
     element: <Carrinho />,

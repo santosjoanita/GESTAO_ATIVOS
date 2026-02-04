@@ -7,18 +7,34 @@ import '../assets/css/global.css';
 const NotFound = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
-    const isGestor = user?.id_perfil === 2;
-
+    
     const handleBack = () => {
-        if (!user) navigate('/');
-        else navigate(isGestor ? '/gestao' : '/home');
+        if (!user) {
+            navigate('/');
+        } else {
+            if (user.id_perfil === 4) navigate('/explorar');
+            else if (user.id_perfil === 2) navigate('/gestao');
+            else navigate('/home');
+        }
     };
 
     return (
         <div style={{ padding: '100px', textAlign: 'center' }}>
             <h1 style={{fontSize: '60px', color: '#1f3a52'}}>404</h1>
-            <p>Página não encontrada.</p>
-            <button onClick={handleBack} style={{ padding: '10px 20px', background: '#1f3a52', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', marginTop: '20px' }}>
+            <p>Página não encontrada ou sem acesso.</p>
+            <button 
+                onClick={handleBack} 
+                style={{ 
+                    padding: '10px 20px', 
+                    background: '#1f3a52', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '8px', 
+                    cursor: 'pointer', 
+                    marginTop: '20px',
+                    fontWeight: 'bold'
+                }}
+            >
                 Voltar à página principal
             </button>
         </div>

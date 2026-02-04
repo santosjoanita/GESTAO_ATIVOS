@@ -34,8 +34,13 @@ const Login = ({ onLoginSuccess }) => {
                 setToast({ type: 'success', message: "Login efetuado com sucesso!" });
 
             setTimeout(() => {
-                if (userToSave.id_perfil === 2) navigate('/gestao'); 
-                else navigate('/home'); 
+                if (userToSave.id_perfil === 2) {
+                    navigate('/gestao'); 
+                } else if (userToSave.id_perfil === 4) {
+                    navigate('/explorar');
+                } else {
+                    navigate('/home'); 
+                }
             }, 1000);
                 
                 localStorage.clear();
@@ -48,6 +53,9 @@ const Login = ({ onLoginSuccess }) => {
                     navigate('/gestao'); 
                 } else {
                     navigate('/home');   
+                }
+                if (userToSave.id_perfil === 4) {
+                    navigate('/explorar'); 
                 }
             } else {
                 const errorData = await response.json().catch(() => ({}));
@@ -64,11 +72,11 @@ const Login = ({ onLoginSuccess }) => {
     useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
     if (user && user.token) {
-        // Se já houver user, manda para a home ou gestao
-        navigate(user.id_perfil === 2 ? '/gestao' : '/home');
+        if (user.id_perfil === 2) navigate('/gestao');
+        else if (user.id_perfil === 4) navigate('/explorar'); 
+        else navigate('/home');
     }
 }, [navigate]);
-
     return (
         <>
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

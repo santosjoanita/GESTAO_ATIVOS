@@ -1,4 +1,3 @@
-//EXEMPLO DE JWT MIDDLEWARE PARA AUTENTICAÇÃO
 
 
 
@@ -20,7 +19,8 @@ const verificarToken = (req, res, next) => {
         }
         
         req.userId = decoded.id;
-        next(); 
+        req.userPerfil = decoded.perfil; 
+        next();
     });
 };
 

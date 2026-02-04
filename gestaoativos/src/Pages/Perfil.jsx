@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { HelpCircle,ChevronDown, ChevronUp, ChevronRight, ShoppingCart, User, CornerDownLeft, Package, RotateCcw, XCircle, Briefcase, Download } from 'lucide-react';
+import { HelpCircle,ChevronDown, ChevronUp, ChevronRight, ShoppingCart, User, CornerDownLeft, Package, RotateCcw, XCircle, Briefcase, Download, ShieldAlert } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
@@ -121,6 +121,7 @@ const Perfil = () => {
 
     const user = JSON.parse(localStorage.getItem('user'));
     const isGestor = user?.id_perfil === 2;
+    const isConvidado = user?.id_perfil === 4;
     const eventoAtivo = JSON.parse(localStorage.getItem('evento_trabalho'));
 
     const getAuthHeaders = useCallback(() => {
@@ -130,6 +131,7 @@ const Perfil = () => {
 
     const fetchPerfilData = useCallback(async () => {
         if (!user) { navigate('/'); return; }
+        if (isConvidado) return;
         try {
             const [resReq, resEv] = await Promise.all([
                 fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user || user.id}`, { headers: getAuthHeaders() }),
@@ -291,7 +293,9 @@ const Perfil = () => {
                     <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}}/>
                     <nav className="header-nav-esp">
                         <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
-                        {isGestor ? <Link to="/gestao" className="nav-item-esp">GESTÃO</Link> : <Link to="/home" className="nav-item-esp">INÍCIO</Link>}
+                        {!isConvidado && (
+                            isGestor ? <Link to="/gestao" className="nav-item-esp">GESTÃO</Link> : <Link to="/home" className="nav-item-esp">INÍCIO</Link>
+                        )}
                     </nav>
                     <div className="header-icons-esp">
                         <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
@@ -299,13 +303,15 @@ const Perfil = () => {
                                 {user?.nome?.split(' ')[0]}
                             </span>
                             <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
-                                {isGestor ? 'GESTOR' : 'FUNCIONÁRIO'}
+                                {isConvidado ? 'CONVIDADO' : (isGestor ? 'GESTOR' : 'FUNCIONÁRIO')}
                             </span>
                         </div>
 
-                        <Link to="/carrinho">
-                            <ShoppingCart size={24} className="icon-esp" />
-                        </Link>
+                        {!isConvidado && (
+                            <Link to="/carrinho">
+                                <ShoppingCart size={24} className="icon-esp" />
+                            </Link>
+                        )}
                         
                         <Link to="/perfil">
                             <User size={24} className="icon-esp active-icon-indicator" />
@@ -327,87 +333,92 @@ const Perfil = () => {
                     </div>
                 </div>
 
-                <div className="filters-header-wrapper" style={{ marginTop: '40px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                    <h3 className="section-title-perfil" style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: 'var(--color-primary-dark)' }}>
-                        OS MEUS PEDIDOS
-                    </h3>
-                    <div className="tooltip-container">
-                        <HelpCircle size={20} className="help-icon-perfil" />
-                        <div className="tooltip-popup">
-                            <h4>Legenda de Estados:</h4>
-                            <p style={{fontSize: '10px', color: '#666', marginBottom: '10px'}}>Estados alterados pelo <strong>Gestor </strong> conforme validação técnica.</p>
-                            <ul>
-                                <li><span className="dot pendente"></span> <strong>Pendente:</strong> Aguarda validação do gestor.</li>
-                                <li><span className="dot aprovada"></span> <strong>Aprovada:</strong> Pedido aceite, aguarda levantamento.</li>
-                                <li><span className="dot em-curso"></span> <strong>Em Curso:</strong> O material está consigo.</li>
-                                <li><span className="dot finalizada"></span> <strong>Finalizada:</strong> Material devolvido e conferido.</li>
-                                <li><span className="dot cancelada"></span> <strong>Cancelada:</strong> Pedido anulado ou rejeitado.</li>
-                            </ul>
-                        </div>
+                {isConvidado ? (
+                    <div className="no-items-msg" style={{ marginTop: '50px', borderStyle: 'solid', borderColor: '#e2e8f0', padding: '40px' }}>
+                        <ShieldAlert size={48} color="#1f4e79" style={{ marginBottom: '15px' }} />
+                        <h3 style={{ color: 'var(--color-primary-dark)', fontWeight: '800' }}>MODO DE CONSULTA ATIVO</h3>
+                        <p>A sua conta não possui permissões para criar eventos ou realizar requisições de material.</p>
+                        <p style={{ fontSize: '12px', marginTop: '10px', color: '#666' }}>Contacte a administração para alterar o seu nível de acesso.</p>
                     </div>
-                </div>
+                ) : (
+                    <>
+                        <div className="filters-header-wrapper" style={{ marginTop: '40px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                            <h3 className="section-title-perfil" style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: 'var(--color-primary-dark)' }}>
+                                OS MEUS PEDIDOS
+                            </h3>
+                            <div className="tooltip-container">
+                                <HelpCircle size={20} className="help-icon-perfil" />
+                                <div className="tooltip-popup">
+                                    <h4>Legenda de Estados:</h4>
+                                    <ul>
+                                        <li><span className="dot pendente"></span> <strong>Pendente:</strong> Aguarda validação do gestor.</li>
+                                        <li><span className="dot aprovada"></span> <strong>Aprovada:</strong> Pedido aceite, aguarda levantamento.</li>
+                                        <li><span className="dot em-curso"></span> <strong>Em Curso:</strong> O material está consigo.</li>
+                                        <li><span className="dot finalizada"></span> <strong>Finalizada:</strong> Material devolvido e conferido.</li>
+                                        <li><span className="dot cancelada"></span> <strong>Cancelada:</strong> Pedido anulado ou rejeitado.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
 
-                <div className="tabs-container-esp">
-                    {['eventos', 'requisições'].map(t => ( 
-                        <button 
-                            key={t} 
-                            className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} 
-                            onClick={() => {
-                                setActiveTab(t);
-                                setFiltroEstado('todos');
-                                setExpandedCardId(null); 
-                            }}
-                        >
-                            {t.toUpperCase()}
-                        </button>
-                    ))}
-                </div>
+                        <div className="tabs-container-esp">
+                            {['eventos', 'requisições'].map(t => ( 
+                                <button 
+                                    key={t} 
+                                    className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} 
+                                    onClick={() => {
+                                        setActiveTab(t);
+                                        setFiltroEstado('todos');
+                                        setExpandedCardId(null); 
+                                    }}
+                                >
+                                    {t.toUpperCase()}
+                                </button>
+                            ))}
+                        </div>
 
-                <div className="status-filter-bar-esp">
-                    {activeTab === 'eventos' 
-                        ? 
-                        ['todos','pendente', 'agendado', 'finalizado', 'cancelado'].map(f => (
-                            <button 
-                                key={f} 
-                                className={`status-filter-btn ${filtroEstado === f ? 'active-status' : ''}`} 
-                                onClick={() => setFiltroEstado(f)}
-                            >
-                                {f.toUpperCase()}
-                            </button>
-                        ))
-                        : 
-                        ['todos', 'pendente', 'aprovada', 'em curso', 'finalizada', 'cancelada', 'rejeitada'].map(f => (
-                            <button 
-                                key={f} 
-                                className={`status-filter-btn ${filtroEstado === f ? 'active-status' : ''}`} 
-                                onClick={() => setFiltroEstado(f)}
-                            >
-                                {f.toUpperCase()}
-                            </button>
-                        ))
-                    }
-                </div>
+                        <div className="status-filter-bar-esp">
+                            {activeTab === 'eventos' 
+                                ? ['todos','pendente', 'agendado', 'finalizado', 'cancelado'].map(f => (
+                                    <button key={f} className={`status-filter-btn ${filtroEstado === f ? 'active-status' : ''}`} onClick={() => setFiltroEstado(f)}>
+                                        {f.toUpperCase()}
+                                    </button>
+                                ))
+                                : ['todos', 'pendente', 'aprovada', 'em curso', 'finalizada', 'cancelada', 'rejeitada'].map(f => (
+                                    <button key={f} className={`status-filter-btn ${filtroEstado === f ? 'active-status' : ''}`} onClick={() => setFiltroEstado(f)}>
+                                        {f.toUpperCase()}
+                                    </button>
+                                ))
+                            }
+                        </div>
 
-                <div className="list-items-container-esp">
-                    {displayItems.length > 0 ? (
-                        displayItems.map(item => (
-                            <EventCard 
-                                key={item.id} 
-                                event={item} 
-                                isRequisicao={item.isRequisicao} 
-                                isExpanded={expandedCardId === item.id}
-                                materiais={materiaisCard} 
-                                onToggle={() => handleToggle(item)} 
-                                onDevolverClick={confirmDevolver} 
-                                onCancelarClick={confirmCancelar} 
-                                onEditarClick={handleEditar} 
-                            />
-                        ))
-                    ) : (
-                        <div className="no-items-msg">Nenhum registo encontrado para os filtros selecionados.</div>
-                    )}
-                </div>
+                        <div className="list-items-container-esp">
+                            {displayItems.length > 0 ? (
+                                displayItems.map(item => (
+                                    <EventCard 
+                                        key={item.id} 
+                                        event={item} 
+                                        isRequisicao={item.isRequisicao} 
+                                        isExpanded={expandedCardId === item.id}
+                                        materiais={materiaisCard} 
+                                        onToggle={() => handleToggle(item)} 
+                                        onDevolverClick={confirmDevolver} 
+                                        onCancelarClick={confirmCancelar} 
+                                        onEditarClick={handleEditar} 
+                                    />
+                                ))
+                            ) : (
+                                <div className="no-items-msg">Nenhum registo encontrado para os filtros selecionados.</div>
+                            )}
+                        </div>
+                    </>
+                )}
             </main>
+            <footer className="fixed-footer-esp" style={{ background: isConvidado ? '#2c3e50' : '#1f4e79' }}>
+                <span className="footer-project-esp">
+                    {isConvidado ? "🔒 MODO CONSULTA - MUNICÍPIO DE ESPOSENDE" : "Gestão de Ativos - Município de Esposende"}
+                </span>
+            </footer>
         </div>
     );
 };
