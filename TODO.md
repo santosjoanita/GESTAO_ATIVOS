@@ -1,38 +1,29 @@
-# 📋 GESTÃO DE ATIVOS - STATUS DO PROJETO
+🟢 CONCLUÍDO (JÁ IMPLEMENTADO)
+[x] Lógica de Colisão de Stock: Query de backend capaz de calcular a disponibilidade real entre datas intersetadas (Calcula stock total - stock ocupado).
 
-## 🟢 CONCLUÍDO (JÁ IMPLEMENTADO)
+🖼️ Imagens & Ficheiros
+[x] Acesso às Imagens: Correção do erro 404; pasta uploads correta.
 
-### 🎨 Interface & Visual
-- [x] **Badge de Cargo:** Adicionado "GESTOR" ou "FUNCIONÁRIO" no Header de todas as páginas.
-- [x] **Formatação de Datas:** Globalmente alterado para `DD/MM/AAAA` em tabelas e detalhes.
-- [x] **Eventos no Perfil:** Agora mostra o intervalo completo: *"Data Início até Data Fim"*.
-- [x] **Google Maps:** Coordenadas no detalhe do evento agora são um link clicável para o mapa.
+[x] Gestão de Anexos: Upload de documentos em Eventos e download funcional com nomes originais no Perfil.
+(Falta aparecer no event-card do perfil)
 
-### ⚙️ Gestão & Funcionalidades
-- [x] **Filtros de Estado:** Separação visual (cores) entre "Recusado" e "Cancelado".
-- [x] **Dashboard Gestor:** Filtro inicial configurado para abrir logo em "Pendentes".
-- [x] **Fluxo Simplificado:** Removido o botão "Marcar Levantamento" (Aprovado -> Em Curso).
-- [x] **Edição pelo Gestor:** Botão "Editar Materiais" funcional, com redirecionamento inteligente no carrinho.
+📊 Perfil & Dashboard
+[x] Filtros Unificados: Lógica "Bilingue" sincronizada (Agendado/Aprovada) no Perfil e Gestor.
 
-### 🐛 Correções de Código (Bugs)
-- [x] **Erro de Sintaxe:** Corrigido o erro crítico de comparação (`=<` para `<`) no Produto.
-- [x] **Bloqueio de Datas:** Inputs de data bloqueados (readonly) ao adicionar itens ao carrinho.
+[x] Expanded UI: Separação visual de detalhes entre Requisições (só materiais) e Eventos (logística completa).
 
----
+🎨 Interface & UX
+[x] Badges & Cores: Reposição do CSS de estados nos materiais e separação visual Pendente/Aprovado/Cancelado.
 
-## 🟠 A VERIFICAR (TESTES RÁPIDOS)
-- [ ] **Validação EventoForm:** Testar se impede mesmo datas no passado.
-- [ ] **UX Carrinho:** Confirmar se o redirecionamento pós-submissão está correto para cada perfil.
+[x] Estabilidade: Resolvido o bug de navegação (salto) entre Home e Perfil.
 
----
+🟠 A VERIFICAR (TESTES RÁPIDOS)
+[ ] Stress Test de Stock: Criar duas requisições para o mesmo material em datas sobrepostas e confirmar se o sistema bloqueia a segunda se exceder o stock.
 
-## 🔴 PRÓXIMOS PASSOS (A BOMBA)
-- [ ] **Lógica de Colisão de Stock:** Query de backend para calcular disponibilidade real entre datas intersetadas.
-- [ ] **Edição de Quantidades:** Permitir que o gestor altere quantidades diretamente no modal de detalhes.
+[ ] UX Carrinho: Confirmar se, ao editar uma requisição antiga, o stock anterior é "libertado" para a nova contagem.
 
+🔴 PRÓXIMOS PASSOS (FINALIZAÇÃO)
+[ ] Painel Administrativo: Criar interface para registo e gestão de utilizadores (Admin).
 
-NOTAS:
-Criar admin apenas para registar utilizadores.
-Criar convidado que apenas vê o catálogo, só.
-As imagens n aparecem
+[ ] Perfil Convidado: Configurar acesso "Read-Only" ao catálogo para utilizadores não autenticados.
 
