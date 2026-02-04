@@ -14,9 +14,9 @@ const formatDate = (dateString) => {
 };
 
 const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick, onCancelarClick, isRequisicao, materiais }) => {
-        if (!event) return null;
+    if (!event) return null;
+    
     const estado = event.id_estado_req;
-
     const podeEditar = isRequisicao && (estado === 2 || estado === 4);
     const podeDevolver = isRequisicao && estado === 4;
     const podeCancelar = isRequisicao && estado === 1;
@@ -27,15 +27,13 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                 <div>
                     <p className="event-title">{event.title}</p>
                     <p className="event-date">
-                        {isRequisicao && event.data_fim 
-                            ? `Duração: ${formatDate(event.data_inicio)} até ${formatDate(event.data_fim)}` 
-                            : `Data: ${event.date}`}
+                        {isRequisicao ? `Estado: ${event.status}` : `Data: ${event.date}`}
                     </p>
                 </div>
                 
                 <div className="event-actions-wrapper" onClick={(e) => e.stopPropagation()} style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
                     {podeEditar && (
-                        <button className="edit-button-esp btn-pendente" onClick={() => onEditarClick(event)} title="Adicionar mais materiais">
+                        <button className="edit-button-esp btn-pendente" onClick={() => onEditarClick(event)}>
                             <Briefcase size={14} style={{marginRight: '5px'}}/> EDITAR
                         </button>
                     )}
@@ -52,79 +50,60 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                     <div className="event-arrow-container">{isExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}</div>
                 </div>
             </div>
-            {isExpanded && (
-    <div className="event-details">
-        <div className="details-info-grid">
-            <p><strong>Local:</strong> {event.localizacao || 'N/A'}</p>
-            <p><strong>Início:</strong> {formatDate(event.data_inicio)}</p>
-            <p><strong>Fim:</strong> {formatDate(event.data_fim)}</p>
 
-                {isRequisicao ? (
-                    <div className="materiais-container-perfil" style={{ marginTop: '15px' }}>
-                        <p style={{ fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', marginBottom: '10px' }}>
-                            <Package size={16} style={{ verticalAlign: 'middle' }} /> LISTA DE MATERIAIS:
-                        </p>
-                        {materiais?.length > 0 ? (
-                            <ul style={{ listStyle: 'none', padding: 0 }}>
-                                {materiais.map((m, idx) => (
-                                    <li key={idx} style={{ fontSize: '13px', borderBottom: '1px solid #eee', padding: '8px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
-                                        <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', padding: '2px 6px', borderRadius: '4px', backgroundColor: m.status_item === 'pendente' ? '#fef3c7' : '#dcfce7', color: m.status_item === 'pendente' ? '#d97706' : '#166534' }}>
-                                            {m.status_item || 'APROVADO'}
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p style={{ fontSize: '12px', color: '#777' }}>Sem materiais listados.</p>
-                        )}
-                    </div>
-                ) : (
-                    <div className="evento-info-extra" style={{ marginTop: '15px' }}>
-                        <div className="requisicoes-associadas" style={{ marginBottom: '15px' }}>
-                            <p style={{ fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', marginBottom: '10px' }}>
-                                PEDIDOS DE MATERIAL:
-                            </p>
-                            {materiais?.length > 0 ? (
-                                <ul style={{ listStyle: 'none', padding: 0 }}>
-                                    {materiais.map((r, idx) => (
-                                        <li key={idx} style={{ fontSize: '13px', padding: '5px 0', color: '#555' }}>
-                                            <ChevronRight size={14} style={{verticalAlign: 'middle'}}/> Requisição #{r.id_req} — <strong>{r.estado_nome}</strong>
-                                        </li>
-                                    ))}
-                                </ul>
+                    {isExpanded && (
+                        <div className="event-details">
+                            {isRequisicao ? (
+                                <div className="materiais-container-perfil">
+                                    <p style={{ fontWeight: '800', fontSize: '13px', color: '#1f4e79', marginBottom: '10px' }}>
+                                        <Package size={16} style={{ verticalAlign: 'middle' }} /> LISTA DE MATERIAIS:
+                                    </p>
+                                    {materiais?.length > 0 ? (
+                                        <ul style={{ listStyle: 'none', padding: 0 }}>
+                                            {materiais.map((m, idx) => (
+                                                <li key={idx} style={{ fontSize: '13px', borderBottom: '1px solid #eee', padding: '8px 0', display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
+                                                    <span className={`status-badge-material ${(m.status_item || 'aprovado').toLowerCase()}`}>
+                                                        {m.status_item || 'APROVADO'}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : <p style={{ fontSize: '12px', color: '#777' }}>Sem materiais associados.</p>}
+                                </div>
                             ) : (
-                                <p style={{ fontSize: '12px', color: '#777' }}>Nenhuma requisição associada a este evento.</p>
+                                <>
+                                    <div className="details-info-grid">
+                                        <p><strong>Local:</strong> {event.localizacao || 'N/A'}</p>
+                                        <p><strong>Início:</strong> {formatDate(event.data_inicio)}</p>
+                                        <p><strong>Fim:</strong> {formatDate(event.data_fim)}</p>
+                                    </div>
+
+                                    <div className="anexos-container-perfil" style={{ marginTop: '20px' }}>
+                                        <p style={{ fontWeight: '800', fontSize: '13px', color: '#1f4e79', marginBottom: '10px' }}>
+                                            DOCUMENTOS ANEXADOS:
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                            {event.anexos && event.anexos.length > 0 ? (
+                                                event.anexos.map((file, idx) => (
+                                                    <a 
+                                                        key={idx} 
+                                                        href={`http://localhost:3002/uploads/${file.nome_oculto}`} 
+                                                        target="_blank" 
+                                                        rel="noreferrer"
+                                                        download={file.nome}
+                                                        style={{ fontSize: '12px', color: '#3498db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', background: '#f0f7ff', padding: '5px 10px', borderRadius: '5px', border: '1px solid #d0e7ff' }}
+                                                    >
+                                                        <Download size={14} /> {file.nome}
+                                                    </a>
+                                                ))
+                                            ) : <p style={{ fontSize: '12px', color: '#777' }}>Sem documentos disponíveis.</p>}
+                                        </div>
+                                    </div>
+                                </>
                             )}
                         </div>
-
-                        <div className="anexos-container-perfil">
-                            <p style={{ fontWeight: '800', fontSize: '13px', color: 'var(--primary-blue)', marginBottom: '10px' }}>
-                                DOCUMENTOS ANEXADOS:
-                            </p>
-                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                {event.anexos?.length > 0 ? (
-                                    event.anexos.map((file, idx) => (
-                                        <a 
-                                            key={idx} 
-                                            href={`http://localhost:3002/uploads/${file.url}`} 
-                                            target="_blank" 
-                                            rel="noreferrer"
-                                            style={{ fontSize: '12px', color: '#3498db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', background: '#f0f7ff', padding: '5px 10px', borderRadius: '5px' }}
-                                        >
-                                            <Download size={14} /> {file.nome_original || 'Documento'}
-                                        </a>
-                                    ))
-                                ) : (
-                                    <p style={{ fontSize: '12px', color: '#777' }}>Sem anexos disponíveis.</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    )}
+                    )}
         </div>
     );
 };
@@ -147,6 +126,7 @@ const Perfil = () => {
     const getAuthHeaders = useCallback(() => {
         return { 'Content-Type': 'application/json', 'Authorization': user?.token ? `Bearer ${user.token}` : '' };
     }, [user]);
+
 
     const fetchPerfilData = useCallback(async () => {
         if (!user) { navigate('/'); return; }
@@ -176,59 +156,63 @@ const Perfil = () => {
             })) : []);
 
             setEventsList(Array.isArray(dataEv) ? dataEv.map(e => ({
-                id: `ev-${e.id_evento}`, 
-                id_orig: e.id_evento,
-                isRequisicao: false,
-                title: e.nome_evento, 
-                date: `${formatDate(e.data_inicio)} até ${formatDate(e.data_fim)}`,
-                data_inicio: e.data_inicio, 
-                data_fim: e.data_fim,
-                localizacao: e.localizacao,
-                anexos: [], 
-                colorClass: getStatusColor(e.estado_nome)
-            })) : []);
+            id: `ev-${e.id_evento}`, 
+            id_orig: e.id_evento,
+            isRequisicao: false,
+            title: e.nome_evento, 
+            date: `${formatDate(e.data_inicio)} até ${formatDate(e.data_fim)}`,
+            data_inicio: e.data_inicio, 
+            data_fim: e.data_fim,
+            localizacao: e.localizacao,
+            status: e.estado_nome, 
+            anexos: [], 
+            colorClass: getStatusColor(e.estado_nome)
+        })) : []);
         } catch (error) { console.error(error); }
     }, [navigate, getAuthHeaders, user]);
 
     useEffect(() => { fetchPerfilData(); }, [fetchPerfilData]);
 
-    const fetchMateriaisReq = async (idReq) => {
-        try {
-            const res = await fetch(`http://localhost:3002/api/requisicoes/${idReq}/materiais`, { headers: getAuthHeaders() });
-            if (res.ok) setMateriaisCard(await res.json());
-        } catch (err) { console.error(err); }
-    };
-    const fetchRequisicoesDoEvento = async (idEvento) => {
-    try {
-        const res = await fetch(`http://localhost:3002/api/eventos/${idEvento}/requisicoes`, { headers: getAuthHeaders() });
-        if (res.ok) {
-            const data = await res.json();
-            setMateriaisCard(data); 
-        }
-    } catch (err) { console.error(err); }
-};
 
-    const handleToggle = (item) => {
+   const handleToggle = async (item) => {
     if (expandedCardId === item.id) { 
         setExpandedCardId(null); 
         setMateriaisCard([]); 
     } else { 
         setExpandedCardId(item.id); 
-        if (item.isRequisicao) fetchMateriaisReq(item.id_orig);
-        else fetchRequisicoesDoEvento(item.id_orig);
-            }
-        };
         
-    const displayItems = (() => {
-    let list = activeTab === 'eventos' ? eventsList : requisicoesList;
+        if (item.isRequisicao) {
+            const res = await fetch(`http://localhost:3002/api/requisicoes/${item.id_orig}/materiais`, { headers: getAuthHeaders() });
+            const data = await res.json();
+            setMateriaisCard(data);
+        } else {
+            const resAnexos = await fetch(`http://localhost:3002/api/eventos/${item.id_orig}/anexos`, { headers: getAuthHeaders() });
+            const dataAnexos = await resAnexos.json();
+            
+            setEventsList(prev => prev.map(ev => 
+                ev.id_orig === item.id_orig ? { ...ev, anexos: dataAnexos } : ev
+            ));
+        }
+    }
+};
+   const displayItems = (() => {
+    let list = activeTab.toLowerCase().includes('evento') ? eventsList : requisicoesList;
     
     if (filtroEstado !== 'todos') {
         list = list.filter(item => {
-            const s = (item.status || '').toLowerCase();
-            if (filtroEstado === 'aprovada') return s.includes('aprov') || s.includes('agend');
-            if (filtroEstado === 'cancelada') return s.includes('cancel');
-            if (filtroEstado === 'rejeitada') return s.includes('rejeit') || s.includes('recus');
-            return s.includes(filtroEstado);
+            const s = (item.status || '').toLowerCase(); 
+            const f = filtroEstado.toLowerCase(); 
+
+            if (f === 'aprovada' || f === 'agendado') {
+                return s.includes('aprov') || s.includes('agend');
+            }
+            if (f === 'cancelada' || f === 'rejeitada') {
+                return s.includes('cancel') || s.includes('rejeit') || s.includes('recus');
+            }
+            if (f === 'finalizada' || f === 'finalizado') {
+                return s.includes('final') || s.includes('concl');
+            }
+            return s.includes(f);
         });
     }
     return list;
@@ -370,6 +354,7 @@ const Perfil = () => {
                             className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} 
                             onClick={() => {
                                 setActiveTab(t);
+                                setFiltroEstado('todos');
                                 setExpandedCardId(null); 
                             }}
                         >
@@ -379,15 +364,28 @@ const Perfil = () => {
                 </div>
 
                 <div className="status-filter-bar-esp">
-                    {['todos', 'pendente', 'aprovada', 'em curso', 'finalizada', 'cancelada', 'rejeitada'].map(f => (
-                        <button 
-                            key={f} 
-                            className={`status-filter-btn ${filtroEstado === f ? 'active-status' : ''}`} 
-                            onClick={() => setFiltroEstado(f)}
-                        >
-                            {f.toUpperCase()}
-                        </button>
-                    ))}
+                    {activeTab === 'eventos' 
+                        ? 
+                        ['todos','pendente', 'agendado', 'finalizado', 'cancelado'].map(f => (
+                            <button 
+                                key={f} 
+                                className={`status-filter-btn ${filtroEstado === f ? 'active-status' : ''}`} 
+                                onClick={() => setFiltroEstado(f)}
+                            >
+                                {f.toUpperCase()}
+                            </button>
+                        ))
+                        : 
+                        ['todos', 'pendente', 'aprovada', 'em curso', 'finalizada', 'cancelada', 'rejeitada'].map(f => (
+                            <button 
+                                key={f} 
+                                className={`status-filter-btn ${filtroEstado === f ? 'active-status' : ''}`} 
+                                onClick={() => setFiltroEstado(f)}
+                            >
+                                {f.toUpperCase()}
+                            </button>
+                        ))
+                    }
                 </div>
 
                 <div className="list-items-container-esp">

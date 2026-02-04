@@ -35,7 +35,17 @@ const Home = ({ onLogout }) => {
 
     };
 
-    useEffect(() => { fetchDashboardData(); }, [user?.id_user]);
+    useEffect(() => {
+    let isMounted = true;
+    
+    if (user?.id_user) {
+        fetchDashboardData().then(() => {
+            if (!isMounted) return;
+        });
+    }
+
+    return () => { isMounted = false; };
+}, [user?.id_user]);
 
     return (
         <div className="home-page-layout">
@@ -63,7 +73,7 @@ const Home = ({ onLogout }) => {
                         </Link>
                         
                         <Link to="/perfil">
-                            <User size={24} className="icon-esp active-icon-indicator" />
+                            <User size={24} className="icon-esp" />
                         </Link>
 
                         <button onClick={handleLogout} className="logout-btn">

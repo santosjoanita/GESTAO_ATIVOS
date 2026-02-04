@@ -166,41 +166,28 @@ const GestorDashboard = () => {
 
     const filteredItems = items.filter(item => {
         const searchLower = searchTerm.toLowerCase();
-        let matchesSearch = false;
-        
-        if (tab === 'stock') {
-            matchesSearch = (item.item_nome || '').toLowerCase().includes(searchLower) || 
-                            (item.nome_utilizador || '').toLowerCase().includes(searchLower);
-        } else if (tab === 'historico_req') {
-            matchesSearch = (item.acao || '').toLowerCase().includes(searchLower) || 
-                            (item.nome_responsavel || '').toLowerCase().includes(searchLower) || 
-                            (item.id_req && item.id_req.toString().includes(searchLower));
-        } else {
-            matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) || 
-                            (item.requerente || '').toLowerCase().includes(searchLower) || 
-                            (item.id_req && item.id_req.toString().includes(searchLower));
-        }
+        const matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) || 
+                             (item.requerente || '').toLowerCase().includes(searchLower) ||
+                             (item.id_req?.toString().includes(searchLower));
 
         if (tab === 'stock' || tab === 'historico_req') return matchesSearch;
 
-        const statusNoItem = (item.estado_nome || item.status || '').toLowerCase();
+        const statusNoItem = (item.estado_nome || '').toLowerCase();
         const filtro = statusFilter.toLowerCase();
 
-        let matchesStatus = false;
+        if (filtro === 'todos') return matchesSearch;
 
-        if (filtro === 'todos') {
-            matchesStatus = true;
-        } else if (filtro === 'aprovada') {
+        let matchesStatus = false;
+        if (filtro === 'aprovada') {
             matchesStatus = statusNoItem.includes('aprov') || statusNoItem.includes('agend');
         } else if (filtro === 'cancelada') {
-            matchesStatus = statusNoItem.includes('cancel') || statusNoItem.includes('recus') || statusNoItem.includes('rejeit');
+            matchesStatus = statusNoItem.includes('cancel') || statusNoItem.includes('rejeit') || statusNoItem.includes('recus');
         } else {
             matchesStatus = statusNoItem.includes(filtro.substring(0, 4)); 
         }
 
         return matchesSearch && matchesStatus;
     });
-
     const handleLogout = () => {
         localStorage.clear();
         if (user?.onLogout) user.onLogout();
@@ -261,7 +248,7 @@ const GestorDashboard = () => {
                                     <option value="em curso">Em Curso</option>
                                     <option value="todos">Todos os Estados</option>
                                     <option value="finalizada">Finalizadas</option>
-                                    <option value="cancelada">Canceladas</option>
+                                    <option value="cancelada">Canceladas/Recusadas</option>
                                 </select>
                             </div>
                         )}
@@ -387,8 +374,15 @@ const GestorDashboard = () => {
                                     <h4><FileText size={16}/> ANEXOS DO EVENTO</h4>
                                     <div className="anexos-grid">
                                         {anexos.map((file, i) => (
-                                            <a key={i} href={`http://localhost:3002/uploads/${file.url}`} target="_blank" rel="noreferrer" className="anexo-link">
-                                                <Download size={14} /> {file.nome_original || 'Documento'}
+                                           <a 
+                                                key={i} 
+                                                href={`http://localhost:3002/uploads/${file.nome_oculto}`} 
+                                                download={file.nome} 
+                                                target="_blank" 
+                                                rel="noreferrer" 
+                                                className="anexo-link"
+                                            >
+                                                <Download size={14} /> {file.nome}
                                             </a>
                                         ))}
                                     </div>

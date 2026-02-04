@@ -183,7 +183,7 @@ const Stock = () => {
                             {filteredMateriais.length > 0 ? (
                                 filteredMateriais.map(m => (
                                     <tr key={m.id_material}>
-                                        <td><img src={m.imagem_url ? `http://localhost:3002/uploads/${m.imagem_url}` : 'https://via.placeholder.com/50'} alt="Material" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} /></td>
+                                        <td><img src={m.imagem_url ? `http://localhost:3002/uploads/${material.imagem_url}` : 'https://via.placeholder.com/50'} alt="Material" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} /></td>
                                         <td><strong>{m.nome}</strong></td>
                                         <td>{m.categoria}</td>
                                         <td>{m.quantidade_total}</td>

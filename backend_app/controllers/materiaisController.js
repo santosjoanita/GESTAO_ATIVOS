@@ -4,18 +4,70 @@ const db = require('../config/db');
 exports.listarTodos = async (req, res) => {
     try {
         const isAdmin = req.query.admin === 'true';
-        const sql = isAdmin 
-            ? 'SELECT * FROM Material ORDER BY nome ASC' 
-            : 'SELECT * FROM Material WHERE visivel = 1 ORDER BY nome ASC';
+        const sql = `
+            SELECT m.*, c.nome as categoria_nome 
+            FROM Material m
+            LEFT JOIN Categoria c ON m.categoria = c.id_categoria
+            ${isAdmin ? '' : 'WHERE m.visivel = 1'}
+            ORDER BY m.nome ASC`;
         
         const [rows] = await db.execute(sql);
         res.json(rows);
     } catch (e) {
-        console.error("Erro Listar:", e.message);
         res.status(500).json({ error: e.message });
     }
 };
 
+exports.quantidade_disp = async (req, res) => {
+  try {
+    const idMaterial = req.params.id;
+    const dataInicioPedido = req.params.data_ini;
+    const dataFimPedido = req.params.data_fim;
+
+    if (!idMaterial || !dataInicioPedido || !dataFimPedido) {
+      return res.status(400).json({ error: "Parâmetros em falta." });
+    }
+
+    const sqlBuscarMaterial = `SELECT id_material, quantidade_total FROM Material WHERE id_material = ?`;
+    const [resultadoBuscarMaterial] = await db.execute(sqlBuscarMaterial, [idMaterial]);
+
+    if (resultadoBuscarMaterial.length === 0) {
+      return res.status(404).json({ error: "Material não encontrado." });
+    }
+
+    const quantidadeTotalMaterial = Number(resultadoBuscarMaterial[0].quantidade_total) || 0;
+    const listaEstadosQueReservamStock = ["aprovado", "pendente"];
+    const placeholdersEstados = listaEstadosQueReservamStock.map(() => "?").join(",");
+
+    const sqlSomarQuantidadeReservada = `
+      SELECT COALESCE(SUM(ri.quantidade), 0) AS quantidade_reservada
+      FROM RequisicaoItem ri
+      JOIN Requisicao r ON ri.id_req = r.id_req
+      WHERE ri.id_material = ?
+        AND r.id_estado_req IN (1, 2) 
+        AND ri.data_saida <= ?
+        AND ri.data_devolucao >= ?
+    `;
+
+    const [resultadoSomarQuantidadeReservada] = await db.execute(sqlSomarQuantidadeReservada, [
+      idMaterial,
+      dataFimPedido,
+      dataInicioPedido,
+    ]);
+
+    const quantidadeReservadaNoIntervalo = Number(resultadoSomarQuantidadeReservada[0]?.quantidade_reservada) || 0;
+    const quantidadeDisponivelReal = Math.max(0, quantidadeTotalMaterial - quantidadeReservadaNoIntervalo);
+
+    return res.json({
+      quantidade_disponivel: quantidadeDisponivelReal, 
+      quantidade_real_disp: quantidadeDisponivelReal, 
+      quantidade_total: quantidadeTotalMaterial,
+      quantidade_reservada: quantidadeReservadaNoIntervalo
+    });
+  } catch (erro) {
+    return res.status(500).json({ error: erro.message });
+  }
+};
 // 2. LISTAR CATEGORIAS
 exports.listarCategorias = async (req, res) => {
     try {

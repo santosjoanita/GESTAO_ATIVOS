@@ -34,4 +34,5 @@
 NOTAS:
 Criar admin apenas para registar utilizadores.
 Criar convidado que apenas vê o catálogo, só.
+As imagens n aparecem
 

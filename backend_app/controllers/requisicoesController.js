@@ -52,44 +52,64 @@ exports.criar = async (req, res) => {
 exports.submeterMateriais = async (req, res) => {
     const { id } = req.params; 
     const { materiais } = req.body; 
-    const idUserLogado = req.user ? (req.user.id_user || req.user.id) : 1;
 
     const connection = await db.getConnection();
     try {
         await connection.beginTransaction();
         
-        for (const m of materiais) {
-            // CONSULTA DIRETA AO STOCK ATUAL (quantidade_disp na tabela Material)
-            const [materialDb] = await connection.execute(
-                'SELECT nome, quantidade_disp FROM Material WHERE id_material = ?',
-                [m.id_material]
-            );
+        const [requisicoes_feitas] = await connection.execute(
+            `SELECT ri.id_material, ri.quantidade, ri.data_saida, ri.data_devolucao
+            FROM RequisicaoItem ri
+            JOIN Requisicao r ON ri.id_req = r.id_req
+            WHERE r.id_req != ? AND r.id_estado_req IN (1, 2, 3, 4)`, [id]);
 
-            const stockNoCatalogo = materialDb[0]?.quantidade_disp || 0;
+        for (const produto_atual of materiais) {
+            let total_reservado_no_periodo = 0;
 
-            if (m.quantidade > stockNoCatalogo) {
-                throw new Error(`Impossível reservar ${m.quantidade} un. de "${m.nome}". Só existem ${stockNoCatalogo} disponíveis.`);
+            for (const produto_req of requisicoes_feitas) {
+                if (produto_atual.id_material === produto_req.id_material) {
+                    const dt_ini_atual = new Date(produto_atual.levantamento);
+                    const dt_fim_atual = new Date(produto_atual.devolucao);
+                    const dt_ini_req = new Date(produto_req.data_saida);
+                    const dt_fim_req = new Date(produto_req.data_devolucao);
+
+                    if (dt_ini_atual >= dt_ini_req && dt_ini_atual <= dt_fim_req) {
+                        total_reservado_no_periodo += produto_req.quantidade;
+                    }
+
+                    if (dt_fim_atual >= dt_ini_req && dt_fim_atual <= dt_fim_req) {
+                        total_reservado_no_periodo += produto_req.quantidade;
+                    }
+                }
             }
 
-            const [existente] = await connection.execute(
-                'SELECT id_item FROM RequisicaoItem WHERE id_req = ? AND id_material = ?', 
-                [id, m.id_material]
+            const [MaterialDb] = await connection.execute(
+                `SELECT nome, quantidade_total FROM Material WHERE id_material = ?`,
+                [produto_atual.id_material]
             );
 
-            if (existente.length === 0) {
-                await connection.execute(
-                    `INSERT INTO RequisicaoItem (id_req, id_material, quantidade, data_saida, data_devolucao, status_item) 
-                     VALUES (?, ?, ?, ?, ?, 'pendente')`,
-                    [id, m.id_material, m.quantidade, m.levantamento, m.devolucao]
-                );
+            const quantidade_total = MaterialDb[0].quantidade_total;
+            const quantidade_real_disp = quantidade_total - total_reservado_no_periodo;
+
+            if (produto_atual.quantidade > quantidade_real_disp) {
+                throw new Error(`Impossível reservar ${produto_atual.quantidade} un. de "${MaterialDb[0].nome}". Só existem ${quantidade_real_disp} disponíveis.`);
             }
+            
+            await connection.execute(
+                `INSERT INTO RequisicaoItem(id_req, id_material, quantidade, data_saida, data_devolucao, status_item)
+                VALUES (?, ?, ?, ?, ?, 'pendente')
+                ON DUPLICATE KEY UPDATE
+                quantidade = VALUES(quantidade),
+                data_saida = VALUES(data_saida),
+                data_devolucao = VALUES(data_devolucao)`, 
+                [id, produto_atual.id_material, produto_atual.quantidade, produto_atual.levantamento, produto_atual.devolucao]
+            );
         }
 
-        // 4. VOLTAR ESTADO PARA PENDENTE 
-        await connection.execute('UPDATE Requisicao SET id_estado_req = 1 WHERE id_req = ?', [id]);
+        await connection.execute(`UPDATE Requisicao SET id_estado_req = 1 WHERE id_req = ?`, [id]);
         
         await connection.commit();
-        res.status(200).json({ message: "Pedido enviado para aprovação." });
+        res.status(200).json({ message: "Materiais reservados com sucesso." });
 
     } catch (e) {
         await connection.rollback();

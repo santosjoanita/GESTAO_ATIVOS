@@ -13,7 +13,7 @@ const Toast = ({ message, type = 'success', onClose }) => {
         position: 'fixed',
         top: '20px',
         right: '20px',
-        zIndex: 9999,
+        zIndex: 99999,
         background: 'white',
         padding: '15px 20px',
         borderRadius: '8px',

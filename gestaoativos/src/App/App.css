@@ -98,3 +98,13 @@
 .app-button:active {
     transform: scale(0.95);
 }
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Garante que o braco do toast não fica invisível no fundo */
+.toast-visible {
+    display: block !important;
+    animation: slideIn 0.3s ease-out;
+}
