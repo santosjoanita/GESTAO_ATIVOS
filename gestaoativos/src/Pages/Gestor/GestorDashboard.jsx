@@ -58,26 +58,30 @@ const GestorDashboard = () => {
     };
 
     const loadData = async () => {
-        setLoading(true);
-        let url = '';
-        
-        if (tab === 'requisicoes') url = 'http://localhost:3002/api/requisicoes/todas';
-        else if (tab === 'eventos') url = 'http://localhost:3002/api/eventos/todos';
-        else if (tab === 'stock') url = 'http://localhost:3002/api/gestao/stock/historico';
-        else if (tab === 'historico_req') url = 'http://localhost:3002/api/requisicoes/historico';
-        
-        try {
-            const res = await fetch(url, { headers: getAuthHeaders() });
-            if (res.status === 401) { localStorage.clear(); navigate('/'); return; }
-            if (!res.ok) throw new Error("Falha ao carregar dados");
-            const data = await res.json();
-            setItems(Array.isArray(data) ? data : []);
-        } catch (error) { 
-            console.error("Erro ao carregar:", error);
-            setToast({ type: 'error', message: "Erro de conexão ao carregar dados." });
-            setItems([]);
-        } finally { setLoading(false); }
-    };
+    setLoading(true);
+    let url = '';
+    if (tab === 'requisicoes') url = 'http://localhost:3002/api/requisicoes/todas';
+    else if (tab === 'eventos') url = 'http://localhost:3002/api/eventos/todos';
+    else if (tab === 'stock') url = 'http://localhost:3002/api/gestao/stock/historico';
+    else if (tab === 'historico_req') url = 'http://localhost:3002/api/requisicoes/historico';
+    
+    try {
+        const res = await fetch(url, { headers: getAuthHeaders() });
+        if (res.status === 401) { localStorage.clear(); navigate('/'); return; }
+        if (!res.ok) throw new Error("Falha ao carregar dados");
+        const data = await res.json();
+
+        const dadosNormalizados = (Array.isArray(data) ? data : []).map(item => ({
+            ...item,
+            estado_texto: (item.nome_estado || item.estado_nome || item.estado || 'Pendente').toLowerCase()
+        }));
+
+        setItems(dadosNormalizados);
+    } catch (error) { 
+        console.error("Erro ao carregar:", error);
+        setItems([]);
+    } finally { setLoading(false); }
+};
 
     const handleVerDetalhes = async (item) => {
         if (!item || tab === 'stock' || tab === 'historico_req') return; 
@@ -163,28 +167,32 @@ const GestorDashboard = () => {
         
         setModal({ isOpen: false, action: null, id: null, novoEstado: null });
     };
-
-    const filteredItems = items.filter(item => {
+const filteredItems = items.filter(item => {
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) || 
-                         (item.requerente || '').toLowerCase().includes(searchLower) ||
-                         (item.id_req?.toString().includes(searchLower));
+    const matchesSearch = 
+        (item.nome_evento || '').toLowerCase().includes(searchLower) || 
+        (item.id_req?.toString().includes(searchLower)) ||
+        (item.id_evento?.toString().includes(searchLower));
 
     if (tab === 'stock' || tab === 'historico_req') return matchesSearch;
 
-    const statusNoItem = (item.estado_nome || '').toLowerCase();
+    const idEstado = parseInt(item.id_estado || item.id_estado_req || item.id_estado_evento || 1);
     const filtro = statusFilter.toLowerCase();
 
     if (filtro === 'todos') return matchesSearch;
 
     let matchesStatus = false;
-    
-    if (filtro === 'aprovada') {
-        matchesStatus = statusNoItem.includes('aprov') || statusNoItem.includes('agend');
+
+    if (filtro === 'pendente') {
+        matchesStatus = (idEstado === 1);
+    } else if (filtro === 'aprovada') {
+        matchesStatus = (idEstado === 2);
+    } else if (filtro === 'em curso') {
+        matchesStatus = (idEstado === 4);
+    } else if (filtro === 'finalizada') {
+        matchesStatus = (idEstado === 5);
     } else if (filtro === 'cancelada') {
-        matchesStatus = statusNoItem.includes('cancel') || statusNoItem.includes('rejeit') || statusNoItem.includes('recus');
-    } else {
-        matchesStatus = statusNoItem.includes(filtro);
+        matchesStatus = (idEstado === 3 || idEstado === 6);
     }
 
     return matchesSearch && matchesStatus;
@@ -243,8 +251,8 @@ const GestorDashboard = () => {
                         {tab !== 'stock' && tab !== 'historico_req' && (
                             <div className="filter-select-wrapper">
                                 <Filter size={20} className="filter-icon" />
-                                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                                    <option value="pendente">Pendentes (Urgente)</option>
+                                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="admin-select-filter">
+                                    <option value="pendente">Pendentes</option>
                                     <option value="aprovada">Aprovadas / Agendadas</option>
                                     <option value="em curso">Em Curso</option>
                                     <option value="todos">Todos os Estados</option>
@@ -257,47 +265,61 @@ const GestorDashboard = () => {
                 </div>
 
                 <div className="gestao-grid">
-                    {loading ? (
-                        <div className="loading-state"><Activity className="spin-animation" size={32}/><p>A carregar dados...</p></div>
-                    ) : filteredItems.length > 0 ? (
-                        filteredItems.map((item) => (
-                            <div 
-                                key={item.id_req || item.id_evento || item.id_hist || Math.random()} 
-                                className="gestao-card" 
-                                onClick={() => handleVerDetalhes(item)}
-                                style={{ cursor: (tab === 'stock' || tab === 'historico_req') ? 'default' : 'pointer' }}
-                            >
-                                <div className="card-info">
-                                    {tab === 'stock' ? (
-                                        <>
-                                            <strong><Package size={16} /> {item.item_nome}</strong>
-                                            <p><User size={14} /> {item.nome_utilizador}</p>
-                                            <p><Activity size={14} /> {item.tipo_movimento} ({item.quantidade_alt} un.)</p>
-                                            <p style={{fontSize: '0.8em', color: '#888'}}>{formatarData(item.data_movimento)}</p>
-                                        </>
-                                    ) : tab === 'historico_req' ? (
-                                        <>
-                                            <strong><FileClock size={16} /> Req #{item.id_req} - {item.acao}</strong>
-                                            <p><User size={14} /> Por: {item.nome_responsavel}</p>
-                                            <p style={{fontStyle: 'italic', fontSize: '0.9em', color: '#555'}}>{item.detalhes}</p>
-                                            <p style={{fontSize: '0.8em', color: '#888'}}>{formatarData(item.data_acao)}</p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <strong>{item.nome_evento || `Requisição #${item.id_req}`}</strong>
-                                            <p>{item.requerente || item.localizacao}</p>
-                                            <span className={`status-badge-gestor ${item.estado_nome?.toLowerCase().replace(/\s+/g, '-')}`}>
-                                            {item.estado_nome}
-                                        </span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        ))
+    {loading ? (
+        <div className="loading-state">
+            <Activity className="spin-animation" size={32} />
+            <p>A carregar dados...</p>
+        </div>
+    ) : filteredItems.length > 0 ? (
+        filteredItems.map((item) => (
+            <div
+                key={item.id_req || item.id_evento || item.id_hist || Math.random()}
+                className="gestao-card"
+                onClick={() => handleVerDetalhes(item)}
+                style={{ cursor: (tab === 'stock' || tab === 'historico_req') ? 'default' : 'pointer' }}
+            >
+                <div className="card-info">
+                    {tab === 'stock' ? (
+                        <>
+                            <strong><Package size={16} /> {item.item_nome}</strong>
+                            <p><User size={14} /> {item.nome_utilizador}</p>
+                            <p><Activity size={14} /> {item.tipo_movimento} ({item.quantidade_alt} un.)</p>
+                            <p style={{ fontSize: '0.8em', color: '#888' }}>{formatarData(item.data_movimento)}</p>
+                        </>
+                    ) : tab === 'historico_req' ? (
+                        <>
+                            <strong><FileClock size={16} /> Req #{item.id_req} - {item.acao}</strong>
+                            <p><User size={14} /> Por: {item.nome_responsavel}</p>
+                            <p style={{ fontStyle: 'italic', fontSize: '0.9em', color: '#555' }}>{item.detalhes}</p>
+                            <p style={{ fontSize: '0.8em', color: '#888' }}>{formatarData(item.data_acao)}</p>
+                        </>
                     ) : (
-                        <p className="no-results">Nenhum resultado encontrado.</p>
+                        <>
+                            <strong>{item.nome_evento || `Requisição #${item.id_req}`}</strong>
+                            <p>{item.requerente || item.localizacao || 'Local não definido'}</p>
+                            
+                            <span className={`status-badge-gestor ${
+                                (item.id_estado || item.id_estado_req) === 2 ? 'aprovada' : 
+                                (item.id_estado || item.id_estado_req) === 3 ? 'cancelada' : 
+                                (item.id_estado || item.id_estado_req) === 4 ? 'em-curso' : 
+                                (item.id_estado || item.id_estado_req) === 5 ? 'finalizada' : 'pendente'
+                            }`}>
+                                {
+                                    (item.id_estado || item.id_estado_req) === 2 ? 'APROVADA / AGENDADO' : 
+                                    (item.id_estado || item.id_estado_req) === 3 ? 'REJEITADA' : 
+                                    (item.id_estado || item.id_estado_req) === 4 ? 'EM CURSO' : 
+                                    (item.id_estado || item.id_estado_req) === 5 ? 'FINALIZADA' : 'PENDENTE'
+                                }
+                            </span>
+                        </>
                     )}
                 </div>
+            </div>
+        ))
+    ) : (
+        <p className="no-results">Nenhum resultado encontrado.</p>
+    )}
+</div>
             </main>
 
             {selectedItem && (
@@ -327,8 +349,18 @@ const GestorDashboard = () => {
                                 </div>
                                 <div className="detail-item">
                                     <span className="label">Estado Atual</span>
-                                    <span className={`status-badge-large ${selectedItem.estado_nome?.toLowerCase().replace(' ', '-')}`}>
-                                        {selectedItem.estado_nome}
+                                    <span className={`status-badge-large ${(
+                                        selectedItem.nome_estado || 
+                                        selectedItem.estado_nome || 
+                                        selectedItem.estado || 
+                                        'pendente'
+                                    ).toLowerCase().replace(/\s+/g, '-')}`}>
+                                        {
+                                            selectedItem.nome_estado || 
+                                            selectedItem.estado_nome || 
+                                            selectedItem.estado || 
+                                            'PENDENTE'
+                                        }
                                     </span>
                                 </div>
                                 <div className="detail-item full-width">

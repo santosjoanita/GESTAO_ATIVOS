@@ -157,12 +157,10 @@ const AdminDashboard = () => {
                                             <th>#ID</th>
                                             <th>Evento</th>
                                             <th>Requisitante</th>
-                                            <th>Estado</th>
                                         </tr>
                                     )}
                                 </thead>
                                 <tbody>
-                                    {/* CONTEÚDO UTILIZADORES */}
                                     {activeTab === 'utilizadores' && data.map(u => (
                                         <tr key={u.id_user} className={u.ativo === 0 ? 'row-disabled' : ''}>
                                             <td><strong>{u.nome}</strong></td>
@@ -205,30 +203,26 @@ const AdminDashboard = () => {
                                             <td>{new Date(e.data_inicio).toLocaleDateString('pt-PT')}</td>
                                             <td>{e.data_fim ? new Date(e.data_fim).toLocaleDateString('pt-PT') : '--/--/----'}</td>
                                             <td>
-                                                <a 
-                                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.localizacao)}`}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="map-link-admin"
-                                                >
-                                                    <MapPin size={14} style={{ marginRight: '5px' }} />
-                                                    {e.localizacao}
-                                                </a>
+                                                {e.localizacao ? (
+                                                    <a 
+                                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.localizacao)}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="map-link-admin"
+                                                    >
+                                                        <MapPin size={14} />
+                                                        {e.localizacao.includes(',') ? 'Ver Coordenadas' : e.localizacao}
+                                                    </a>
+                                                ) : 'N/A'}
                                             </td>
                                         </tr>
                                     ))}
 
-                                    {/* CONTEÚDO REQUISIÇÕES */}
                                     {activeTab === 'requisições' && data.map(r => (
                                         <tr key={r.id_req}>
                                             <td><strong>#{r.id_req}</strong></td>
                                             <td>{r.nome_evento}</td>
                                             <td>{r.nome_requisitante}</td>
-                                            <td>
-                                                <span className={`status-badge ${getStatusClass(r.estado_nome)}`}>
-                                                    {r.estado_nome}
-                                                </span>
-                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
