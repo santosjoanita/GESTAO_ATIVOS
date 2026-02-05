@@ -4,17 +4,19 @@ services:
     image: mysql:8.0
     container_name: gestaoativos_mysql
     restart: always
+    env_file:
+      - .env 
     environment:
-      MYSQL_ROOT_PASSWORD: root_password_segura 
-      MYSQL_DATABASE: gestao_ativos_db        
-      MYSQL_USER: user_gestao                  
-      MYSQL_PASSWORD: user_password_segura     
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306" 
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-uuser_gestao", "-puser_password_segura"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 10

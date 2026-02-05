@@ -1,13 +1,17 @@
 const db = require('../config/db');
 const path = require('path');
 
-// Listagem para o admin 
+// Listagem 
 exports.listarTodosGeral = async (req, res) => {
     try {
         const [rows] = await db.execute(`
-            SELECT e.*, u.nome as nome_utilizador 
+            SELECT 
+                e.*, 
+                u.nome as nome_utilizador,
+                ee.nome_estado as estado_nome 
             FROM Evento e 
             JOIN Utilizador u ON e.id_user = u.id_user
+            LEFT JOIN Estado_Evento ee ON e.id_estado = ee.id_estado
             ORDER BY e.data_inicio DESC
         `);
         res.json(rows);

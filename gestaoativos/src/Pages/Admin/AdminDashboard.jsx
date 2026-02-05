@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { UserMinus, UserCheck, CornerDownLeft, User, MapPin } from 'lucide-react';
+import { UserMinus, UserCheck, CornerDownLeft, User, MapPin, HelpCircle } from 'lucide-react';
 import logo from '../../assets/img/esposende.png';
 import './AdminDashboard.css';
 import Toast from '../../components/Toast'; 
@@ -124,7 +124,21 @@ const AdminDashboard = () => {
             <main className="admin-main">
                 <div className="admin-container">
                     <div className="admin-welcome">
-                        <h1>Painel de Administração</h1>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <h1>Painel de Administração</h1>
+                            <div className="tooltip-container">
+                                <HelpCircle size={20} className="help-icon-admin" />
+                                <div className="tooltip-popup admin-perfis">
+                                    <h4>Privilégios por Perfil:</h4>
+                                    <ul>
+                                        <li><strong>Admin:</strong> Gestão total de utilizadores e auditoria global.</li>
+                                        <li><strong>Gestor:</strong> Aprovação de pedidos, gestão de stock e eventos.</li>
+                                        <li><strong>Funcionário:</strong> Criar requisições e consultar catálogo.</li>
+                                        <li><strong>Convidado:</strong> Apenas consulta e visualização limitada.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                         <p>Gestão de acessos e monitorização global do sistema.</p>
                     </div>
 

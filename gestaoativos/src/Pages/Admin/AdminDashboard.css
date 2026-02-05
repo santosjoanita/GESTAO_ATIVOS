@@ -28,7 +28,118 @@
     color: #666;
     font-size: 14px;
 }
+.hist-item-container {
+    background: #fff;
+    border-left: 4px solid #3498db;
+    padding: 12px 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
 
+.hist-item-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #95a5a6;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hist-req-id { font-weight: bold; color: #1f4e79; }
+
+.hist-main-info {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.hist-action-tag {
+    background: #ebf5fb;
+    color: #2980b9;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.hist-details-text {
+    font-size: 13px;
+    color: #7f8c8d;
+    margin: 0;
+    padding-left: 20px;
+}
+
+.inline-icon { margin-right: 4px; vertical-align: middle; }
+
+/* --- Tooltip Admin Corrigido --- */
+.tooltip-container { 
+    position: relative; 
+    display: inline-flex; 
+    align-items: center;
+}
+
+.help-icon-admin { 
+    color: #bdc3c7; 
+    cursor: pointer; 
+    transition: 0.3s;
+    margin-left: 8px;
+}
+
+.tooltip-popup.admin-perfis {
+    visibility: hidden;
+    opacity: 0;
+    width: 300px;
+    background: #ffffff; /* Fundo branco sólido */
+    border: 1px solid #d1d9e0;
+    padding: 15px;
+    position: absolute;
+    top: 35px; /* Ajustado para aparecer abaixo do ícone */
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); /* Sombra mais forte */
+    z-index: 9999; /* Garantir que fica por cima de tudo */
+    transition: all 0.3s ease;
+}
+
+.tooltip-container:hover .tooltip-popup {
+    visibility: visible;
+    opacity: 1;
+    top: 40px; /* Pequeno efeito de deslize */
+}
+
+/* Setinha no topo do Tooltip */
+.tooltip-popup.admin-perfis::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -8px;
+    border-width: 8px;
+    border-style: solid;
+    border-color: transparent transparent #ffffff transparent;
+}
+
+.tooltip-popup h4 { 
+    font-size: 14px; 
+    color: #1f4e79; 
+    margin: 0 0 12px 0; 
+    border-bottom: 2px solid #f1f5f9; 
+    padding-bottom: 8px;
+    font-weight: 800;
+}
+
+.tooltip-popup ul { list-style: none; padding: 0; margin: 0; }
+.tooltip-popup li { 
+    font-size: 13px; 
+    margin-bottom: 10px; 
+    color: #4a5568; 
+    line-height: 1.4;
+    text-align: left;
+}
 /* --- Tabela --- */
 .admin-table-wrapper {
     background: white;

@@ -236,29 +236,91 @@ a { text-decoration: none; }
     text-transform: uppercase;
 }
 
-/* Tooltip */
-.tooltip-container { position: relative; display: flex; align-items: center; }
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+    margin-left: 10px;
+}
+
+.help-icon-perfil {
+    color: #7f8c8d;
+    transition: color 0.3s;
+}
+
+.help-icon-perfil:hover {
+    color: #3498db;
+}
+
 .tooltip-popup {
     visibility: hidden;
-    opacity: 0;
     width: 280px;
-    background: white;
-    padding: 15px;
+    background-color: #ffffff;
+    color: #2c3e50;
+    text-align: left;
     border-radius: 8px;
+    padding: 15px;
     position: absolute;
-    bottom: 130%;
+    z-index: 100;
+    bottom: 125%;
     left: 50%;
     transform: translateX(-50%);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-    z-index: 10000;
-    border: 1px solid #ddd;
-    pointer-events: none;
-    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    border: 1px solid #e0e0e0;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
 }
+
 .tooltip-container:hover .tooltip-popup {
     visibility: visible;
     opacity: 1;
 }
+
+.tooltip-popup::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #fff transparent transparent transparent;
+}
+
+.tooltip-popup h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #34495e;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.tooltip-popup ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tooltip-popup li {
+    font-size: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.dot {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.dot.pendente { background-color: #f1c40f; }
+.dot.aprovada { background-color: #2ecc71; }
+.dot.em-curso { background-color: #3498db; }
+.dot.finalizada { background-color: #27ae60; }
+.dot.cancelada { background-color: #e74c3c; }
 /* Footer */
 .fixed-footer-esp {
     position: fixed; bottom: 0; left: 0; right: 0;
