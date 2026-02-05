@@ -18,7 +18,7 @@ const upload = multer({ storage });
 // Rotas de Eventos
 router.post('/', verifyToken, upload.array('anexos'), eventosController.criar);
 router.get('/user/:id', verifyToken, eventosController.listarPorUser);
-router.get('/todos', verifyToken, eventosController.listarTodos);
+router.get('/todos', verifyToken, eventosController.listarTodosGeral);
 router.get('/lista-simples', verifyToken, eventosController.listarSimples);
 router.get('/summary/:id', verifyToken, eventosController.obterDetalhes); 
 router.get('/:id/anexos', verifyToken, eventosController.listarAnexos);

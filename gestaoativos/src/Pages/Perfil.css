@@ -109,7 +109,10 @@ a { text-decoration: none; }
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background-color: #d1d5db;
+    background-color: var(--color-primary-dark) !important; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-right: 25px;
 }
 
@@ -264,6 +267,13 @@ a { text-decoration: none; }
     color: white;
 }
 
+.no-items-msg {
+    margin-top: 50px;
+    border: 1px solid #e2e8f0 !important;
+    padding: 40px;
+    background: white !important; /* Fundo branco como o convidado */
+    border-radius: 12px;
+}
 /* --- RESPONSIVIDADE (MOBILE) --- */
 
 @media (max-width: 1024px) {

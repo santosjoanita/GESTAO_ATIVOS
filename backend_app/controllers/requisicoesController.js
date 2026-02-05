@@ -5,6 +5,22 @@ const sendError = (res, code, msg, errorDetails) => {
 };
 
 // 1. LISTAR TODAS
+exports.listarTodasGeral = async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT r.*, e.nome_evento, u.nome as nome_requisitante
+            FROM Requisicao r
+            JOIN Evento e ON r.id_evento = e.id_evento
+            JOIN Utilizador u ON r.id_user = u.id_user
+            ORDER BY r.data_pedido DESC
+        `);
+        res.json(rows);
+    } catch (error) {
+        console.error("Erro em listarTodasGeral:", error);
+        res.status(500).json({ error: "Erro ao listar requisições" });
+    }
+};
+
 exports.listarTodas = async (req, res) => {
     try {
         const [rows] = await db.execute(`
@@ -19,7 +35,6 @@ exports.listarTodas = async (req, res) => {
     } catch (e) { sendError(res, 500, "Erro ao listar", e.message); }
 };
 
-// 2. LISTAR POR USER
 exports.listarPorUser = async (req, res) => {
     try {
         const [rows] = await db.execute(`
@@ -33,7 +48,6 @@ exports.listarPorUser = async (req, res) => {
     } catch (e) { sendError(res, 500, "Erro ao carregar perfil", e.message); }
 };
 
-// 3. CRIAR REQUISIÇÃO
 exports.criar = async (req, res) => {
     const { id_user, id_evento, descricao } = req.body;
     try {
@@ -41,9 +55,6 @@ exports.criar = async (req, res) => {
             `INSERT INTO Requisicao (id_user, id_evento, data_pedido, id_estado_req, descricao) 
              VALUES (?, ?, NOW(), 1, ?)`, [id_user, id_evento, descricao || "Sem descrição"]
         );
-        
-        await db.execute(`INSERT INTO Historico_Requisicao (id_req, id_user, acao, detalhes, data_acao) VALUES (?, ?, 'Criada', 'Requisição iniciada', NOW())`, [result.insertId, id_user]);
-
         res.status(201).json({ id_req: result.insertId });
     } catch (e) { sendError(res, 500, "Erro ao criar", e.message); }
 };

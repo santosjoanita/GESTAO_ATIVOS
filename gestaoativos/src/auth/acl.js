@@ -13,6 +13,7 @@ export const Permissions = {
   CREATE_EVENTO: "create:evento",
   CREATE_REQUISICAO: "create:requisicao",
   MANAGE_SISTEMA: "manage:sistema",
+  MANAGE_USERS: "manage:users",
 };
 
 export const permissionsByProfile = {

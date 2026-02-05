@@ -1,0 +1,139 @@
+.admin-page {
+    background-color: #f4f7f9;
+    min-height: 100vh;
+}
+
+.admin-main {
+    padding-top: 120px;
+    padding-bottom: 50px;
+}
+
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.admin-welcome {
+    margin-bottom: 30px;
+}
+
+.admin-welcome h1 {
+    color: #1f4e79;
+    font-weight: 800;
+    margin: 0;
+}
+
+.admin-welcome p {
+    color: #666;
+    font-size: 14px;
+}
+
+/* --- Tabela --- */
+.admin-table-wrapper {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px; /* Impede que a tabela esmague em mobile */
+}
+
+th {
+    background: #f8fafc;
+    padding: 15px;
+    text-align: left;
+    font-size: 12px;
+    color: #1f4e79;
+    text-transform: uppercase;
+    border-bottom: 2px solid #edf2f7;
+}
+
+td {
+    padding: 15px;
+    border-bottom: 1px solid #edf2f7;
+    font-size: 14px;
+    color: #4a5568;
+}
+
+.row-disabled {
+    background-color: #fdf2f2;
+    opacity: 0.8;
+}
+
+select {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+}
+
+.action-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.action-icon-btn:hover:not(:disabled) {
+    transform: scale(1.2);
+}
+
+.action-icon-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+/* --- Footer no Admin Dashboard --- */
+.admin-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #1f4e79 !important; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white !important; 
+    font-weight: bold;
+    z-index: 9999;
+    border: none;
+}
+
+.map-link-admin {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: color 0.2s;
+}
+
+.map-link-admin:hover {
+    color: #1f4e79;
+    text-decoration: underline;
+}
+.status-badge.pendente { background: #fef3c7; color: #92400e; } 
+.status-badge.aprovado { background: #dcfce7; color: #166534; } 
+.status-badge.rejeitado { background: #fee2e2; color: #991b1b; } 
+
+/* --- Responsividade --- */
+@media (max-width: 768px) {
+    .admin-main {
+        padding-top: 100px;
+    }
+    
+    .header-nav-esp {
+        display: none; 
+    }
+    
+    .admin-welcome h1 {
+        font-size: 20px;
+    }
+}

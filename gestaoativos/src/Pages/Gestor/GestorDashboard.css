@@ -15,16 +15,24 @@
 }
 
 /* --- HEADER FIXO --- */
-.fixed-header-esp {
-    position: fixed; 
-    top: 0; 
-    width: 100%; 
-    height: 90px;
-    background-color: var(--primary-blue); 
-    z-index: 9999 !important;
-    display: flex; 
-    justify-content: center; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+.fixed-footer-esp {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #1f4e79 !important; /* Azul Marinho Forçado */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white !important; /* Texto Branco Forçado */
+    font-weight: bold;
+    z-index: 9999;
+    border: none;
+}
+
+.footer-project-esp {
+    color: white !important;
 }
 
 .header-content-esp { 
@@ -558,15 +566,23 @@
     align-items: center;
     gap: 8px;
 }
-
-.status-badge-large {
+.status-badge-gestor {
     display: inline-block;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 12px;
+    margin-top: 10px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
 }
+
+.status-badge-gestor.pendente { background: #fef3c7; color: #92400e; }
+.status-badge-gestor.agendado, 
+.status-badge-gestor.aprovada { background: #dcfce7; color: #166534; }
+.status-badge-gestor.em-curso { background: #d0e7ff; color: #1f4e79; }
+.status-badge-gestor.finalizada { background: #f1f5f9; color: #475569; }
+.status-badge-gestor.cancelada, 
+.status-badge-gestor.rejeitada { background: #fee2e2; color: #991b1b; }
 
 /* --- RESPONSIVIDADE DASHBOARD GESTOR --- */
 

@@ -9,12 +9,19 @@ import EventoForm from "../forms/EventoForm.jsx";
 import Requisicao from "../forms/requisicao/Requisicao.jsx"; 
 import Produto from "../Pages/Produto/Produto.jsx";
 import Carrinho from "../Pages/Carrinho/Carrinho.jsx";
+import AdminDashboard from "../Pages/Admin/AdminDashboard.jsx";
 
 import { Permissions } from "../auth/acl.js";
 
 export const appRoutes = [
   { path: "/", element: <Login />, auth: false },
   
+  { 
+    path: "/admin", 
+    element: <AdminDashboard />, 
+    auth: true, 
+    permission: Permissions.MANAGE_USERS 
+  },
   { 
     path: "/home", 
     element: <Home />, 

@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { HelpCircle,ChevronDown, ChevronUp, ChevronRight, ShoppingCart, User, CornerDownLeft, Package, RotateCcw, XCircle, Briefcase, Download, ShieldAlert } from 'lucide-react';
+import { 
+    HelpCircle, ChevronDown, ChevronUp, ChevronRight, ShoppingCart, 
+    User, CornerDownLeft, Package, RotateCcw, XCircle, Briefcase, 
+    Download, ShieldAlert, ShieldCheck 
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Perfil.css'; 
 import logo from '../assets/img/esposende.png'; 
@@ -51,59 +55,59 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                 </div>
             </div>
 
-                    {isExpanded && (
-                        <div className="event-details">
-                            {isRequisicao ? (
-                                <div className="materiais-container-perfil">
-                                    <p style={{ fontWeight: '800', fontSize: '13px', color: '#1f4e79', marginBottom: '10px' }}>
-                                        <Package size={16} style={{ verticalAlign: 'middle' }} /> LISTA DE MATERIAIS:
-                                    </p>
-                                    {materiais?.length > 0 ? (
-                                        <ul style={{ listStyle: 'none', padding: 0 }}>
-                                            {materiais.map((m, idx) => (
-                                                <li key={idx} style={{ fontSize: '13px', borderBottom: '1px solid #eee', padding: '8px 0', display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
-                                                    <span className={`status-badge-material ${(m.status_item || 'aprovado').toLowerCase()}`}>
-                                                        {m.status_item || 'APROVADO'}
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : <p style={{ fontSize: '12px', color: '#777' }}>Sem materiais associados.</p>}
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="details-info-grid">
-                                        <p><strong>Local:</strong> {event.localizacao || 'N/A'}</p>
-                                        <p><strong>Início:</strong> {formatDate(event.data_inicio)}</p>
-                                        <p><strong>Fim:</strong> {formatDate(event.data_fim)}</p>
-                                    </div>
-
-                                    <div className="anexos-container-perfil" style={{ marginTop: '20px' }}>
-                                        <p style={{ fontWeight: '800', fontSize: '13px', color: '#1f4e79', marginBottom: '10px' }}>
-                                            DOCUMENTOS ANEXADOS:
-                                        </p>
-                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                            {event.anexos && event.anexos.length > 0 ? (
-                                                event.anexos.map((file, idx) => (
-                                                    <a 
-                                                        key={idx} 
-                                                        href={`http://localhost:3002/uploads/${file.nome_oculto}`} 
-                                                        target="_blank" 
-                                                        rel="noreferrer"
-                                                        download={file.nome}
-                                                        style={{ fontSize: '12px', color: '#3498db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', background: '#f0f7ff', padding: '5px 10px', borderRadius: '5px', border: '1px solid #d0e7ff' }}
-                                                    >
-                                                        <Download size={14} /> {file.nome}
-                                                    </a>
-                                                ))
-                                            ) : <p style={{ fontSize: '12px', color: '#777' }}>Sem documentos disponíveis.</p>}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
+            {isExpanded && (
+                <div className="event-details">
+                    {isRequisicao ? (
+                        <div className="materiais-container-perfil">
+                            <p style={{ fontWeight: '800', fontSize: '13px', color: '#1f4e79', marginBottom: '10px' }}>
+                                <Package size={16} style={{ verticalAlign: 'middle' }} /> LISTA DE MATERIAIS:
+                            </p>
+                            {materiais?.length > 0 ? (
+                                <ul style={{ listStyle: 'none', padding: 0 }}>
+                                    {materiais.map((m, idx) => (
+                                        <li key={idx} style={{ fontSize: '13px', borderBottom: '1px solid #eee', padding: '8px 0', display: 'flex', justifyContent: 'space-between' }}>
+                                            <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
+                                            <span className={`status-badge-material ${(m.status_item || 'aprovado').toLowerCase()}`}>
+                                                {m.status_item || 'APROVADO'}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : <p style={{ fontSize: '12px', color: '#777' }}>Sem materiais associados.</p>}
                         </div>
+                    ) : (
+                        <>
+                            <div className="details-info-grid">
+                                <p><strong>Local:</strong> {event.localizacao || 'N/A'}</p>
+                                <p><strong>Início:</strong> {formatDate(event.data_inicio)}</p>
+                                <p><strong>Fim:</strong> {formatDate(event.data_fim)}</p>
+                            </div>
+
+                            <div className="anexos-container-perfil" style={{ marginTop: '20px' }}>
+                                <p style={{ fontWeight: '800', fontSize: '13px', color: '#1f4e79', marginBottom: '10px' }}>
+                                    DOCUMENTOS ANEXADOS:
+                                </p>
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                    {event.anexos && event.anexos.length > 0 ? (
+                                        event.anexos.map((file, idx) => (
+                                            <a 
+                                                key={idx} 
+                                                href={`http://localhost:3002/uploads/${file.nome_oculto}`} 
+                                                target="_blank" 
+                                                rel="noreferrer"
+                                                download={file.nome}
+                                                style={{ fontSize: '12px', color: '#3498db', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px', background: '#f0f7ff', padding: '5px 10px', borderRadius: '5px', border: '1px solid #d0e7ff' }}
+                                            >
+                                                <Download size={14} /> {file.nome}
+                                            </a>
+                                        ))
+                                    ) : <p style={{ fontSize: '12px', color: '#777' }}>Sem documentos disponíveis.</p>}
+                                </div>
+                            </div>
+                        </>
                     )}
+                </div>
+            )}
         </div>
     );
 };
@@ -120,18 +124,20 @@ const Perfil = () => {
     const [expandedCardId, setExpandedCardId] = useState(null);
 
     const user = JSON.parse(localStorage.getItem('user'));
+    const isAdmin = user?.id_perfil === 1;
     const isGestor = user?.id_perfil === 2;
     const isConvidado = user?.id_perfil === 4;
-    const eventoAtivo = JSON.parse(localStorage.getItem('evento_trabalho'));
+    
+    const isReadOnly = isAdmin || isConvidado;
 
     const getAuthHeaders = useCallback(() => {
         return { 'Content-Type': 'application/json', 'Authorization': user?.token ? `Bearer ${user.token}` : '' };
     }, [user]);
 
-
     const fetchPerfilData = useCallback(async () => {
         if (!user) { navigate('/'); return; }
-        if (isConvidado) return;
+        if (isReadOnly) return;
+        
         try {
             const [resReq, resEv] = await Promise.all([
                 fetch(`http://localhost:3002/api/requisicoes/user/${user.id_user || user.id}`, { headers: getAuthHeaders() }),
@@ -158,67 +164,57 @@ const Perfil = () => {
             })) : []);
 
             setEventsList(Array.isArray(dataEv) ? dataEv.map(e => ({
-            id: `ev-${e.id_evento}`, 
-            id_orig: e.id_evento,
-            isRequisicao: false,
-            title: e.nome_evento, 
-            date: `${formatDate(e.data_inicio)} até ${formatDate(e.data_fim)}`,
-            data_inicio: e.data_inicio, 
-            data_fim: e.data_fim,
-            localizacao: e.localizacao,
-            status: e.estado_nome, 
-            anexos: [], 
-            colorClass: getStatusColor(e.estado_nome)
-        })) : []);
+                id: `ev-${e.id_evento}`, 
+                id_orig: e.id_evento,
+                isRequisicao: false,
+                title: e.nome_evento, 
+                date: `${formatDate(e.data_inicio)} até ${formatDate(e.data_fim)}`,
+                data_inicio: e.data_inicio, 
+                data_fim: e.data_fim,
+                localizacao: e.localizacao,
+                status: e.estado_nome, 
+                anexos: [], 
+                colorClass: getStatusColor(e.estado_nome)
+            })) : []);
         } catch (error) { console.error(error); }
-    }, [navigate, getAuthHeaders, user]);
+    }, [navigate, getAuthHeaders, user, isReadOnly]);
 
     useEffect(() => { fetchPerfilData(); }, [fetchPerfilData]);
 
-
-   const handleToggle = async (item) => {
-    if (expandedCardId === item.id) { 
-        setExpandedCardId(null); 
-        setMateriaisCard([]); 
-    } else { 
-        setExpandedCardId(item.id); 
-        
-        if (item.isRequisicao) {
-            const res = await fetch(`http://localhost:3002/api/requisicoes/${item.id_orig}/materiais`, { headers: getAuthHeaders() });
-            const data = await res.json();
-            setMateriaisCard(data);
-        } else {
-            const resAnexos = await fetch(`http://localhost:3002/api/eventos/${item.id_orig}/anexos`, { headers: getAuthHeaders() });
-            const dataAnexos = await resAnexos.json();
-            
-            setEventsList(prev => prev.map(ev => 
-                ev.id_orig === item.id_orig ? { ...ev, anexos: dataAnexos } : ev
-            ));
+    const handleToggle = async (item) => {
+        if (expandedCardId === item.id) { 
+            setExpandedCardId(null); 
+            setMateriaisCard([]); 
+        } else { 
+            setExpandedCardId(item.id); 
+            if (item.isRequisicao) {
+                const res = await fetch(`http://localhost:3002/api/requisicoes/${item.id_orig}/materiais`, { headers: getAuthHeaders() });
+                const data = await res.json();
+                setMateriaisCard(data);
+            } else {
+                const resAnexos = await fetch(`http://localhost:3002/api/eventos/${item.id_orig}/anexos`, { headers: getAuthHeaders() });
+                const dataAnexos = await resAnexos.json();
+                setEventsList(prev => prev.map(ev => 
+                    ev.id_orig === item.id_orig ? { ...ev, anexos: dataAnexos } : ev
+                ));
+            }
         }
-    }
-};
-   const displayItems = (() => {
-    let list = activeTab.toLowerCase().includes('evento') ? eventsList : requisicoesList;
-    
-    if (filtroEstado !== 'todos') {
-        list = list.filter(item => {
-            const s = (item.status || '').toLowerCase(); 
-            const f = filtroEstado.toLowerCase(); 
+    };
 
-            if (f === 'aprovada' || f === 'agendado') {
-                return s.includes('aprov') || s.includes('agend');
-            }
-            if (f === 'cancelada' || f === 'rejeitada') {
-                return s.includes('cancel') || s.includes('rejeit') || s.includes('recus');
-            }
-            if (f === 'finalizada' || f === 'finalizado') {
-                return s.includes('final') || s.includes('concl');
-            }
-            return s.includes(f);
-        });
-    }
-    return list;
-})();
+    const displayItems = (() => {
+        let list = activeTab.toLowerCase().includes('evento') ? eventsList : requisicoesList;
+        if (filtroEstado !== 'todos') {
+            list = list.filter(item => {
+                const s = (item.status || '').toLowerCase(); 
+                const f = filtroEstado.toLowerCase(); 
+                if (f === 'aprovada' || f === 'agendado') return s.includes('aprov') || s.includes('agend');
+                if (f === 'cancelada' || f === 'rejeitada') return s.includes('cancel') || s.includes('rejeit') || s.includes('recus');
+                if (f === 'finalizada' || f === 'finalizado') return s.includes('final') || s.includes('concl');
+                return s.includes(f);
+            });
+        }
+        return list;
+    })();
 
     const executeCancelar = async () => {
         try {
@@ -231,7 +227,7 @@ const Perfil = () => {
             } else {
                 setToast({ type: 'error', message: "Não foi possível cancelar." });
             }
-        } catch (e) { setToast({ type: 'error', message: "Erro de ligação ao servidor." }); }
+        } catch (e) { setToast({ type: 'error', message: "Erro de ligação." }); }
         setModal({ isOpen: false, type: null, id: null });
     };
 
@@ -252,27 +248,18 @@ const Perfil = () => {
 
     const confirmCancelar = (id) => setModal({ isOpen: true, type: 'cancelar', id });
     const confirmDevolver = (id) => setModal({ isOpen: true, type: 'devolver', id });
+    
     const handleEditar = async (item) => {
-            localStorage.setItem('evento_trabalho', JSON.stringify({ 
-                id_req: item.id_orig, 
-                nome: item.title 
-            }));
-
-           
-            if (item.id_estado_req === 1 || item.id_estado_req === 2) {
-                try {
-                    await fetch(`http://localhost:3002/api/requisicoes/${item.id_orig}/estado`, {
-                        method: 'PUT',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify({ id_estado: 4 }) // 4 = Em Curso
-                    });
-                } catch (e) {
-                    console.error("Erro ao atualizar para Em Curso:", e);
-                }
-            }
-
-            navigate('/explorar');
-        };
+        localStorage.setItem('evento_trabalho', JSON.stringify({ id_req: item.id_orig, nome: item.title }));
+        if (item.id_estado_req === 1 || item.id_estado_req === 2) {
+            try {
+                await fetch(`http://localhost:3002/api/requisicoes/${item.id_orig}/estado`, {
+                    method: 'PUT', headers: getAuthHeaders(), body: JSON.stringify({ id_estado: 4 })
+                });
+            } catch (e) { console.error(e); }
+        }
+        navigate('/explorar');
+    };
 
     return (
         <div className="perfil-page-app">
@@ -290,12 +277,12 @@ const Perfil = () => {
 
             <header className="fixed-header-esp">
                 <div className="header-content-esp centered-content">
-                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/home')} style={{cursor:'pointer'}}/>
+                    <img src={logo} alt="Logo" className="logo-img" onClick={() => navigate('/explorar')} style={{cursor:'pointer'}}/>
                     <nav className="header-nav-esp">
                         <Link to="/explorar" className="nav-item-esp">CATÁLOGO</Link>
-                        {!isConvidado && (
-                            isGestor ? <Link to="/gestao" className="nav-item-esp">GESTÃO</Link> : <Link to="/home" className="nav-item-esp">INÍCIO</Link>
-                        )}
+                        {isAdmin && <Link to="/admin" className="nav-item-esp">ADMINISTRAÇÃO</Link>}
+                        {isGestor && <Link to="/gestao" className="nav-item-esp">GESTÃO</Link>}
+                        {(!isAdmin && !isGestor && !isConvidado) && <Link to="/home" className="nav-item-esp">INÍCIO</Link>}
                     </nav>
                     <div className="header-icons-esp">
                         <div className="user-profile-badge" style={{ marginRight: '15px', textAlign: 'right' }}>
@@ -303,11 +290,11 @@ const Perfil = () => {
                                 {user?.nome?.split(' ')[0]}
                             </span>
                             <span style={{ color: '#3498db', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>
-                                {isConvidado ? 'CONVIDADO' : (isGestor ? 'GESTOR' : 'FUNCIONÁRIO')}
+                                {isAdmin ? 'ADMINISTRADOR' : (isConvidado ? 'CONVIDADO' : (isGestor ? 'GESTOR' : 'FUNCIONÁRIO'))}
                             </span>
                         </div>
 
-                        {!isConvidado && (
+                        {!isReadOnly && (
                             <Link to="/carrinho">
                                 <ShoppingCart size={24} className="icon-esp" />
                             </Link>
@@ -326,19 +313,48 @@ const Perfil = () => {
 
             <main className="main-content-esp">
                 <div className="user-panel-esp">
-                    <div className="user-avatar-esp"></div>
+                    <div className="user-avatar-esp" style={{ backgroundColor: isAdmin ? '#f1c40f' : '#1f4e79' }}>
+                        {isAdmin ? <ShieldCheck size={24} color="white" /> : null}
+                    </div>
                     <div>
                         <h2 className="user-title-esp">Olá, {user?.nome}.</h2>
                         <p className="user-email-esp">{user?.email}</p>
                     </div>
                 </div>
 
-                {isConvidado ? (
-                    <div className="no-items-msg" style={{ marginTop: '50px', borderStyle: 'solid', borderColor: '#e2e8f0', padding: '40px' }}>
-                        <ShieldAlert size={48} color="#1f4e79" style={{ marginBottom: '15px' }} />
-                        <h3 style={{ color: 'var(--color-primary-dark)', fontWeight: '800' }}>MODO DE CONSULTA ATIVO</h3>
-                        <p>A sua conta não possui permissões para criar eventos ou realizar requisições de material.</p>
-                        <p style={{ fontSize: '12px', marginTop: '10px', color: '#666' }}>Contacte a administração para alterar o seu nível de acesso.</p>
+                {isReadOnly ? (
+                    <div className="no-items-msg" style={{ 
+                        marginTop: '50px', 
+                        borderStyle: 'solid', 
+                        borderColor: isAdmin ? '#f1c40f' : '#e2e8f0', 
+                        padding: '40px',
+                        background: isAdmin ? '#fffdf0' : 'white'
+                    }}>
+                        {isAdmin ? <ShieldCheck size={48} color="#f1c40f" style={{ marginBottom: '15px' }} /> : <ShieldAlert size={48} color="#1f4e79" style={{ marginBottom: '15px' }} />}
+                        
+                        <h3 style={{ color: 'var(--color-primary-dark)', fontWeight: '800' }}>
+                            {isAdmin ? 'PAINEL DE CONTROLO ADMINISTRATIVO' : 'MODO DE CONSULTA ATIVO'}
+                        </h3>
+                        <p>
+                            {isAdmin 
+                                ? 'Como administrador, as tuas funções de gestão de utilizadores e monitorização global estão disponíveis no painel de administração.' 
+                                : 'A sua conta não possui permissões para criar eventos ou realizar requisições de material.'}
+                        </p>
+                        <button 
+                            onClick={() => navigate(isAdmin ? '/admin' : '/explorar')}
+                            style={{ 
+                                marginTop: '20px', 
+                                padding: '10px 20px', 
+                                backgroundColor: isAdmin ? '#f1c40f' : '#1f4e79', 
+                                color: isAdmin ? '#000' : '#fff',
+                                border: 'none',
+                                borderRadius: '5px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            {isAdmin ? 'IR PARA ADMINISTRAÇÃO' : 'VER CATÁLOGO'}
+                        </button>
                     </div>
                 ) : (
                     <>
@@ -366,11 +382,7 @@ const Perfil = () => {
                                 <button 
                                     key={t} 
                                     className={`tab-button-esp ${activeTab === t ? 'active-tab-indicator' : ''}`} 
-                                    onClick={() => {
-                                        setActiveTab(t);
-                                        setFiltroEstado('todos');
-                                        setExpandedCardId(null); 
-                                    }}
+                                    onClick={() => { setActiveTab(t); setFiltroEstado('todos'); setExpandedCardId(null); }}
                                 >
                                     {t.toUpperCase()}
                                 </button>
@@ -408,15 +420,16 @@ const Perfil = () => {
                                     />
                                 ))
                             ) : (
-                                <div className="no-items-msg">Nenhum registo encontrado para os filtros selecionados.</div>
+                                <div className="no-items-msg">Nenhum registo encontrado.</div>
                             )}
                         </div>
                     </>
                 )}
             </main>
-            <footer className="fixed-footer-esp" style={{ background: isConvidado ? '#2c3e50' : '#1f4e79' }}>
+            
+            <footer className="fixed-footer-esp" style={{ background: isAdmin ? '#95a5a6' : (isConvidado ? '#2c3e50' : '#1f4e79') }}>
                 <span className="footer-project-esp">
-                    {isConvidado ? "🔒 MODO CONSULTA - MUNICÍPIO DE ESPOSENDE" : "Gestão de Ativos - Município de Esposende"}
+                    {isAdmin ? "🛠️ PAINEL ADMIN - MUNICÍPIO DE ESPOSENDE" : (isConvidado ? "🔒 MODO CONSULTA - MUNICÍPIO DE ESPOSENDE" : "Gestão de Ativos - Município de Esposende")}
                 </span>
             </footer>
         </div>

@@ -1,6 +1,23 @@
 const db = require('../config/db');
 const path = require('path');
 
+// Listagem para o admin 
+exports.listarTodosGeral = async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT e.*, u.nome as nome_utilizador 
+            FROM Evento e 
+            JOIN Utilizador u ON e.id_user = u.id_user
+            ORDER BY e.data_inicio DESC
+        `);
+        res.json(rows);
+    } catch (error) {
+        console.error("Erro em listarTodosGeral:", error);
+        res.status(500).json({ error: "Erro ao listar eventos" });
+    }
+};
+
+// Listagem simples 
 exports.listarTodos = async (req, res) => {
     try {
         const [rows] = await db.execute(`
@@ -12,9 +29,18 @@ exports.listarTodos = async (req, res) => {
         `);
         res.json(rows);
     } catch (e) {
-        console.error("Erro SQL em listarTodos:", e.message);
-        res.status(500).json({ error: "Erro na BD", detalhes: e.message });
+        res.status(500).json({ error: e.message });
     }
+};
+
+exports.listarPorUser = async (req, res) => {
+    try {
+        const [rows] = await db.execute(
+            `SELECT e.*, ee.nome_estado as estado_nome FROM Evento e 
+             JOIN Estado_Evento ee ON e.id_estado = ee.id_estado 
+             WHERE e.id_user = ? ORDER BY e.id_evento DESC`, [req.params.id]);
+        res.json(rows);
+    } catch (e) { res.status(500).json([]); }
 };
 
 // 2. CRIAR EVENTO 

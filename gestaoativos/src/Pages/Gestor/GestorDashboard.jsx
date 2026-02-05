@@ -165,29 +165,30 @@ const GestorDashboard = () => {
     };
 
     const filteredItems = items.filter(item => {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) || 
-                             (item.requerente || '').toLowerCase().includes(searchLower) ||
-                             (item.id_req?.toString().includes(searchLower));
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = (item.nome_evento || '').toLowerCase().includes(searchLower) || 
+                         (item.requerente || '').toLowerCase().includes(searchLower) ||
+                         (item.id_req?.toString().includes(searchLower));
 
-        if (tab === 'stock' || tab === 'historico_req') return matchesSearch;
+    if (tab === 'stock' || tab === 'historico_req') return matchesSearch;
 
-        const statusNoItem = (item.estado_nome || '').toLowerCase();
-        const filtro = statusFilter.toLowerCase();
+    const statusNoItem = (item.estado_nome || '').toLowerCase();
+    const filtro = statusFilter.toLowerCase();
 
-        if (filtro === 'todos') return matchesSearch;
+    if (filtro === 'todos') return matchesSearch;
 
-        let matchesStatus = false;
-        if (filtro === 'aprovada') {
-            matchesStatus = statusNoItem.includes('aprov') || statusNoItem.includes('agend');
-        } else if (filtro === 'cancelada') {
-            matchesStatus = statusNoItem.includes('cancel') || statusNoItem.includes('rejeit') || statusNoItem.includes('recus');
-        } else {
-            matchesStatus = statusNoItem.includes(filtro.substring(0, 4)); 
-        }
+    let matchesStatus = false;
+    
+    if (filtro === 'aprovada') {
+        matchesStatus = statusNoItem.includes('aprov') || statusNoItem.includes('agend');
+    } else if (filtro === 'cancelada') {
+        matchesStatus = statusNoItem.includes('cancel') || statusNoItem.includes('rejeit') || statusNoItem.includes('recus');
+    } else {
+        matchesStatus = statusNoItem.includes(filtro);
+    }
 
-        return matchesSearch && matchesStatus;
-    });
+    return matchesSearch && matchesStatus;
+});
     const handleLogout = () => {
         localStorage.clear();
         if (user?.onLogout) user.onLogout();
@@ -285,9 +286,9 @@ const GestorDashboard = () => {
                                         <>
                                             <strong>{item.nome_evento || `Requisição #${item.id_req}`}</strong>
                                             <p>{item.requerente || item.localizacao}</p>
-                                            <span className={`status-badge ${item.estado_nome?.toLowerCase().replace(' ', '-')}`}>
-                                                {item.estado_nome}
-                                            </span>
+                                            <span className={`status-badge-gestor ${item.estado_nome?.toLowerCase().replace(/\s+/g, '-')}`}>
+                                            {item.estado_nome}
+                                        </span>
                                         </>
                                     )}
                                 </div>

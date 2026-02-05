@@ -14,6 +14,13 @@ exports.login = async (req, res) => {
         }
 
         const user = rows[0];
+
+        if (user.ativo === 0) {
+            return res.status(403).json({ 
+                error: "A sua conta foi desativada. Contacte o administrador." 
+            });
+        }
+
         const isMatch = await bcrypt.compare(password, user.password_hash);
 
         if (!isMatch) {

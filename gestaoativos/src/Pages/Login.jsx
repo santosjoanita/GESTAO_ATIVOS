@@ -18,65 +18,55 @@ const Login = ({ onLoginSuccess }) => {
         try {
             const response = await fetch('http://localhost:3001/api/auth/login', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json' 
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
 
+            const serverResponse = await response.json();
+
             if (response.ok) {
-                const serverResponse = await response.json();
-                
                 const userToSave = {
                     ...serverResponse.user,   
                     token: serverResponse.token 
                 };
-                setToast({ type: 'success', message: "Login efetuado com sucesso!" });
 
-            setTimeout(() => {
-                if (userToSave.id_perfil === 2) {
-                    navigate('/gestao'); 
-                } else if (userToSave.id_perfil === 4) {
-                    navigate('/explorar');
-                } else {
-                    navigate('/home'); 
-                }
-            }, 1000);
-                
                 localStorage.clear();
                 localStorage.setItem('user', JSON.stringify(userToSave));
                 
                 if (onLoginSuccess) onLoginSuccess(userToSave);
+
+                setToast({ type: 'success', message: "Login efetuado com sucesso!" });
                 setShowAuthModal(false);
 
-                if (userToSave.id_perfil === 2) { 
-                    navigate('/gestao'); 
-                } else {
-                    navigate('/home');   
-                }
-                if (userToSave.id_perfil === 4) {
-                    navigate('/explorar'); 
-                }
+                const perfil = userToSave.id_perfil;
+                if (perfil === 1) navigate('/admin');
+                else if (perfil === 2) navigate('/gestao'); 
+                else if (perfil === 4) navigate('/explorar');
+                else navigate('/home');
+
             } else {
-                const errorData = await response.json().catch(() => ({}));
-                setError(errorData.erro || 'Utilizador ou palavra-passe incorretos.');
-                setToast({ type: 'error', message: "Credenciais inválidas." });
+                setError(serverResponse.erro || 'Credenciais inválidas.');
+                setToast({ type: 'error', message: "Falha na autenticação." });
             }
         } catch (err) {
             console.error("Erro no login:", err);
-            setError('Erro ao ligar ao servidor de autenticação.');
+            setError('Erro ao ligar ao servidor.');
         } finally {
             setIsLoading(false);
         }
     };
+
     useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.token) {
-        if (user.id_perfil === 2) navigate('/gestao');
-        else if (user.id_perfil === 4) navigate('/explorar'); 
-        else navigate('/home');
-    }
-}, [navigate]);
+        const storedUser = JSON.parse(localStorage.getItem('user'));
+        if (storedUser && storedUser.token) {
+            const p = storedUser.id_perfil;
+            if (p === 1) navigate('/admin');
+            else if (p === 2) navigate('/gestao');
+            else if (p === 4) navigate('/explorar');
+            else navigate('/home');
+        }
+    }, [navigate]);
+
     return (
         <>
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

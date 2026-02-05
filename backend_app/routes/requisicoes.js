@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const requisicoesController = require('../controllers/requisicoesController');
 
-// --- CORREÇÃO 1 ---
 const { verifyToken } = require('../middleware/authMiddleware'); 
 
 // Rotas de Leitura
