@@ -102,9 +102,8 @@ const EventoForm = ({ onLogout }) => {
         <div className="form-page-layout">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            {/* MODAL DO MAPA EXPANDIDO */}
             {isMapExpanded && (
-                <div className="modal-overlay" style={{zIndex: 10001}}>
+                <div className="modal-overlay">
                     <div className="modal-content expanded-map-modal" style={{width: '90%', maxWidth: '1100px'}}>
                         <div className="modal-header">
                             <h3>Selecionar Localização</h3>
@@ -167,7 +166,7 @@ const EventoForm = ({ onLogout }) => {
                             </div>
 
                             <div className="map-column-layout">
-                                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                                <div style={{display: 'flex', justifyContent: 'space-between', marginTop: '17px'}}>
                                     <button type="button" onClick={() => setIsMapExpanded(true)} className="btn-expand-map" style={{fontSize: '10px', background: '#1f3a52', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer'}}>
                                         <Search size={12} /> EXPANDIR
                                     </button>

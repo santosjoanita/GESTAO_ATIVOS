@@ -6,7 +6,7 @@ const { verifyToken, checkPermission } = require('../middleware/authMiddleware')
 // Dashboard Stats
 router.get('/dashboard', verifyToken, checkPermission('ver_dashboard'), gestaoController.getDashboardStats);
 
-// Histórico Stock -
+// Histórico Stock 
 router.get('/stock/historico', verifyToken, gestaoController.getHistoricoStock);
 
 // Notificações de Prazos

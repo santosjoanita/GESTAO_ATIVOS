@@ -13,7 +13,7 @@ const AuthModal = ({ onClose, onLoginSubmit, isLoading, error }) => {
 
     return (
         <div className="modal-overlay">
-            <div className="auth-modal">
+            <div className="auth-modal" style={{marginTop: '50px', marginRight: '50px'}}>
                 
                 <button 
                     onClick={onClose} 

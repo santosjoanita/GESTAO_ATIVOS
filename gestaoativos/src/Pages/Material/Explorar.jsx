@@ -84,7 +84,6 @@ const Explorar = ({ onLogout }) => {
             });
             return;
         }
-        // Navega para o produto onde será feito o cálculo da quantidade real com as datas do evento
         navigate(`/produto/${m.id_material}`);
     };
 
@@ -215,7 +214,7 @@ const Explorar = ({ onLogout }) => {
                             <div 
                                 key={m.id_material} 
                                 className={`card-visual ${m.quantidade_total <= 0 ? 'esgotado' : ''} ${(!eventoAtivo || isConvidado) ? 'only-view' : ''}`}
-                                onClick={() => !isConvidado && handleMaterialClick(m)} // Bloqueia clique se for convidado
+                                onClick={() => !isConvidado && handleMaterialClick(m)}
                                 style={{cursor: (!eventoAtivo || isConvidado) ? 'not-allowed' : 'pointer'}}
                             >
                                 <div className="img-box">

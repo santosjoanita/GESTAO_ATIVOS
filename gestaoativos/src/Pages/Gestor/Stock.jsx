@@ -190,7 +190,7 @@ const Stock = ({ onLogout }) => {
                                         <td><span className={`status-badge ${m.visivel ? 'aprovado' : 'rejeitado'}`}>{m.visivel ? 'Visível' : 'Oculto'}</span></td>
                                         <td className="table-actions-cell">
                                             <button className="btn-edit" onClick={() => abrirEdicao(m)}>EDITAR</button>
-                                            <button className={m.visivel ? "btn-reject" : "btn-approve"} onClick={() => requestToggleVisibilidade(m)} style={{ marginLeft: '10px', padding: '5px 10px', fontSize: '11px' }}>
+                                            <button className={m.visivel ? "btn-reject" : "btn-approve"} onClick={() => requestToggleVisibilidade(m)} >
                                                 {m.visivel ? "OCULTAR" : "MOSTRAR"}
                                             </button>
                                         </td>
@@ -202,7 +202,7 @@ const Stock = ({ onLogout }) => {
                 </div>
 
                 {showModal && (
-                    <div className="modal-overlay">
+                    <div className="modal-overlay-stock">
                         <div className="modal-content stock-modal">
                             <div className="modal-header"><h3>{selectedMaterial ? 'Editar Material' : 'Novo Material'}</h3><button onClick={() => setShowModal(false)} className="close-btn"><X /></button></div>
                             <form onSubmit={handleSave} className="extended-form modal-body">
@@ -222,7 +222,7 @@ const Stock = ({ onLogout }) => {
                                 <select value={formData.local_armazenamento} onChange={e => setFormData({...formData, local_armazenamento: e.target.value})} required>
                                     <option value="">Selecionar armazém...</option><option value="Bouro">Bouro</option><option value="Armazém Municipal Central">Armazém Municipal Central</option><option value="Instalações SGE">Instalações SGE</option><option value="Instalações DSSA">Instalações DSSA</option><option value="Fórum Rodrigues Sampaio">Fórum Rodrigues Sampaio</option><option value="Biblioteca Municipal">Biblioteca Municipal</option><option value="Auditório Municipal">Auditório Municipal</option><option value="Instalações SMPC">Instalações SMPC</option><option value="Estaleiro Municipal">Estaleiro Municipal</option>
                                 </select>
-                                <button type="submit" className="btn-submeter"><Save size={18}/> GUARDAR NO SISTEMA</button>
+                                <button type="submit" className="btn-submeter-stock" ><Save size={18}/> GUARDAR NO SISTEMA</button>
                             </form>
                         </div>
                     </div>

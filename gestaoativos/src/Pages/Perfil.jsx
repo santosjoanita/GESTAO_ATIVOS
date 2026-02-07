@@ -65,10 +65,10 @@ const EventCard = ({ event, isExpanded, onToggle, onEditarClick, onDevolverClick
                             {materiais?.length > 0 ? (
                                 <ul style={{ listStyle: 'none', padding: 0 }}>
                                     {materiais.map((m, idx) => (
-                                        <li key={idx} style={{ fontSize: '13px', borderBottom: '1px solid #eee', padding: '8px 0', display: 'flex', justifyContent: 'space-between' }}>
+                                        <li key={idx} className="item-material-lista">
                                             <span>• {m.nome} — <strong>{m.quantidade} un.</strong></span>
-                                            <span className={`status-badge-material ${(m.status_item || 'aprovado').toLowerCase()}`}>
-                                                {m.status_item || 'APROVADO'}
+                                            <span className={`status-badge-material ${m.status_item?.toLowerCase()}`}>
+                                                {m.status_item?.toUpperCase() || 'PENDENTE'}
                                             </span>
                                         </li>
                                     ))}

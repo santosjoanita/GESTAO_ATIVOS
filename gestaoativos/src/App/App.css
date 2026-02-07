@@ -6,7 +6,6 @@
     background-color: var(--background-light);
 }
 
-/* --- HEADER / FOOTER --- */
 .app-header,
 .app-footer {
     background-color: var(--primary-color);
@@ -44,7 +43,6 @@
     text-decoration: underline; 
 }
 
-/* --- CONTEÚDO PRINCIPAL (APP MAIN) --- */
 .app-main {
     max-width: 1200px; 
     margin: 0 auto;
@@ -69,7 +67,6 @@
     margin-top: 1rem;
 }
 
-/* --- BOTÃO --- */
 .app-button {
     
     display: flex;
@@ -103,7 +100,6 @@
     to { transform: translateX(0); opacity: 1; }
 }
 
-/* Garante que o braco do toast não fica invisível no fundo */
 .toast-visible {
     display: block !important;
     animation: slideIn 0.3s ease-out;

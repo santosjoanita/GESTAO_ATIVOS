@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { 
     CornerDownLeft, User, X, Calendar, Download, Package, Activity, 
     Filter, MapPin, CheckCircle, XCircle, Truck, RotateCcw, 
-    FileClock, Ban, FileText, ShoppingCart, Edit
+    FileClock, Ban, FileText, ShoppingCart, Edit, MessageSquare
 } from 'lucide-react';
 import './GestorDashboard.css';
 import logo from '../../assets/img/esposende.png';
@@ -277,6 +277,7 @@ const GestorDashboard = () => {
                                 <div className="hist-card-info">
                                     <p><User size={14} /> <span>Requerente:</span> {item.nome_responsavel || 'N/A'}</p>
                                     <p><Activity size={14} /> <span>Ação:</span> {item.acao}</p>
+                                    <p><MessageSquare size={14} /> <span>Observações:</span> {item.detalhes || 'Nenhuma observação'}</p>
                                 </div>
                             </div>
                         ) : (

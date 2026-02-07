@@ -72,27 +72,23 @@ exports.submeterMateriais = async (req, res) => {
             `SELECT ri.id_material, ri.quantidade, ri.data_saida, ri.data_devolucao
             FROM RequisicaoItem ri
             JOIN Requisicao r ON ri.id_req = r.id_req
-            WHERE r.id_req != ? AND r.id_estado_req IN (1, 2, 3, 4)`, [id]);
+            WHERE r.id_req != ? AND r.id_estado_req IN (1, 2, 4)`, [id]); 
 
-        for (const produto_atual of materiais) {
-            let total_reservado_no_periodo = 0;
+            for (const produto_atual of materiais) {
+                let total_reservado_no_periodo = 0;
 
-            for (const produto_req of requisicoes_feitas) {
-                if (produto_atual.id_material === produto_req.id_material) {
-                    const dt_ini_atual = new Date(produto_atual.levantamento);
-                    const dt_fim_atual = new Date(produto_atual.devolucao);
-                    const dt_ini_req = new Date(produto_req.data_saida);
-                    const dt_fim_req = new Date(produto_req.data_devolucao);
+                for (const produto_req of requisicoes_feitas) {
+                    if (produto_atual.id_material === produto_req.id_material) {
+                        const dt_ini_atual = new Date(produto_atual.levantamento);
+                        const dt_fim_atual = new Date(produto_atual.devolucao);
+                        const dt_ini_req = new Date(produto_req.data_saida);
+                        const dt_fim_req = new Date(produto_req.data_devolucao);
 
-                    if (dt_ini_atual >= dt_ini_req && dt_ini_atual <= dt_fim_req) {
-                        total_reservado_no_periodo += produto_req.quantidade;
-                    }
-
-                    if (dt_fim_atual >= dt_ini_req && dt_fim_atual <= dt_fim_req) {
-                        total_reservado_no_periodo += produto_req.quantidade;
+                        if (dt_ini_atual <= dt_fim_req && dt_fim_atual >= dt_ini_req) {
+                            total_reservado_no_periodo += produto_req.quantidade;
+                        }
                     }
                 }
-            }
 
             const [MaterialDb] = await connection.execute(
                 `SELECT nome, quantidade_total FROM Material WHERE id_material = ?`,
@@ -134,40 +130,57 @@ exports.submeterMateriais = async (req, res) => {
 exports.atualizarEstado = async (req, res) => {
     const { id } = req.params; 
     const { id_estado } = req.body;
-    const idUserLogado = req.user ? (req.user.id_user || req.user.id) : 1;
-
     const connection = await db.getConnection();
+
     try {
         await connection.beginTransaction();
 
+        const userId = req.body.id_user || 9; 
+
         if (parseInt(id_estado) === 2 || parseInt(id_estado) === 4) {
-            
             const [itens] = await connection.execute(
                 'SELECT id_material, quantidade FROM RequisicaoItem WHERE id_req = ? AND status_item = "pendente"', 
                 [id]
             );
-
+            
             for (const item of itens) {
                 await connection.execute(
                     'UPDATE Material SET quantidade_disp = quantidade_disp - ? WHERE id_material = ?',
                     [item.quantidade, item.id_material]
                 );
+
+                const [mat] = await connection.execute('SELECT nome FROM Material WHERE id_material = ?', [item.id_material]);
+
+                await connection.execute(
+                    `INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, ?, ?)`,
+                    [userId, mat[0].nome, 'saida', item.quantidade]
+                );
             }
 
             await connection.execute(
-                'UPDATE RequisicaoItem SET status_item = "aprovado" WHERE id_req = ? AND status_item = "pendente"', 
+                'UPDATE RequisicaoItem SET status_item = "aprovado" WHERE id_req = ?', 
+                [id]
+            );
+        } 
+        else if (parseInt(id_estado) === 3) {
+            await connection.execute(
+                'UPDATE RequisicaoItem SET status_item = "rejeitado" WHERE id_req = ?', 
                 [id]
             );
         }
 
-        await connection.execute(`UPDATE Requisicao SET id_estado_req = ? WHERE id_req = ?`, [id_estado, id]);
-
+        await connection.execute(
+            `UPDATE Requisicao SET id_estado_req = ? WHERE id_req = ?`, 
+            [id_estado, id]
+        );
         await connection.commit();
-        res.json({ msg: "Estado atualizado e stock abatido!" });
+        res.json({ msg: "Estado atualizado com sucesso!" });
     } catch (e) {
         await connection.rollback();
         res.status(500).json({ message: e.message });
-    } finally { connection.release(); }
+    } finally { 
+        connection.release(); 
+    }
 };
 
 // 6. DEVOLVER REQUISIÇÃO
@@ -177,29 +190,58 @@ exports.devolverRequisicao = async (req, res) => {
     const connection = await db.getConnection(); 
     try {
         await connection.beginTransaction();
-        const [reqInfo] = await connection.execute('SELECT id_estado_req FROM Requisicao WHERE id_req = ?', [id]);
+
+        const userId = id_user || 9; 
+
+        const [reqInfo] = await connection.execute(
+            'SELECT id_estado_req FROM Requisicao WHERE id_req = ?', 
+            [id]
+        );
         if (reqInfo.length === 0 || reqInfo[0].id_estado_req === 5) {
-            await connection.rollback(); connection.release(); return sendError(res, 400, "Erro", "Inválida");
+            await connection.rollback(); 
+            connection.release(); 
+            return sendError(res, 400, "Erro", "Inválida");
         }
-        const [itens] = await connection.execute('SELECT id_material, quantidade FROM RequisicaoItem WHERE id_req = ?', [id]);
+
+        const [itens] = await connection.execute(
+            'SELECT id_material, quantidade FROM RequisicaoItem WHERE id_req = ?', 
+            [id]
+        );
+
         for (const item of itens) {
             await connection.execute('UPDATE Material SET quantidade_disp = quantidade_disp + ? WHERE id_material = ?', [item.quantidade, item.id_material]);
             await connection.execute('UPDATE RequisicaoItem SET data_devolucao = CURDATE() WHERE id_req = ? AND id_material = ?', [id, item.id_material]);
             const [mat] = await connection.execute('SELECT nome FROM Material WHERE id_material = ?', [item.id_material]);
-            await connection.execute(`INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'devolucao', ?)`, [id_user || 1, mat[0].nome, item.quantidade]);
+            await connection.execute(
+                `INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'devolucao', ?)`,
+                [userId, mat[0].nome, item.quantidade]
+            );
         }
-        await connection.execute('UPDATE Requisicao SET id_estado_req = 5 WHERE id_req = ?', [id]);
-        
-        await connection.execute(`INSERT INTO Historico_Requisicao (id_req, id_user, acao, detalhes, data_acao) VALUES (?, ?, 'Finalizada', 'Devolução de material', NOW())`, [id, id_user || 1]);
-        
+
+        await connection.execute(
+            'UPDATE Requisicao SET id_estado_req = 5 WHERE id_req = ?', 
+            [id]
+        );
+
+        await connection.execute(
+            `INSERT INTO Historico_Requisicao (id_req, id_user, acao, detalhes, data_acao) VALUES (?, ?, 'Finalizada', 'Devolução de material', NOW())`,
+            [id, userId]
+        );
+
         await connection.commit();
         res.json({ message: "Devolvido com sucesso." });
-    } catch (e) { await connection.rollback(); sendError(res, 500, "Erro ao devolver", e.message); } 
-    finally { if (connection) connection.release(); }
+    } catch (e) { 
+        await connection.rollback(); 
+        sendError(res, 500, "Erro ao devolver", e.message); 
+    } finally { 
+        if (connection) connection.release(); 
+    }
 };
+
 
 // 7. CANCELAR REQUISIÇÃO
 exports.cancelarRequisicao = async (req, res) => {
+    const userId = id_user || 9;
     const { id } = req.params;
     const { id_user } = req.body; 
     const connection = await db.getConnection();
@@ -210,13 +252,19 @@ exports.cancelarRequisicao = async (req, res) => {
         
         const estado = reqInfo[0].id_estado_req;
         if ([1, 2, 3, 4].includes(estado)) {
-            const [itens] = await connection.execute('SELECT id_material, quantidade FROM RequisicaoItem WHERE id_req = ?', [id]);
-            for (const item of itens) {
-                await connection.execute('UPDATE Material SET quantidade_disp = quantidade_disp + ? WHERE id_material = ?', [item.quantidade, item.id_material]);
-                const [mat] = await connection.execute('SELECT nome FROM Material WHERE id_material = ?', [item.id_material]);
-                await connection.execute(`INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'cancelamento', ?)`, [id_user || 1, mat[0].nome, item.quantidade]);
+                const [itens] = await connection.execute('SELECT id_material, quantidade FROM RequisicaoItem WHERE id_req = ?', [id]);
+                for (const item of itens) {
+                    await connection.execute(
+                        'UPDATE Material SET quantidade_disp = quantidade_disp + ? WHERE id_material = ?',
+                        [item.quantidade, item.id_material]
+                    );
+                    const [mat] = await connection.execute('SELECT nome FROM Material WHERE id_material = ?', [item.id_material]);
+                    await connection.execute(
+                        `INSERT INTO Historico_Stock (id_user, item_nome, tipo_movimento, quantidade_alt) VALUES (?, ?, 'cancelamento', ?)`,
+                        [userId, mat[0].nome, item.quantidade]
+                    );
+                }
             }
-        }
         await connection.execute('UPDATE Requisicao SET id_estado_req = 6 WHERE id_req = ?', [id]);
         
         await connection.execute(`INSERT INTO Historico_Requisicao (id_req, id_user, acao, detalhes, data_acao) VALUES (?, ?, 'Cancelada', 'Cancelada pelo utilizador', NOW())`, [id, id_user || 1]);

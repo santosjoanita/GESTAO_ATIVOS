@@ -14,27 +14,6 @@
     flex-direction: column;
 }
 
-/* --- HEADER FIXO --- */
-.fixed-footer-esp {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background-color: #1f4e79 !important; /* Azul Marinho Forçado */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white !important; /* Texto Branco Forçado */
-    font-weight: bold;
-    z-index: 9999;
-    border: none;
-}
-
-.footer-project-esp {
-    color: white !important;
-}
-
 .header-content-esp { 
     width: 92%; 
     max-width: 1400px; 
@@ -109,7 +88,6 @@
 }
 }
 
-/* Badge de Cargo no Header */
 .user-profile-badge {
     display: flex;
     flex-direction: column;
@@ -133,7 +111,6 @@
     font-weight: 800;
 }
 
-/* --- MAIN CONTENT --- */
 .gestao-main {
     padding-top: 130px; 
     padding-bottom: 80px;
@@ -157,7 +134,6 @@
     padding-left: 15px;
 }
 
-/* --- FILTROS LIMPOS (Estilo Card) --- */
 .filters-container {
     display: flex; 
     gap: 20px; 
@@ -176,14 +152,6 @@
     position: relative;
     border: none;
     transition: transform 0.2s, box-shadow 0.2s;
-}
-.filter-select-wrapper::after {
-    content: "▼";
-    font-size: 10px;
-    position: absolute;
-    right: 20px;
-    color: var(--primary-blue);
-    pointer-events: none;
 }
 
 .search-input-wrapper { flex: 3; }
@@ -216,7 +184,6 @@
     opacity: 0.8;
 }
 
-/* Filtros em Chips para Estados */
 .filter-chips-container {
     display: flex;
     gap: 10px;
@@ -241,10 +208,9 @@
     color: white;
 }
 
-/* --- GRELHA DE CARDS --- */
 .gestao-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); 
     gap: 25px; 
 }
 
@@ -281,7 +247,6 @@
     font-weight: 500; 
 }
 
-/* Status Badges */
 .status-badge { 
     display: inline-block; 
     padding: 6px 12px; 
@@ -299,7 +264,6 @@
 .status-badge.finalizada { background-color: #f1f5f9 !important; color: #475569 !important; }
 .status-badge.cancelada, .status-badge.recusada, .status-badge.rejeitada { background-color: #fee2e2 !important; color: #991b1b !important; }
 
-/* --- MODAIS PROFISSIONAIS (BLUR & SOMBRA) --- */
 .modal-overlay { 
     position: fixed; 
     top: 0; left: 0; 
@@ -385,9 +349,9 @@
     font-weight: 700; 
     border-radius: 8px; 
     color: #64748b; 
-    font-size: 14px; 
+    font-size: 14px;
 }
-/* Container do conteúdo do card de histórico */
+
 .hist-card-content {
     display: flex;
     flex-direction: column;
@@ -440,18 +404,6 @@
 .warning { background: #f39c12; } 
 .danger { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
 
-/* Link Google Maps */
-.map-link {
-    display: inline-block;
-    background-color: var(--primary-blue);
-    color: white !important;
-    padding: 8px 16px;
-    border-radius: 6px;
-    text-decoration: none !important;
-    font-weight: 700;
-    margin-top: 10px;
-}
-
 .fixed-footer-esp {
     position: fixed; 
     bottom: 0; 
@@ -466,18 +418,7 @@
 }
 
 .footer-project-esp { font-size: 12px; font-weight: 700; letter-spacing: 1px; }
-/* --- AJUSTE DO DROPDOWN NO FILTRO --- */
-.filter-select-wrapper::after {
-    content: "▼";
-    font-size: 10px;
-    position: absolute;
-    right: 20px;
-    color: var(--primary-blue);
-    pointer-events: none;
-    opacity: 0.6;
-}
 
-/* --- LISTA DE MATERIAIS NO MODAL --- */
 .section-block {
     margin-top: 30px;
     padding-top: 20px;
@@ -534,7 +475,6 @@
     font-weight: 600;
 }
 
-/* Tags de Status dos Materiais no Modal */
 .item-status-tag {
     font-size: 10px;
     font-weight: 800;
@@ -553,7 +493,6 @@
     color: #166534;
 }
 
-/* Grid de Anexos */
 .anexos-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -580,7 +519,6 @@
     color: #3498db;
 }
 
-/* Ajustes de Grelha de Detalhes */
 .detail-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -614,6 +552,40 @@
     align-items: center;
     gap: 8px;
 }
+
+.map-link {
+    background-color: #1f3a52;
+    color: white !important;
+    padding: 6px 14px;
+    border-radius: 6px;
+    text-decoration: none !important;
+    font-weight: 700;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.map-link:hover {
+    background-color: #2c5270;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(31, 58, 82, 0.15);
+}
+
+.map-link:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(31, 58, 82, 0.1);
+}
+
+.detail-item .value .map-link {
+    margin-left: 10px;
+}
+
 .status-badge-gestor {
     display: inline-block;
     margin-top: 10px;
@@ -631,8 +603,6 @@
 .status-badge-gestor.finalizada { background: #f1f5f9; color: #475569; }
 .status-badge-gestor.cancelada, 
 .status-badge-gestor.rejeitada { background: #fee2e2; color: #991b1b; }
-
-/* --- RESPONSIVIDADE DASHBOARD GESTOR --- */
 
 @media (max-width: 1024px) {
     .gestao-grid {

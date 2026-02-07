@@ -191,17 +191,15 @@ input[name="localizacao"] {
     font-weight: 600;
     color: #1f4e79;
 }
-/* --- CORREÇÃO DO HEADER E MAPA (Z-INDEX) --- */
+
 .fixed-header-esp {
-    z-index: 9999 !important; /* Header sempre no topo absoluto */
+    z-index: 9999 !important;
 }
 
-/* Garante que os controlos do mapa ficam abaixo do header */
 .leaflet-top, .leaflet-bottom {
     z-index: 500 !important;
 }
 
-/* --- BOTÃO EXPANDIR MAPA --- */
 .btn-expand-map {
     background-color: #1f3a52;
     color: white;
@@ -224,7 +222,6 @@ input[name="localizacao"] {
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* --- GRELHA DE DATAS --- */
 .date-time-row-layout {
     display: grid;
     grid-template-columns: repeat(4, 1fr) !important;
@@ -233,7 +230,6 @@ input[name="localizacao"] {
     margin-top: 10px;
 }
 
-/* --- MODAL DO MAPA EXPANDIDO --- */
 .expanded-map-modal {
     background: white;
     border-radius: 12px;
@@ -242,6 +238,24 @@ input[name="localizacao"] {
     flex-direction: column;
     box-shadow: 0 20px 50px rgba(0,0,0,0.3);
     animation: slideUp 0.3s ease-out;
+}
+
+.modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #0f172ab3 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 100000 !important;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    overflow-y: auto !important;
+    margin: 0 !important;
+    padding: 0!important;
 }
 
 .expanded-map-modal .modal-body {
@@ -254,8 +268,6 @@ input[name="localizacao"] {
     width: 100% !important;
     z-index: 1;
 }
-
-/* --- CORREÇÃO DO CONTROLO DE CAMADAS DO LEAFLET --- */
 
 .leaflet-control-layers-list input[type="radio"],
 .leaflet-control-layers-list input[type="checkbox"] {
@@ -303,7 +315,6 @@ input[name="localizacao"] {
     }
 }
 
-/* --- ESTILO EXTRA PARA ANEXOS --- */
 .attachments-row-layout p {
     background: #f1f5f9;
     padding: 8px;

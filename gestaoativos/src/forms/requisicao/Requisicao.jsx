@@ -161,7 +161,32 @@ const Requisicao = ({ onLogout }) => {
 
                         <div className="req-button-row">
                             <button type="button" className="btn-cancelar" onClick={() => navigate('/home')}>CANCELAR</button>
-                            <button type="submit" className="btn-submeter">CRIAR REQUISIÇÃO</button>
+                            <button 
+                                type="submit" 
+                                style={{
+                                    flex: 1,
+                                    padding: 0,
+                                    backgroundColor: '#1f4e79', 
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontWeight: '700',
+                                    fontSize: '15px',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 15px rgba(31, 58, 82, 0.4)',
+                                    transition: 'all 0.2s ease',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    height: '50px',
+                                    width: '100%',
+                                    boxSizing: 'border-box',
+                                    marginTop: '40px',
+                                    marginBottom: '30px'
+                                }}
+                                >
+                                CRIAR REQUISIÇÃO
+                                </button>
                         </div>
                     </form>
                 </div>

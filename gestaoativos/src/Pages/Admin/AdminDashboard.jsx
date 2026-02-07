@@ -131,9 +131,9 @@ const AdminDashboard = () => {
                                 <div className="tooltip-popup admin-perfis">
                                     <h4>Privilégios por Perfil:</h4>
                                     <ul>
-                                        <li><strong>Admin:</strong> Gestão total de utilizadores e auditoria global.</li>
-                                        <li><strong>Gestor:</strong> Aprovação de pedidos, gestão de stock e eventos.</li>
-                                        <li><strong>Funcionário:</strong> Criar requisições e consultar catálogo.</li>
+                                        <li><strong>Admin:</strong> Gestão total de utilizadores e auditoria global. </li>
+                                        <li><strong>Gestor:</strong> Aprovação de pedidos e gestão de stock. </li>
+                                        <li><strong>Funcionário:</strong> Criar requisições e consultar catálogo. </li>
                                         <li><strong>Convidado:</strong> Apenas consulta e visualização limitada.</li>
                                     </ul>
                                 </div>

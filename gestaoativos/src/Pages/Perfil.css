@@ -27,7 +27,6 @@ a { text-decoration: none; }
     padding-bottom: 60px; 
 }
 
-/* --- HEADER --- */
 .fixed-header-esp {
     position: fixed;
     top: 0;
@@ -88,7 +87,6 @@ a { text-decoration: none; }
 
 .active-icon-indicator { filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); }
 
-/* --- PROFILE PANEL --- */
 .main-content-esp {
     max-width: 1100px;
     margin: 0 auto;
@@ -123,7 +121,6 @@ a { text-decoration: none; }
     color: var(--color-primary-dark);
 }
 
-/* --- TABS & FILTERS --- */
 .tabs-container-esp {
     border-bottom: 2px solid var(--color-border);
     margin-bottom: 25px;
@@ -170,7 +167,6 @@ a { text-decoration: none; }
     color: white;
 }
 
-/* --- CARDS --- */
 .event-card {
     background-color: white;
     border-radius: 12px;
@@ -196,7 +192,6 @@ a { text-decoration: none; }
 .event-title { font-weight: 800; color: var(--color-primary-dark); font-size: 1.1rem; margin: 0; }
 .event-date { font-size: 0.85rem; color: #94a3b8; margin-top: 5px; }
 
-/* --- DETAILS & BADGES --- */
 .event-details {
     padding: 20px;
     border-top: 1px solid #f1f5f9;
@@ -236,6 +231,16 @@ a { text-decoration: none; }
     text-transform: uppercase;
 }
 
+.edit-button-esp.btn-cancelar {
+    padding: 6px 16px;
+    color: white;
+}
+
+.edit-button-esp.btn-cancelar svg {
+    color: white;
+    stroke: white;
+}
+
 .tooltip-container {
     position: relative;
     display: inline-block;
@@ -269,6 +274,7 @@ a { text-decoration: none; }
     border: 1px solid #e0e0e0;
     opacity: 0;
     transition: opacity 0.3s, visibility 0.3s;
+    min-height: 280px;
 }
 
 .tooltip-container:hover .tooltip-popup {
@@ -321,7 +327,7 @@ a { text-decoration: none; }
 .dot.em-curso { background-color: #3498db; }
 .dot.finalizada { background-color: #27ae60; }
 .dot.cancelada { background-color: #e74c3c; }
-/* Footer */
+
 .fixed-footer-esp {
     position: fixed; bottom: 0; left: 0; right: 0;
     height: 60px; background: var(--color-primary-dark);
@@ -333,46 +339,35 @@ a { text-decoration: none; }
     margin-top: 50px;
     border: 1px solid #e2e8f0 !important;
     padding: 40px;
-    background: white !important; /* Fundo branco como o convidado */
+    background: white !important;
     border-radius: 12px;
 }
-/* --- RESPONSIVIDADE (MOBILE) --- */
 
 @media (max-width: 1024px) {
     .main-content-esp { padding: 20px 10px; }
 }
 
 @media (max-width: 768px) {
-    /* Header e Navegação */
     .fixed-header-esp { height: auto; padding: 10px 0; }
     .header-content-esp { flex-direction: column; gap: 15px; text-align: center; }
     .logo-img { height: 60px !important; }
     .header-nav-esp { gap: 15px; flex-wrap: wrap; justify-content: center; }
     .header-icons-esp { width: 100%; justify-content: center; margin-top: 10px; }
     
-    .perfil-page-app { padding-top: 180px; } 
+    .perfil-page-app { padding-top: 180px; }
 
-    /* Painel do Utilizador */
     .user-panel-esp { flex-direction: column; text-align: center; padding: 20px; }
     .user-avatar-esp { margin-right: 0; margin-bottom: 15px; }
 
-    /* Filtros e Tabs */
     .tabs-container-esp { justify-content: center; }
     .tab-button-esp { padding: 10px; font-size: 12px; }
     .status-filter-bar-esp { justify-content: center; gap: 5px; }
     .status-filter-btn { padding: 6px 12px; font-size: 10px; }
 
-    /* Card de Evento */
     .event-header-row { flex-direction: column; align-items: flex-start; gap: 15px; }
-   .event-actions-wrapper {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-    /* Grelha de Detalhes */
+
     .details-info-grid { grid-template-columns: 1fr; }
 
-    /* Tooltip */
     .tooltip-popup { width: 240px; left: 0; transform: translateX(0); }
     .tooltip-popup::after { left: 20px; }
 }

@@ -61,21 +61,26 @@ const Produto = ({ onLogout }) => {
         }
     }, [id]);
 
-    // CALCULAR STOCK REAL SEMPRE QUE AS DATAS MUDAM
-    useEffect(() => {
-        if (datas.levantamento && datas.devolucao) {
-            const headers = getAuthHeaders();
-           fetch(`http://localhost:3002/api/materiais/quantidadeReal/${id}/${datas.levantamento}/${datas.devolucao}`, { headers })
+   useEffect(() => {
+    if (datas.levantamento && datas.devolucao) {
+        const headers = getAuthHeaders();
+        fetch(`http://localhost:3002/api/materiais/quantidadeReal/${id}/${datas.levantamento}/${datas.devolucao}`, { headers })
             .then(res => res.json())
             .then(data => {
-                setQuantidadeRealDisp(data.quantidade_disponivel);
-                    if (data.quantidade_real_disp <= 0) {
-                        setToast({ type: 'warning', message: "Aviso: Este material já está reservado para estas datas." });
-                    }
-                })
-                .catch(err => console.error("Erro no cálculo real:", err));
-        }
-    }, [datas.levantamento, datas.devolucao, id]);
+                const disponivel = data.quantidade_disponivel;
+                
+                setQuantidadeRealDisp(disponivel);
+
+                if (disponivel <= 0) {
+                    setToast({ 
+                        type: 'warning', 
+                        message: "Aviso: Este material já está totalmente reservado para estas datas." 
+                    });
+                }
+            })
+            .catch(err => console.error("Erro no cálculo real:", err));
+    }
+}, [datas.levantamento, datas.devolucao, id]);
 
     const handleLogout = () => {
         localStorage.clear();
@@ -84,27 +89,22 @@ const Produto = ({ onLogout }) => {
     };
 
     const handleAdicionar = () => {
-        // Validação de Evento Ativo
         if (!eventoAtivo) {
             setToast({ type: 'warning', message: "Atenção: Seleciona 'Editar' numa requisição no Perfil primeiro!" });
             return;
         }
-        // Validação de Datas Vazias
         if (!datas.levantamento || !datas.devolucao) {
             setToast({ type: 'error', message: "Por favor, seleciona as datas de levantamento e devolução." });
             return;
         }
-        // Validação de Stock Real
         if (parseInt(quantidade) > quantidadeRealDisp) {
             setToast({ type: 'error', message: `Quantidade indisponível. Só existem ${quantidadeRealDisp} unidades livres neste período.` });
             return;
         }
-        // Validação de Limites do Evento
         if (datas.levantamento < limitesEvento.min || datas.devolucao > limitesEvento.max) {
             setToast({ type: 'error', message: "As datas escolhidas estão fora do período permitido para este evento." });
             return;
         }
-        // Validação Lógica de Datas
         if (new Date(datas.devolucao) < new Date(datas.levantamento)) {
             setToast({ type: 'error', message: "A data de devolução não pode ser anterior à data de levantamento." });
             return;
@@ -129,7 +129,6 @@ const Produto = ({ onLogout }) => {
 
     return (
         <div className="layout-padrao-produto">
-            {/* COMPONENTE TOAST */}
             {toast && (
                 <Toast 
                     message={toast.message} 
@@ -188,16 +187,15 @@ const Produto = ({ onLogout }) => {
                     </div>
 
                     <div className="produto-info-detalhe">
-                        <div className="categoria-tag">{material.categoria_nome || 'MATERIAL'}</div>
                         <h1>{material.nome?.toUpperCase()}</h1>
                         
                         <div className="specs-box-estilizada">
-                            <p><strong><Package size={16} /> DESCRIÇÃO:</strong> {material.descricao_tecnica || "Nenhuma descrição técnica disponível."}</p>
+                            <p><strong><Package size={16} /> DESCRIÇÃO:</strong> {material.especificacoes || "Nenhuma descrição técnica disponível."}</p>
                             <p><strong>ARMAZÉM:</strong> {material.local_armazenamento || "Não especificado"}</p>
                             
                             <p><strong>QUANTIDADE TOTAL (ARMAZÉM):</strong> {material.quantidade_total}</p>
                             
-                            {/* CAIXA DE STOCK DINÂMICO */}
+
                             <div className="stock-label-esp" style={{ backgroundColor: quantidadeRealDisp <= 0 ? '#e74c3c' : '#2ecc71' }}>
                                 DISPONÍVEL NO PERÍODO: {quantidadeRealDisp}
                             </div>
