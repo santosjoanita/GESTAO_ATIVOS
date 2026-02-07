@@ -367,11 +367,11 @@ const Perfil = () => {
                                 <div className="tooltip-popup">
                                     <h4>Legenda de Estados:</h4>
                                     <ul>
-                                        <li><span className="dot pendente"></span> <strong>Pendente:</strong> Aguarda validação do gestor.</li>
-                                        <li><span className="dot aprovada"></span> <strong>Aprovada:</strong> Pedido aceite, aguarda levantamento.</li>
-                                        <li><span className="dot em-curso"></span> <strong>Em Curso:</strong> O material está consigo.</li>
-                                        <li><span className="dot finalizada"></span> <strong>Finalizada:</strong> Material devolvido e conferido.</li>
-                                        <li><span className="dot cancelada"></span> <strong>Cancelada:</strong> Pedido anulado ou rejeitado.</li>
+                                        <li><span className="dot-pendente"></span> <strong>Pendente:</strong> Aguarda validação do gestor.</li>
+                                        <li><span className="dot-aprovada"></span> <strong>Aprovada:</strong> Pedido aceite, aguarda levantamento.</li>
+                                        <li><span className="dot-em-curso"></span> <strong>Em Curso:</strong> O material está consigo.</li>
+                                        <li><span className="dot-finalizada"></span> <strong>Finalizada:</strong> Material devolvido e conferido.</li>
+                                        <li><span className="dot-cancelada"></span> <strong>Cancelada:</strong> Pedido anulado ou rejeitado.</li>
                                     </ul>
                                 </div>
                             </div>
@@ -427,7 +427,7 @@ const Perfil = () => {
                 )}
             </main>
             
-            <footer className="fixed-footer-esp" style={{ background: isAdmin ? '#95a5a6' : (isConvidado ? '#2c3e50' : '#1f4e79') }}>
+            <footer className="fixed-footer-esp" style={{ background: isAdmin ? '#1f4e79' : (isConvidado ? '#1f4e79' : '#1f4e79') }}>
                 <span className="footer-project-esp">
                     {isAdmin ? "🛠️ PAINEL ADMIN - MUNICÍPIO DE ESPOSENDE" : (isConvidado ? "🔒 MODO CONSULTA - MUNICÍPIO DE ESPOSENDE" : "Gestão de Ativos - Município de Esposende")}
                 </span>

@@ -322,11 +322,17 @@ a { text-decoration: none; }
     margin-right: 8px;
 }
 
-.dot.pendente { background-color: #f1c40f; }
-.dot.aprovada { background-color: #2ecc71; }
-.dot.em-curso { background-color: #3498db; }
-.dot.finalizada { background-color: #27ae60; }
-.dot.cancelada { background-color: #e74c3c; }
+.dot-aprovada, .dot-cancelada, .dot-finalizada, .dot-em-curso, .dot-pendente {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+}
+
+.dot-pendente { background-color: #f1c40f; }
+.dot-aprovada { background-color: #2ecc71; }
+.dot-em-curso { background-color: #3498db; }
+.dot-finalizada { background-color: #27ae60; }
+.dot-cancelada { background-color: #e74c3c; }
 
 .fixed-footer-esp {
     position: fixed; bottom: 0; left: 0; right: 0;
